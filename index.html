@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vizela Elétrica - Sistema de Gestão</title>
+    <style>
+        :root {
+            --bg-sidebar: #111827;
+            --bg-sidebar-hover: #1f2937;
+            --bg-sidebar-active: #374151;
+            --text-sidebar: #9ca3af;
+            --text-sidebar-active: #ffffff;
+            --bg-main: #f9fafb;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --text-dark: #111827;
+            --text-muted: #6b7280;
+            --card-bg: #ffffff;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+
+        body { background-color: var(--bg-main); overflow: hidden; height: 100vh; }
+
+        /* ================= TELA DE LOGIN & REGISTO ================= */
+        #login-screen {
+            display: flex;
+            height: 100vh; width: 100vw;
+            align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            position: absolute; top: 0; left: 0; z-index: 1000;
+        }
+
+        .login-card {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+            width: 100%; max-width: 420px;
+            text-align: center;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-logo { margin-bottom: 24px; display: flex; justify-content: center; }
+        .login-logo svg { width: 48px; height: 48px; stroke: var(--primary); stroke-width: 2; fill: none; }
+        .login-card h1 { color: var(--text-dark); font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
+        .login-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
+
+        /* Vistas de Login e Registo */
+        #view-login, #view-register { transition: opacity 0.3s ease; }
+        #view-register { display: none; }
+
+        /* Estilos dos Formulários de Autenticação */
+        .auth-form { text-align: left; }
+        .auth-input-group { margin-bottom: 16px; position: relative; }
+        .auth-input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-dark); margin-bottom: 6px; }
+        .auth-input-wrapper { position: relative; display: flex; align-items: center; }
+        .auth-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: var(--text-dark); transition: all 0.2s; }
+        .auth-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); padding-right: 40px; }
+        /* Adiciona espaço extra na direita para a senha não sobrepor o olho */
+        input[type="password"], input.pwd-field { padding-right: 40px; } 
+        
+        .eye-btn { position: absolute; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; }
+        .eye-btn:hover { color: var(--text-dark); background-color: #f3f4f6; }
+        .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+        .btn-auth { width: 100%; background-color: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+        .btn-auth:hover { background-color: var(--primary-hover); }
+        .btn-auth:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+        .divider { display: flex; align-items: center; text-align: center; margin: 24px 0; color: var(--text-muted); font-size: 0.85rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--border); }
+        .divider::before { margin-right: .5em; } .divider::after { margin-left: .5em; }
+
+        .btn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; background-color: #ffffff; color: #374151; border: 1px solid var(--border); padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+        .btn-google:hover { background-color: #f9fafb; border-color: #9ca3af; }
+        .btn-google img { width: 20px; height: 20px; }
+
+        .auth-switch { margin-top: 24px; font-size: 0.9rem; color: var(--text-muted); }
+        .auth-link { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
+        .auth-link:hover { text-decoration: underline; }
+
+        /* ================= APP SCREEN (SISTEMA) ================= */
+        #app-screen { display: none; height: 100vh; width: 100vw; }
+
+        /* Barra Lateral */
+        .sidebar { width: 240px; background-color: var(--bg-sidebar); color: var(--text-sidebar); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid #1f2937; }
+        .sidebar::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-thumb { background-color: #374151; border-radius: 4px; }
+        .sidebar-header { padding: 24px 20px; font-size: 1.25rem; font-weight: 700; color: var(--text-sidebar-active); border-bottom: 1px solid #1f2937; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
+        .menu-container { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
+        .menu-btn { width: 100%; padding: 12px 20px; background: none; border: none; color: var(--text-sidebar); text-align: left; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; }
+        .menu-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; transition: stroke 0.2s ease; }
+        .menu-btn:hover { background-color: var(--bg-sidebar-hover); color: var(--text-sidebar-active); }
+        .menu-btn.active { background-color: var(--bg-sidebar-active); color: var(--text-sidebar-active); font-weight: 600; border-left: 4px solid var(--primary); padding-left: 16px; }
+
+        /* Área de Conteúdo */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+
+        /* Botões do Cabeçalho */
+        .btn-cadastrar { background-color: var(--primary); color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s ease; }
+        .btn-cadastrar:hover { background-color: var(--primary-hover); box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3); transform: translateY(-1px); }
+        .btn-cadastrar svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; }
+
+        .btn-logout { background-color: #f3f4f6; color: var(--text-dark); border: 1px solid var(--border); padding: 9px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
+        .btn-logout:hover { background-color: #e5e7eb; color: var(--danger); }
+        .btn-logout svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+        .hamburger-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 22px; height: 16px; padding: 0; }
+        .hamburger-btn span { display: block; height: 2px; width: 100%; background-color: var(--text-dark); border-radius: 2px; transition: all 0.2s ease; }
+        .hamburger-btn:hover span { background-color: var(--primary); }
+
+        .category-title { color: var(--text-dark); font-size: 1.4rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .subview-indicator { color: var(--text-muted); font-size: 1.1rem; font-weight: 400; }
+
+        /* Dropdown */
+        .dropdown-menu { position: absolute; top: 70px; left: 40px; background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); width: 320px; max-height: 500px; overflow-y: auto; display: none; z-index: 100; animation: slideDown 0.15s ease; padding: 0; }
+        .dropdown-menu::-webkit-scrollbar { width: 5px; }
+        .dropdown-menu::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
+        .dropdown-menu.active { display: block; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .dropdown-section-title { padding: 12px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--bg-sidebar); background-color: #f3f4f6; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-top: 8px; margin-bottom: 4px; letter-spacing: 0.5px; }
+        .dropdown-section-title:first-child { margin-top: 0; border-top: none; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+
+        .dropdown-item { width: 100%; padding: 10px 20px 10px 32px; background: none; border: none; text-align: left; font-size: 0.95rem; color: var(--text-dark); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; position: relative; }
+        .dropdown-item::before { content: ''; position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 4px; height: 4px; border-radius: 50%; background-color: var(--border); transition: background 0.15s ease; }
+        .dropdown-item:hover { background-color: #f9fafb; color: var(--primary); }
+        .dropdown-item:hover::before { background-color: var(--primary); }
+        .dropdown-item.active { background-color: #eff6ff; color: var(--primary); font-weight: 600; }
+        .dropdown-item.active::before { background-color: var(--primary); width: 6px; height: 6px; left: 19px; }
+
+        .content-area { padding: 40px; overflow-y: auto; flex: 1; }
+        .view-card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 40px; text-align: center; color: var(--text-muted); font-size: 1rem; overflow-x: auto; }
+
+        /* Tabela de Dados Elegante */
+        .elegant-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; background-color: var(--card-bg); }
+        .elegant-table th { background-color: #f9fafb; color: var(--text-dark); padding: 14px 20px; font-weight: 600; border-bottom: 2px solid var(--border); letter-spacing: 0.3px; }
+        .elegant-table td { padding: 14px 20px; border-bottom: 1px solid var(--border); color: var(--text-dark); vertical-align: middle; }
+        .elegant-table tr:last-child td { border-bottom: none; }
+        .elegant-table tr:hover { background-color: #f9fafb; }
+
+        /* Botões Modernos de Ações na Tabela */
+        .action-buttons { display: flex; gap: 8px; }
+        .btn-action { background: none; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+        .btn-action svg { width: 16px; height: 16px; stroke-width: 2; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
+        .btn-edit { background-color: #eff6ff; color: #3b82f6; }
+        .btn-edit:hover { background-color: #dbeafe; }
+        .btn-delete { background-color: #fef2f2; color: #ef4444; }
+        .btn-delete:hover { background-color: #fee2e2; }
+
+        /* Modals Gerais */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.6); display: none; justify-content: center; align-items: center; z-index: 999; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-box { background-color: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.95); transition: transform 0.3s ease; overflow: hidden; }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 1.25rem; color: var(--text-dark); font-weight: 600; }
+        .btn-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s, color 0.2s; }
+        .btn-close:hover { background-color: #f3f4f6; color: #ef4444; }
+        .modal-body { padding: 24px; }
+        .modal-footer { padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+        
+        .btn-cancelar { background-color: #ffffff; color: var(--text-dark); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        .btn-cancelar:hover { background-color: #f3f4f6; }
+        
+        .btn-salvar { background-color: var(--primary); color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
+        .btn-salvar:hover { background-color: var(--primary-hover); }
+        .btn-salvar:disabled { background-color: #9ca3af; cursor: not-allowed; }
+
+        .btn-perigo { background-color: var(--danger); color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        .btn-perigo:hover { background-color: var(--danger-hover); }
+    </style>
+</head>
+<body>
+
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+            </div>
+            
+            <div id="view-login">
+                <h1>Vizela Elétrica</h1>
+                <p>Faça login para aceder ao sistema</p>
+                
+                <form class="auth-form" onsubmit="loginComEmail(event)">
+                    <div class="auth-input-group">
+                        <label for="login-email">Email</label>
+                        <div class="auth-input-wrapper">
+                            <input type="email" id="login-email" class="auth-input" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="login-senha">Senha</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="login-senha" class="auth-input pwd-field" placeholder="••••••••" required>
+                            <button type="button" class="eye-btn" onclick="togglePassword('login-senha', 'icon-login')" title="Mostrar Senha">
+                                <svg id="icon-login" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-auth" id="btn-login-email">Entrar</button>
+                </form>
+
+                <div class="divider">ou</div>
+                
+                <button class="btn-google" onclick="loginComGoogle()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
+                    Entrar com Google
+                </button>
+
+                <div class="auth-switch">
+                    Não tem conta? <a class="auth-link" onclick="alternarVista('register')">Registe-se aqui</a>
+                </div>
+            </div>
+
+            <div id="view-register">
+                <h1>Criar Conta</h1>
+                <p>Registe-se para aceder ao sistema</p>
+                
+                <form class="auth-form" onsubmit="registrarComEmail(event)">
+                    <div class="auth-input-group">
+                        <label for="reg-email">Email</label>
+                        <div class="auth-input-wrapper">
+                            <input type="email" id="reg-email" class="auth-input" placeholder="seu@email.com" required>
+                        </div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="reg-senha">Senha</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="reg-senha" class="auth-input pwd-field" placeholder="Mínimo 6 caracteres" required minlength="6">
+                            <button type="button" class="eye-btn" onclick="togglePassword('reg-senha', 'icon-reg1')" title="Mostrar Senha">
+                                <svg id="icon-reg1" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="auth-input-group">
+                        <label for="reg-senha-conf">Confirmar Senha</label>
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="reg-senha-conf" class="auth-input pwd-field" placeholder="Repita a senha" required minlength="6">
+                            <button type="button" class="eye-btn" onclick="togglePassword('reg-senha-conf', 'icon-reg2')" title="Mostrar Senha">
+                                <svg id="icon-reg2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-auth" id="btn-reg-email">Registar e Enviar Email</button>
+                </form>
+
+                <div class="auth-switch">
+                    Já tem conta? <a class="auth-link" onclick="alternarVista('login')">Faça Login</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <svg style="width: 24px; height: 24px; stroke: var(--primary); stroke-width: 2.5; fill: none; flex-shrink: 0;" viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                Vizela Elétrica
+            </div>
+            <div class="menu-container">
+                <button class="menu-btn active" onclick="selectCategory('Tabelas', this)">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabelas
+                </button>
+                <button class="menu-btn" onclick="selectCategory('Documentos', this)">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Documentos
+                </button>
+                <button class="menu-btn" onclick="selectCategory('Consultas', this)">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Consultas
+                </button>
+                <button class="menu-btn" onclick="selectCategory('Configurações', this)">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Configurações
+                </button>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header>
+                <div class="header-left">
+                    <button class="hamburger-btn" onclick="toggleDropdown(event)" title="Ver abas e subdivisões">
+                        <span></span><span></span><span></span>
+                    </button>
+                    <h1 class="category-title">
+                        <span id="main-category-title">Tabelas</span>
+                        <span class="subview-indicator">/</span>
+                        <span id="sub-category-title" class="subview-indicator" style="font-weight: 500; color: var(--text-dark);">Entidades</span>
+                        <span class="subview-indicator">></span>
+                        <span id="subview-title" class="subview-indicator">Clientes</span>
+                    </h1>
+                </div>
+                <div class="header-right">
+                    <button class="btn-cadastrar" onclick="acionarCadastro()">
+                        <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar
+                    </button>
+                    <button class="btn-logout" onclick="fazerLogout()" title="Sair do Sistema">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Sair
+                    </button>
+                </div>
+            </header>
+
+            <div class="dropdown-menu" id="options-dropdown"></div>
+
+            <div class="content-area">
+                <div class="view-card" id="content-display">
+                    Selecione uma ação no menu hambúrguer para gerenciar os dados.
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="modal-cadastro">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 id="modal-titulo">Novo Registo</h2>
+                <button class="btn-close" onclick="fecharModal()" title="Fechar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="form-cadastro" onsubmit="salvarDadosDb(event)">
+                    <div class="form-group">
+                        <label for="nome">Nome</label>
+                        <input type="text" id="nome" class="form-control" placeholder="Introduza o nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="morada">Morada</label>
+                        <input type="text" id="morada" class="form-control" placeholder="Introduza a morada" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="codigo-postal">Código postal</label>
+                        <input type="text" id="codigo-postal" class="form-control" placeholder="Ex: 1000-001" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefone">Telefone</label>
+                        <input type="tel" id="telefone" class="form-control" placeholder="Introduza o contacto telefónico" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="nif">NIF</label>
+                        <input type="text" id="nif" class="form-control" placeholder="Número de Identificação Fiscal (9 dígitos)" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancelar" type="button" onclick="fecharModal()">Cancelar</button>
+                <button class="btn-salvar" type="submit" form="form-cadastro" id="btn-guardar-texto">Guardar Registo</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-exclusao">
+        <div class="modal-box" style="max-width: 400px; text-align: center;">
+            <div class="modal-body" style="padding: 40px 24px 24px 24px;">
+                <div style="width: 64px; height: 64px; background-color: #fee2e2; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px auto;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                </div>
+                <h2 style="font-size: 1.25rem; color: var(--text-dark); font-weight: 600; margin-bottom: 8px;">Atenção!</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Tem a certeza que deseja eliminar este registo permanentemente? Esta ação não pode ser desfeita.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; background: none; border-top: none;">
+                <button class="btn-cancelar" style="width: 100%;" onclick="fecharModalExclusao()">Cancelar</button>
+                <button class="btn-perigo" style="width: 100%;" id="btn-confirmar-exclusao" onclick="confirmarExclusao()">Sim, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-alerta">
+        <div class="modal-box" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2 id="alerta-titulo">Notificação</h2>
+                <button class="btn-close" onclick="fecharAlerta()" title="Fechar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="alerta-mensagem" style="text-align: center; color: var(--text-dark); padding: 8px 0; font-size: 1rem;">
+                Mensagem informativa.
+            </div>
+            <div class="modal-footer" style="justify-content: center; background: none; border-top: none; padding-top: 0;">
+                <button class="btn-salvar" style="padding: 8px 24px;" onclick="fecharAlerta()">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        // Importações do Firebase Auth (Adicionado Registo por Email e Verificação)
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyA0DDj72CDHc4gbjYLvee21vXAb1xysKoY",
+            authDomain: "vizela-eletrica.firebaseapp.com",
+            projectId: "vizela-eletrica",
+            storageBucket: "vizela-eletrica.firebasestorage.app",
+            messagingSenderId: "580578429133",
+            appId: "1:580578429133:web:d2e2dbbbfa9898e7eb4184"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        const sistemaModulos = {
+            'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias & Artigos', 'Artigos Fabricados', 'Armazéns', 'Propriedades', 'Tabelas de Preços'], 'Stocks': ['Controlo de stocks', 'Contagens de Existências'] },
+            'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Notas de Débito'], 'Transporte': ['Guia de Remessa', 'Guia de Transporte'], 'Outros Documentos': ['Notas de Encomenda', 'Orçamentos', 'Fichas de Serviço', 'Faturas pro forma', 'Faturas de Consignação', 'Avenças', 'Documentos Internos', 'Consultas de mesa'], 'Liquidações': ['Recibos', 'Notas de Liquidação', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Simplificadas', 'Notas de Crédito', 'Notas de Débito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Vendedores': ['Guia de Pagamento'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
+            'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
+            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Impostos e retenções': ['Impostos e taxas', 'Retenções'], 'Agenda': ['Eventos Programados'], 'Referências Multibanco': ['Consultar', 'Configurar'], 'Mensagem SMS': ['Consultar', 'Configurar'], 'Assinaturas Digitais': ['Consultar', 'Configurar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas', 'Zonas Geográficas', 'Unidades de Medida', 'Mensagens Predefinidas'] }
+        };
+
+        let categoriaAtiva = 'Tabelas';
+        let dadosCadastrados = { 'Clientes': [], 'Fornecedores': [], 'Vendedores': [] };
+        let idSendoEditado = null;
+        let idParaExcluir = null;
+        let listenersAtivos = [];
+
+        /* ---------------- GESTÃO DE INTERFACE LOGIN/REGISTO ---------------- */
+        window.alternarVista = function(vista) {
+            const login = document.getElementById('view-login');
+            const register = document.getElementById('view-register');
+            if (vista === 'register') {
+                login.style.display = 'none';
+                register.style.display = 'block';
+            } else {
+                register.style.display = 'none';
+                login.style.display = 'block';
+            }
+        }
+
+        window.togglePassword = function(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === "password") {
+                input.type = "text";
+                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+            } else {
+                input.type = "password";
+                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+            }
+        }
+
+        /* ---------------- GESTÃO DE AUTENTICAÇÃO (LOGIN/REGISTO) ---------------- */
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                // Checa se o email está verificado (Google sempre é true)
+                if (user.emailVerified) {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-screen').style.display = 'flex';
+                    iniciarListenersBancoDeDados();
+                } else {
+                    // Desloga caso o email não esteja verificado ainda
+                    await signOut(auth);
+                    document.getElementById('login-screen').style.display = 'flex';
+                    document.getElementById('app-screen').style.display = 'none';
+                    pararListenersBancoDeDados();
+                }
+            } else {
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('app-screen').style.display = 'none';
+                pararListenersBancoDeDados();
+            }
+        });
+
+        window.loginComEmail = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-senha').value;
+            const btn = document.getElementById('btn-login-email');
+            
+            btn.disabled = true; btn.innerText = "A entrar...";
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, pass);
+                if (!userCredential.user.emailVerified) {
+                    await signOut(auth);
+                    mostrarAlertaCustomizado("Por favor, verifique a sua caixa de entrada ou spam e clique no link de confirmação para ativar o seu acesso.", "Acesso Bloqueado");
+                }
+            } catch (error) {
+                console.error(error);
+                mostrarAlertaCustomizado("Email ou senha inválidos.", "Erro no Login");
+            } finally {
+                btn.disabled = false; btn.innerText = "Entrar";
+            }
+        }
+
+        window.registrarComEmail = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('reg-email').value;
+            const pass = document.getElementById('reg-senha').value;
+            const passConf = document.getElementById('reg-senha-conf').value;
+            const btn = document.getElementById('btn-reg-email');
+
+            if (pass !== passConf) {
+                mostrarAlertaCustomizado("As senhas não coincidem. Verifique e tente novamente.", "Atenção");
+                return;
+            }
+
+            btn.disabled = true; btn.innerText = "A processar...";
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                await sendEmailVerification(userCredential.user);
+                await signOut(auth); // Força deslogar para obrigar verificação
+                
+                mostrarAlertaCustomizado("Conta criada com sucesso! Enviámos um link de confirmação para o seu email. Por favor, verifique a sua caixa de entrada (ou pasta de spam) para ativar a sua conta.", "Verifique o seu Email");
+                
+                alternarVista('login');
+                document.querySelectorAll('.auth-form').forEach(f => f.reset());
+            } catch (error) {
+                console.error(error);
+                if (error.code === 'auth/email-already-in-use') {
+                    mostrarAlertaCustomizado("Este email já está registado no sistema.", "Erro");
+                } else if (error.code === 'auth/weak-password') {
+                    mostrarAlertaCustomizado("A senha é muito fraca. Deve ter pelo menos 6 caracteres.", "Erro");
+                } else {
+                    mostrarAlertaCustomizado("Ocorreu um erro ao criar a conta. Tente novamente mais tarde.", "Erro");
+                }
+            } finally {
+                btn.disabled = false; btn.innerText = "Registar e Enviar Email";
+            }
+        }
+
+        window.loginComGoogle = function() {
+            signInWithPopup(auth, provider).catch((error) => {
+                mostrarAlertaCustomizado("Erro ao iniciar sessão com o Google.", "Erro de Acesso");
+            });
+        }
+
+        window.fazerLogout = function() {
+            signOut(auth).catch((error) => { mostrarAlertaCustomizado("Erro ao encerrar sessão.", "Erro"); });
+        }
+
+        /* ---------------- GESTÃO DE BANCO DE DADOS EM TEMPO REAL ---------------- */
+
+        function iniciarListenersBancoDeDados() {
+            pararListenersBancoDeDados(); 
+            ['Clientes', 'Fornecedores', 'Vendedores'].forEach(entidade => {
+                const unsub = onSnapshot(collection(db, entidade), (snapshot) => {
+                    dadosCadastrados[entidade] = [];
+                    snapshot.forEach((doc) => {
+                        dadosCadastrados[entidade].push({ id: doc.id, ...doc.data() });
+                    });
+                    const abaAtual = document.getElementById('subview-title').innerText;
+                    if (abaAtual === entidade) { renderTabela(entidade); }
+                }, (error) => {
+                    console.error(`Permissões negadas para ${entidade}. Verifique as regras do Firestore.`);
+                });
+                listenersAtivos.push(unsub);
+            });
+        }
+
+        function pararListenersBancoDeDados() {
+            listenersAtivos.forEach(unsub => unsub());
+            listenersAtivos = [];
+        }
+
+        /* ---------------- NAVEGAÇÃO DO SISTEMA ---------------- */
+
+        window.selectCategory = function(categoryName, element) {
+            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            categoriaAtiva = categoryName;
+            document.getElementById('main-category-title').innerText = categoryName;
+            const primeiroSubtitulo = Object.keys(sistemaModulos[categoryName])[0];
+            const primeiraAba = sistemaModulos[categoryName][primeiroSubtitulo][0];
+            updateContentView(categoryName, primeiroSubtitulo, primeiraAba);
+            document.getElementById('options-dropdown').classList.remove('active');
+        }
+
+        window.toggleDropdown = function(event) {
+            event.stopPropagation();
+            const dropdown = document.getElementById('options-dropdown');
+            renderDropdownStructure();
+            dropdown.classList.toggle('active');
+        }
+
+        function renderDropdownStructure() {
+            const dropdown = document.getElementById('options-dropdown');
+            dropdown.innerHTML = '';
+            const subCategorias = sistemaModulos[categoriaAtiva];
+            const abaAtual = document.getElementById('subview-title').innerText;
+
+            for (const subTitulo in subCategorias) {
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'dropdown-section-title';
+                titleDiv.innerText = subTitulo;
+                dropdown.appendChild(titleDiv);
+
+                subCategorias[subTitulo].forEach(aba => {
+                    const btn = document.createElement('button');
+                    btn.className = `dropdown-item ${aba === abaAtual ? 'active' : ''}`;
+                    btn.innerText = aba;
+                    btn.onclick = function() {
+                        updateContentView(categoriaAtiva, subTitulo, aba);
+                        dropdown.classList.remove('active');
+                    };
+                    dropdown.appendChild(btn);
+                });
+            }
+        }
+
+        function updateContentView(categoria, subtitulo, aba) {
+            document.getElementById('sub-category-title').innerText = subtitulo;
+            document.getElementById('subview-title').innerText = aba;
+            const display = document.getElementById('content-display');
+            
+            if (['Clientes', 'Fornecedores', 'Vendedores'].includes(aba)) {
+                renderTabela(aba);
+            } else {
+                display.style.textAlign = 'center';
+                display.style.padding = '40px';
+                display.innerHTML = `${categoria} > ${subtitulo} > Tela de ${aba} vazia, pronta para criação.`;
+            }
+        }
+
+        function renderTabela(aba) {
+            const display = document.getElementById('content-display');
+            const listaDados = dadosCadastrados[aba];
+            
+            if (!listaDados || listaDados.length === 0) {
+                display.style.textAlign = 'center';
+                display.style.padding = '40px';
+                let textoRegisto = aba === 'Clientes' ? 'Nenhum cliente cadastrado' : (aba === 'Fornecedores' ? 'Nenhum fornecedor cadastrado' : 'Nenhum vendedor cadastrado');
+                display.innerHTML = `<div style="color: var(--text-muted);">${textoRegisto}. Clique no botão <strong>+ Cadastrar</strong> no cabeçalho para adicionar dados.</div>`;
+            } else {
+                display.style.textAlign = 'left';
+                display.style.padding = '0';
+                let tableHTML = `
+                    <table class="elegant-table">
+                        <thead>
+                            <tr><th>Nome</th><th>Morada</th><th>Código Postal</th><th>Telefone</th><th>NIF</th><th>Ações</th></tr>
+                        </thead>
+                        <tbody>
+                `;
+                listaDados.forEach(item => {
+                    tableHTML += `
+                        <tr>
+                            <td>${escapeHTML(item.nome || '')}</td>
+                            <td>${escapeHTML(item.morada || '')}</td>
+                            <td>${escapeHTML(item.codigoPostal || '')}</td>
+                            <td>${escapeHTML(item.telefone || '')}</td>
+                            <td>${escapeHTML(item.nif || '')}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-action btn-edit" onclick="abrirEdicao('${item.id}')" title="Editar"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button>
+                                    <button class="btn-action btn-delete" onclick="prepararExclusao('${item.id}')" title="Eliminar"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tableHTML += `</tbody></table>`;
+                display.innerHTML = tableHTML;
+            }
+        }
+
+        function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
+
+        /* ---------------- FUNÇÕES CRUD E MODAIS ---------------- */
+
+        window.acionarCadastro = function() {
+            idSendoEditado = null;
+            document.getElementById('form-cadastro').reset();
+            const abaAtual = document.getElementById('subview-title').innerText;
+            if (['Clientes', 'Fornecedores', 'Vendedores'].includes(abaAtual)) {
+                let singular = abaAtual === 'Clientes' ? 'Cliente' : (abaAtual === 'Fornecedores' ? 'Fornecedor' : 'Vendedor');
+                document.getElementById('modal-titulo').innerText = `Novo ${singular}`;
+                document.getElementById('btn-guardar-texto').innerText = `Guardar ${singular}`;
+                abrirModal();
+            } else {
+                mostrarAlertaCustomizado(`A funcionalidade de cadastro para a aba "${abaAtual}" será implementada em breve.`, 'Aviso');
+            }
+        }
+
+        window.abrirEdicao = function(id) {
+            const abaAtual = document.getElementById('subview-title').innerText;
+            const item = dadosCadastrados[abaAtual].find(d => d.id === id);
+            if(!item) return;
+
+            idSendoEditado = id;
+            document.getElementById('nome').value = item.nome || '';
+            document.getElementById('morada').value = item.morada || '';
+            document.getElementById('codigo-postal').value = item.codigoPostal || '';
+            document.getElementById('telefone').value = item.telefone || '';
+            document.getElementById('nif').value = item.nif || '';
+
+            let singular = abaAtual === 'Clientes' ? 'Cliente' : (abaAtual === 'Fornecedores' ? 'Fornecedor' : 'Vendedor');
+            document.getElementById('modal-titulo').innerText = `Editar ${singular}`;
+            document.getElementById('btn-guardar-texto').innerText = `Atualizar ${singular}`;
+            abrirModal();
+        }
+
+        window.prepararExclusao = function(id) {
+            idParaExcluir = id;
+            const modal = document.getElementById('modal-exclusao');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+        }
+
+        window.fecharModalExclusao = function() {
+            const modal = document.getElementById('modal-exclusao');
+            modal.classList.remove('active');
+            setTimeout(() => { modal.style.display = 'none'; idParaExcluir = null; }, 300);
+        }
+
+        window.confirmarExclusao = async function() {
+            if (!idParaExcluir) return;
+            const btnConfirmar = document.getElementById('btn-confirmar-exclusao');
+            btnConfirmar.disabled = true; btnConfirmar.innerText = "A eliminar...";
+            const abaAtual = document.getElementById('subview-title').innerText;
+            try {
+                await deleteDoc(doc(db, abaAtual, idParaExcluir));
+                fecharModalExclusao();
+                mostrarAlertaCustomizado('Registo eliminado com sucesso!', 'Sucesso');
+            } catch (error) {
+                mostrarAlertaCustomizado('Não foi possível eliminar o registo.', 'Erro');
+            } finally {
+                btnConfirmar.disabled = false; btnConfirmar.innerText = "Sim, Eliminar";
+            }
+        }
+
+        window.salvarDadosDb = async function(event) {
+            event.preventDefault();
+            const btnSalvar = document.getElementById('btn-guardar-texto');
+            btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
+
+            const abaAtual = document.getElementById('subview-title').innerText;
+            let singular = abaAtual === 'Clientes' ? 'Cliente' : (abaAtual === 'Fornecedores' ? 'Fornecedor' : 'Vendedor');
+            const dadosSubmetidos = {
+                nome: document.getElementById('nome').value,
+                morada: document.getElementById('morada').value,
+                codigoPostal: document.getElementById('codigo-postal').value,
+                telefone: document.getElementById('telefone').value,
+                nif: document.getElementById('nif').value,
+                atualizadoEm: new Date().toISOString()
+            };
+            
+            try {
+                if (idSendoEditado) {
+                    await updateDoc(doc(db, abaAtual, idSendoEditado), dadosSubmetidos);
+                    mostrarAlertaCustomizado(`${singular} atualizado com sucesso!`, 'Sucesso');
+                } else {
+                    dadosSubmetidos.criadoEm = new Date().toISOString();
+                    await addDoc(collection(db, abaAtual), dadosSubmetidos);
+                    mostrarAlertaCustomizado(`${singular} cadastrado com sucesso!`, 'Sucesso');
+                }
+                document.getElementById('form-cadastro').reset();
+                fecharModal();
+            } catch (error) {
+                mostrarAlertaCustomizado("Erro ao salvar! Tente novamente.", "Erro");
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = idSendoEditado ? `Atualizar ${singular}` : `Guardar ${singular}`;
+            }
+        }
+
+        window.abrirModal = function() {
+            const modal = document.getElementById('modal-cadastro');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+        }
+
+        window.fecharModal = function() {
+            const modal = document.getElementById('modal-cadastro');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none'; document.getElementById('form-cadastro').reset(); idSendoEditado = null; document.getElementById('btn-guardar-texto').disabled = false;
+            }, 300);
+        }
+
+        window.mostrarAlertaCustomizado = function(mensagem, titulo = 'Notificação') {
+            document.getElementById('alerta-titulo').innerText = titulo;
+            document.getElementById('alerta-mensagem').innerText = mensagem;
+            const modalAlerta = document.getElementById('modal-alerta');
+            modalAlerta.style.display = 'flex';
+            setTimeout(() => { modalAlerta.classList.add('active'); }, 10);
+        }
+
+        window.fecharAlerta = function() {
+            const modalAlerta = document.getElementById('modal-alerta');
+            modalAlerta.classList.remove('active');
+            setTimeout(() => { modalAlerta.style.display = 'none'; }, 300);
+        }
+
+        /* ---------------- EVENTOS GLOBAIS E MÁSCARAS ---------------- */
+
+        document.getElementById('codigo-postal').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, ''); 
+            let formattedValue = '';
+            if (value.length > 0) { formattedValue = value.substring(0, 4); }
+            if (value.length > 4) { formattedValue += '-' + value.substring(4, 7); }
+            e.target.value = formattedValue;
+        });
+
+        document.getElementById('nif').addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, ''); e.target.value = value.substring(0, 9);
+        });
+
+        document.addEventListener('click', (event) => {
+            const dropdown = document.getElementById('options-dropdown');
+            if (dropdown && dropdown.classList.contains('active') && !event.target.closest('.header-left')) { dropdown.classList.remove('active'); }
+            
+            const clickFora = [ { overlayId: 'modal-cadastro', closeFunc: fecharModal }, { overlayId: 'modal-exclusao', closeFunc: fecharModalExclusao }, { overlayId: 'modal-alerta', closeFunc: fecharAlerta } ];
+            clickFora.forEach(m => { const overlay = document.getElementById(m.overlayId); if (overlay && event.target === overlay) { m.closeFunc(); } });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => { renderDropdownStructure(); });
+    </script>
+</body>
+</html>
