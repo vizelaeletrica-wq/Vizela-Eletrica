@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Vizela Elétrica - Sistema de Gestão</title>
     <style>
         :root {
@@ -24,7 +24,7 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
 
-        body { background-color: var(--bg-main); overflow: hidden; height: 100vh; }
+        body { background-color: var(--bg-main); overflow: hidden; height: 100vh; width: 100vw; }
 
         /* ================= TELA DE LOGIN & REGISTO ================= */
         #login-screen {
@@ -40,7 +40,7 @@
             padding: 40px;
             border-radius: 16px;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
-            width: 100%; max-width: 420px;
+            width: 90%; max-width: 420px;
             text-align: center;
             border: 1px solid var(--border);
             position: relative;
@@ -52,18 +52,15 @@
         .login-card h1 { color: var(--text-dark); font-size: 1.75rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }
         .login-card p { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px; }
 
-        /* Vistas de Login e Registo */
         #view-login, #view-register { transition: opacity 0.3s ease; }
         #view-register { display: none; }
 
-        /* Estilos dos Formulários de Autenticação */
         .auth-form { text-align: left; }
         .auth-input-group { margin-bottom: 16px; position: relative; }
         .auth-input-group label { display: block; font-size: 0.85rem; font-weight: 500; color: var(--text-dark); margin-bottom: 6px; }
         .auth-input-wrapper { position: relative; display: flex; align-items: center; }
         .auth-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: var(--text-dark); transition: all 0.2s; }
         .auth-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); padding-right: 40px; }
-        /* Adiciona espaço extra na direita para a senha não sobrepor o olho */
         input[type="password"], input.pwd-field { padding-right: 40px; } 
         
         .eye-btn { position: absolute; right: 10px; background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; }
@@ -87,40 +84,41 @@
         .auth-link:hover { text-decoration: underline; }
 
         /* ================= APP SCREEN (SISTEMA) ================= */
-        #app-screen { display: none; height: 100vh; width: 100vw; }
+        #app-screen { display: none; height: 100vh; width: 100vw; flex-direction: row; }
 
         /* Barra Lateral */
-        .sidebar { width: 240px; background-color: var(--bg-sidebar); color: var(--text-sidebar); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid #1f2937; }
+        .sidebar { width: 240px; background-color: var(--bg-sidebar); color: var(--text-sidebar); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid #1f2937; transition: all 0.3s ease; z-index: 50; }
         .sidebar::-webkit-scrollbar { width: 6px; }
         .sidebar::-webkit-scrollbar-thumb { background-color: #374151; border-radius: 4px; }
         .sidebar-header { padding: 24px 20px; font-size: 1.25rem; font-weight: 700; color: var(--text-sidebar-active); border-bottom: 1px solid #1f2937; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
-        .menu-container { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
-        .menu-btn { width: 100%; padding: 12px 20px; background: none; border: none; color: var(--text-sidebar); text-align: left; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; }
+        .menu-container { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+        .menu-btn { width: 100%; padding: 12px 20px; background: none; border: none; color: var(--text-sidebar); text-align: left; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; position: relative; }
         .menu-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; transition: stroke 0.2s ease; }
         .menu-btn:hover { background-color: var(--bg-sidebar-hover); color: var(--text-sidebar-active); }
         .menu-btn.active { background-color: var(--bg-sidebar-active); color: var(--text-sidebar-active); font-weight: 600; border-left: 4px solid var(--primary); padding-left: 16px; }
 
         /* Área de Conteúdo */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; background-color: var(--bg-main); }
+        header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .header-left { display: flex; align-items: center; gap: 16px; }
-        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
 
-        /* Botões do Cabeçalho */
-        .btn-cadastrar { background-color: var(--primary); color: #ffffff; border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s ease; }
+        .btn-cadastrar { background-color: var(--primary); color: #ffffff; border: none; padding: 10px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); transition: all 0.2s ease; }
         .btn-cadastrar:hover { background-color: var(--primary-hover); box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3); transform: translateY(-1px); }
         .btn-cadastrar svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; }
 
-        .btn-logout { background-color: #f3f4f6; color: var(--text-dark); border: 1px solid var(--border); padding: 9px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
-        .btn-logout:hover { background-color: #e5e7eb; color: var(--danger); }
-        .btn-logout svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
+        .btn-icon-secundario { background-color: #f3f4f6; color: var(--text-dark); border: 1px solid var(--border); padding: 9px 12px; border-radius: 8px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; }
+        .btn-icon-secundario:hover { background-color: #e5e7eb; }
+        .btn-icon-secundario svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;}
+        
+        .btn-logout:hover { color: var(--danger); border-color: #fca5a5; background-color: #fef2f2; }
 
         .hamburger-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 22px; height: 16px; padding: 0; }
         .hamburger-btn span { display: block; height: 2px; width: 100%; background-color: var(--text-dark); border-radius: 2px; transition: all 0.2s ease; }
         .hamburger-btn:hover span { background-color: var(--primary); }
 
-        .category-title { color: var(--text-dark); font-size: 1.4rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .subview-indicator { color: var(--text-muted); font-size: 1.1rem; font-weight: 400; }
+        .category-title { color: var(--text-dark); font-size: 1.3rem; font-weight: 600; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .subview-indicator { color: var(--text-muted); font-size: 1rem; font-weight: 400; }
 
         /* Dropdown */
         .dropdown-menu { position: absolute; top: 70px; left: 40px; background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); width: 320px; max-height: 500px; overflow-y: auto; display: none; z-index: 100; animation: slideDown 0.15s ease; padding: 0; }
@@ -139,17 +137,15 @@
         .dropdown-item.active { background-color: #eff6ff; color: var(--primary); font-weight: 600; }
         .dropdown-item.active::before { background-color: var(--primary); width: 6px; height: 6px; left: 19px; }
 
-        .content-area { padding: 40px; overflow-y: auto; flex: 1; }
-        .view-card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 40px; text-align: center; color: var(--text-muted); font-size: 1rem; overflow-x: auto; }
+        .content-area { padding: 30px 40px; overflow-y: auto; flex: 1; }
+        .view-card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 30px; text-align: center; color: var(--text-muted); font-size: 1rem; overflow-x: auto; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); }
 
-        /* Tabela de Dados Elegante */
-        .elegant-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; background-color: var(--card-bg); }
+        .elegant-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; background-color: var(--card-bg); min-width: 600px; }
         .elegant-table th { background-color: #f9fafb; color: var(--text-dark); padding: 14px 20px; font-weight: 600; border-bottom: 2px solid var(--border); letter-spacing: 0.3px; }
         .elegant-table td { padding: 14px 20px; border-bottom: 1px solid var(--border); color: var(--text-dark); vertical-align: middle; }
         .elegant-table tr:last-child td { border-bottom: none; }
         .elegant-table tr:hover { background-color: #f9fafb; }
 
-        /* Botões Modernos de Ações na Tabela */
         .action-buttons { display: flex; gap: 8px; }
         .btn-action { background: none; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
         .btn-action svg { width: 16px; height: 16px; stroke-width: 2; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
@@ -158,16 +154,26 @@
         .btn-delete { background-color: #fef2f2; color: #ef4444; }
         .btn-delete:hover { background-color: #fee2e2; }
 
-        /* Modals Gerais */
+        /* Modals e Formulários (Correção Aplicada) */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(17, 24, 39, 0.6); display: none; justify-content: center; align-items: center; z-index: 999; opacity: 0; transition: opacity 0.3s ease; }
         .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-box { background-color: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.95); transition: transform 0.3s ease; overflow: hidden; }
+        .modal-box { background-color: var(--card-bg); width: 95%; max-width: 500px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.95); transition: transform 0.3s ease; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; }
         .modal-overlay.active .modal-box { transform: scale(1); }
+        
         .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { font-size: 1.25rem; color: var(--text-dark); font-weight: 600; }
         .btn-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s, color 0.2s; }
         .btn-close:hover { background-color: #f3f4f6; color: #ef4444; }
-        .modal-body { padding: 24px; }
+        
+        .modal-body { padding: 24px; overflow-y: auto; }
+        
+        /* ATUALIZAÇÃO CIRÚRGICA: Estilos do Formulário */
+        .form-group { margin-bottom: 16px; text-align: left; }
+        .form-group label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: var(--text-dark); background-color: #ffffff; transition: all 0.2s; box-sizing: border-box; }
+        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .form-control::placeholder { color: #9ca3af; }
+
         .modal-footer { padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
         
         .btn-cancelar { background-color: #ffffff; color: var(--text-dark); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
@@ -179,6 +185,36 @@
 
         .btn-perigo { background-color: var(--danger); color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
         .btn-perigo:hover { background-color: var(--danger-hover); }
+
+        /* ================= RESPONSIVIDADE (MOBILE) ================= */
+        @media (max-width: 768px) {
+            #app-screen { flex-direction: column; }
+            
+            /* Sidebar vira Bottom Nav Bar */
+            .sidebar { position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; flex-direction: row; border-right: none; border-top: 1px solid var(--border); box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.05); }
+            .sidebar-header { display: none; }
+            .menu-container { flex-direction: row; padding: 0; justify-content: space-around; align-items: center; }
+            .menu-btn { width: auto; padding: 10px 16px; flex-direction: column; gap: 4px; justify-content: center; border-left: none; }
+            .menu-btn.active { border-left: none; padding-left: 16px; border-bottom: 3px solid var(--primary); background: none; }
+            .menu-btn .menu-text { display: none; } /* Oculta texto, mostra só ícone */
+            .menu-btn svg { margin: 0; width: 22px; height: 22px; }
+            
+            /* Ajustes Gerais */
+            .main-content { height: calc(100vh - 65px); }
+            header { padding: 15px 20px; }
+            .dropdown-menu { left: 20px; width: calc(100% - 40px); }
+            .content-area { padding: 20px; }
+            .view-card { padding: 16px; }
+            
+            /* Oculta textos e botões secundários no cabeçalho */
+            .header-right span.txt-btn { display: none; }
+            #btn-fullscreen { display: none; } /* Oculto no celular */
+            #sub-category-title, #sub-category-title + .subview-indicator { display: none; } /* Simplifica breadcrumb */
+            .category-title { font-size: 1.1rem; }
+            
+            .btn-cadastrar { padding: 8px 12px; }
+            .btn-icon-secundario { padding: 8px; }
+        }
     </style>
 </head>
 <body>
@@ -273,17 +309,21 @@
                 Vizela Elétrica
             </div>
             <div class="menu-container">
-                <button class="menu-btn active" onclick="selectCategory('Tabelas', this)">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabelas
+                <button class="menu-btn active" onclick="selectCategory('Tabelas', this)" title="Tabelas">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> 
+                    <span class="menu-text">Tabelas</span>
                 </button>
-                <button class="menu-btn" onclick="selectCategory('Documentos', this)">
-                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Documentos
+                <button class="menu-btn" onclick="selectCategory('Documentos', this)" title="Documentos">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> 
+                    <span class="menu-text">Documentos</span>
                 </button>
-                <button class="menu-btn" onclick="selectCategory('Consultas', this)">
-                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Consultas
+                <button class="menu-btn" onclick="selectCategory('Consultas', this)" title="Consultas">
+                    <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> 
+                    <span class="menu-text">Consultas</span>
                 </button>
-                <button class="menu-btn" onclick="selectCategory('Configurações', this)">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Configurações
+                <button class="menu-btn" onclick="selectCategory('Configurações', this)" title="Configurações">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> 
+                    <span class="menu-text">Configurações</span>
                 </button>
             </div>
         </nav>
@@ -304,10 +344,16 @@
                 </div>
                 <div class="header-right">
                     <button class="btn-cadastrar" onclick="acionarCadastro()">
-                        <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar
+                        <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> <span class="txt-btn">Cadastrar</span>
                     </button>
-                    <button class="btn-logout" onclick="fazerLogout()" title="Sair do Sistema">
-                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> Sair
+                    <!-- Novo Botão de Tela Cheia -->
+                    <button class="btn-icon-secundario" id="btn-fullscreen" onclick="toggleFullScreen()" title="Expandir Tela">
+                        <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
+                        <span class="txt-btn">Expandir</span>
+                    </button>
+                    <button class="btn-icon-secundario btn-logout" onclick="fazerLogout()" title="Sair do Sistema">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        <span class="txt-btn">Sair</span>
                     </button>
                 </div>
             </header>
@@ -322,6 +368,7 @@
         </main>
     </div>
 
+    <!-- Modal de Cadastro -->
     <div class="modal-overlay" id="modal-cadastro">
         <div class="modal-box">
             <div class="modal-header">
@@ -334,11 +381,11 @@
                 <form id="form-cadastro" onsubmit="salvarDadosDb(event)">
                     <div class="form-group">
                         <label for="nome">Nome</label>
-                        <input type="text" id="nome" class="form-control" placeholder="Introduza o nome" required>
+                        <input type="text" id="nome" class="form-control" placeholder="Introduza o nome completo ou designação social" required>
                     </div>
                     <div class="form-group">
                         <label for="morada">Morada</label>
-                        <input type="text" id="morada" class="form-control" placeholder="Introduza a morada" required>
+                        <input type="text" id="morada" class="form-control" placeholder="Introduza o endereço completo" required>
                     </div>
                     <div class="form-group">
                         <label for="codigo-postal">Código postal</label>
@@ -401,7 +448,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        // Importações do Firebase Auth (Adicionado Registo por Email e Verificação)
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
         const firebaseConfig = {
@@ -431,6 +477,19 @@
         let idParaExcluir = null;
         let listenersAtivos = [];
 
+        /* ---------------- FUNÇÕES DE TELA CHEIA ---------------- */
+        window.toggleFullScreen = function() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.error(`Erro ao tentar entrar em modo tela cheia: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
         /* ---------------- GESTÃO DE INTERFACE LOGIN/REGISTO ---------------- */
         window.alternarVista = function(vista) {
             const login = document.getElementById('view-login');
@@ -456,17 +515,14 @@
             }
         }
 
-        /* ---------------- GESTÃO DE AUTENTICAÇÃO (LOGIN/REGISTO) ---------------- */
-        
+        /* ---------------- GESTÃO DE AUTENTICAÇÃO ---------------- */
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Checa se o email está verificado (Google sempre é true)
                 if (user.emailVerified) {
                     document.getElementById('login-screen').style.display = 'none';
                     document.getElementById('app-screen').style.display = 'flex';
                     iniciarListenersBancoDeDados();
                 } else {
-                    // Desloga caso o email não esteja verificado ainda
                     await signOut(auth);
                     document.getElementById('login-screen').style.display = 'flex';
                     document.getElementById('app-screen').style.display = 'none';
@@ -516,7 +572,7 @@
             try {
                 const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
                 await sendEmailVerification(userCredential.user);
-                await signOut(auth); // Força deslogar para obrigar verificação
+                await signOut(auth); 
                 
                 mostrarAlertaCustomizado("Conta criada com sucesso! Enviámos um link de confirmação para o seu email. Por favor, verifique a sua caixa de entrada (ou pasta de spam) para ativar a sua conta.", "Verifique o seu Email");
                 
@@ -543,11 +599,11 @@
         }
 
         window.fazerLogout = function() {
+            if(document.fullscreenElement) document.exitFullscreen();
             signOut(auth).catch((error) => { mostrarAlertaCustomizado("Erro ao encerrar sessão.", "Erro"); });
         }
 
-        /* ---------------- GESTÃO DE BANCO DE DADOS EM TEMPO REAL ---------------- */
-
+        /* ---------------- GESTÃO DE BANCO DE DADOS ---------------- */
         function iniciarListenersBancoDeDados() {
             pararListenersBancoDeDados(); 
             ['Clientes', 'Fornecedores', 'Vendedores'].forEach(entidade => {
@@ -571,7 +627,6 @@
         }
 
         /* ---------------- NAVEGAÇÃO DO SISTEMA ---------------- */
-
         window.selectCategory = function(categoryName, element) {
             document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
             element.classList.add('active');
@@ -625,7 +680,7 @@
             } else {
                 display.style.textAlign = 'center';
                 display.style.padding = '40px';
-                display.innerHTML = `${categoria} > ${subtitulo} > Tela de ${aba} vazia, pronta para criação.`;
+                display.innerHTML = `<div style="color: var(--text-muted);">${categoria} > ${subtitulo} > Tela de <strong>${aba}</strong> vazia, pronta para criação.</div>`;
             }
         }
 
@@ -673,7 +728,6 @@
         function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
 
         /* ---------------- FUNÇÕES CRUD E MODAIS ---------------- */
-
         window.acionarCadastro = function() {
             idSendoEditado = null;
             document.getElementById('form-cadastro').reset();
@@ -799,7 +853,6 @@
         }
 
         /* ---------------- EVENTOS GLOBAIS E MÁSCARAS ---------------- */
-
         document.getElementById('codigo-postal').addEventListener('input', function (e) {
             let value = e.target.value.replace(/\D/g, ''); 
             let formattedValue = '';
