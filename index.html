@@ -461,6 +461,25 @@
             <div class="modal-footer">
                 <button class="btn-cancelar" type="button" onclick="fecharModal()">Cancelar</button>
                 <button class="btn-salvar" type="submit" form="form-cadastro" id="btn-guardar-texto">Guardar Registo</button>
+                <button class="btn-salvar" type="button" id="btn-avancar-bundle" style="display:none;" onclick="avancarBundle()">Avançar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-nome-conjunto" style="z-index: 1000;">
+        <div class="modal-box" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>Nome do Conjunto</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="nome-conjunto-input">Nome (Pacote/Conjunto)</label>
+                    <input type="text" id="nome-conjunto-input" class="form-control" placeholder="Ex: Kit Cobre Básico">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancelar" onclick="voltarBundle()">Voltar</button>
+                <button class="btn-salvar" id="btn-salvar-bundle-final" onclick="salvarBundleFinal()">Salvar</button>
             </div>
         </div>
     </div>
@@ -521,7 +540,6 @@
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // Estrutura atualizada separando Categorias e Artigos
         const sistemaModulos = {
             'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns', 'Propriedades', 'Tabelas de Preços'], 'Stocks': ['Controlo de stocks', 'Contagens de Existências'] },
             'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Notas de Débito'], 'Transporte': ['Guia de Remessa', 'Guia de Transporte'], 'Outros Documentos': ['Notas de Encomenda', 'Orçamentos', 'Fichas de Serviço', 'Faturas pro forma', 'Faturas de Consignação', 'Avenças', 'Documentos Internos', 'Consultas de mesa'], 'Liquidações': ['Recibos', 'Notas de Liquidação', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Simplificadas', 'Notas de Crédito', 'Notas de Débito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Vendedores': ['Guia de Pagamento'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
@@ -530,10 +548,14 @@
         };
 
         let categoriaAtiva = 'Tabelas';
-        let dadosCadastrados = { 'Clientes': [], 'Fornecedores': [], 'Vendedores': [], 'Categorias': [], 'Artigos': [] };
+        let dadosCadastrados = { 'Clientes': [], 'Fornecedores': [], 'Vendedores': [], 'Categorias': [], 'Artigos': [], 'Artigos Fabricados': [] };
         let idSendoEditado = null;
         let idParaExcluir = null;
         let listenersAtivos = [];
+        
+        // Variaveis Temporárias para o Fluxo do "Artigos Fabricados"
+        let artigosBundleTemp = [];
+        let nomeConjuntoSendoEditado = '';
 
         /* ---------------- GESTÃO DE INTERFACE LOGIN/REGISTO ---------------- */
         window.alternarVista = function(vista) {
@@ -603,7 +625,7 @@
         /* ---------------- GESTÃO DE BANCO DE DADOS EM TEMPO REAL ---------------- */
         function iniciarListenersBancoDeDados() {
             pararListenersBancoDeDados(); 
-            ['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos'].forEach(entidade => {
+            ['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos', 'Artigos Fabricados'].forEach(entidade => {
                 const unsub = onSnapshot(collection(db, entidade), (snapshot) => {
                     dadosCadastrados[entidade] = [];
                     snapshot.forEach((doc) => { dadosCadastrados[entidade].push({ id: doc.id, ...doc.data() }); });
@@ -648,7 +670,7 @@
             document.getElementById('sub-category-title').innerText = subtitulo; document.getElementById('subview-title').innerText = aba;
             const display = document.getElementById('content-display');
             
-            if (['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos'].includes(aba)) {
+            if (['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos', 'Artigos Fabricados'].includes(aba)) {
                 renderTabela(aba);
             } else {
                 display.style.textAlign = 'center'; display.style.padding = '40px';
@@ -656,7 +678,7 @@
             }
         }
 
-        /* ---------------- LÓGICA DE PREÇOS (ARTIGOS) ---------------- */
+        /* ---------------- LÓGICA DE PREÇOS E CONJUNTOS ---------------- */
         window.calcularPrecoFinal = function(index) {
             const custo = parseFloat(document.getElementById(`custo-${index}`).value) || 0;
             const margem = parseFloat(document.getElementById(`margem-${index}`).value) || 0;
@@ -668,6 +690,102 @@
             if(event.target.closest('.action-buttons')) return;
             const tr = document.getElementById(id);
             if(tr) tr.classList.toggle('active');
+        }
+
+        // Funções específicas do Workflow Artigos Fabricados
+        window.mostrarPrecosBundle = function(artigoId) {
+            const container = document.getElementById('area-precos-bundle');
+            if(!artigoId) { container.innerHTML = ''; return; }
+            const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
+            if(!artigo || !artigo.precos) return;
+
+            let html = `<table class="inner-table" style="cursor: pointer; margin-top: 10px;">
+                <tr><th colspan="4" style="text-align:center; background-color: #fef3c7; color: #d97706; padding: 6px;">Clique na linha do preço desejado para adicionar ao conjunto</th></tr>
+                <tr><th>Tabela</th><th>Custo (€)</th><th>Margem (%)</th><th>Preço Venda (€)</th></tr>`;
+            
+            artigo.precos.forEach((p, idx) => {
+                let final = p.custo + (p.custo * (p.margem / 100));
+                html += `<tr class="clickable-row" onclick="escolherPrecoBundle('${artigo.id}', ${idx}, ${p.custo})">
+                    <td>Preço ${idx+1}</td><td>${p.custo.toFixed(2)}</td><td>${p.margem.toFixed(2)}</td><td>${final.toFixed(2)}</td>
+                </tr>`;
+            });
+            html += `</table>`;
+            container.innerHTML = html;
+        }
+
+        window.escolherPrecoBundle = function(artigoId, tabelaIndex, custo) {
+            const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
+            artigosBundleTemp.push({ id: artigo.id, codigo: artigo.codigo, categoria: artigo.categoria, tabelaIndex: tabelaIndex, custo: custo });
+            
+            document.getElementById('select-artigo-bundle').value = '';
+            document.getElementById('area-precos-bundle').innerHTML = '';
+            renderListaBundle();
+        }
+
+        window.removerDoBundle = function(index) {
+            artigosBundleTemp.splice(index, 1);
+            renderListaBundle();
+        }
+
+        window.renderListaBundle = function() {
+            const container = document.getElementById('area-lista-bundle');
+            if (artigosBundleTemp.length === 0) {
+                container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center;">Nenhum artigo adicionado ao conjunto no momento.</p>`;
+                return;
+            }
+            let html = `<h3 style="font-size: 0.95rem; margin: 15px 0 10px 0; color: var(--primary);">Artigos no Conjunto</h3>
+                <table class="elegant-table" style="font-size: 0.85rem;">
+                <thead><tr><th>Artigo</th><th>Tabela Usada</th><th>Custo (€)</th><th style="width: 50px;">Ação</th></tr></thead><tbody>`;
+            let total = 0;
+            artigosBundleTemp.forEach((item, idx) => {
+                total += item.custo;
+                html += `<tr>
+                    <td>${item.codigo} - ${item.categoria}</td>
+                    <td>Preço ${item.tabelaIndex + 1}</td>
+                    <td>${item.custo.toFixed(2)}</td>
+                    <td><button type="button" class="btn-action btn-delete" style="padding: 4px;" onclick="removerDoBundle(${idx})" title="Remover"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></td>
+                </tr>`;
+            });
+            html += `<tr style="font-weight: 700; background-color: #f9fafb;"><td colspan="2" style="text-align: right;">Custo Total:</td><td colspan="2">${total.toFixed(2)} €</td></tr>`;
+            html += `</tbody></table>`;
+            container.innerHTML = html;
+        }
+
+        window.avancarBundle = function() {
+            if (artigosBundleTemp.length === 0) { mostrarAlertaCustomizado("Adicione pelo menos um artigo ao conjunto antes de avançar.", "Atenção"); return; }
+            document.getElementById('nome-conjunto-input').value = nomeConjuntoSendoEditado || '';
+            const modal = document.getElementById('modal-nome-conjunto');
+            modal.style.display = 'flex'; setTimeout(() => { modal.classList.add('active'); }, 10);
+        }
+
+        window.voltarBundle = function() {
+            const modal = document.getElementById('modal-nome-conjunto');
+            modal.classList.remove('active'); setTimeout(() => { modal.style.display = 'none'; }, 300);
+        }
+
+        window.salvarBundleFinal = async function() {
+            const nome = document.getElementById('nome-conjunto-input').value.trim();
+            if(!nome) { mostrarAlertaCustomizado("Digite um nome para salvar o conjunto.", "Atenção"); return; }
+            
+            const btnSalvar = document.getElementById('btn-salvar-bundle-final');
+            btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
+
+            let custoTotal = artigosBundleTemp.reduce((sum, item) => sum + item.custo, 0);
+
+            const dados = { nome: nome, artigos: artigosBundleTemp, custoTotal: custoTotal, atualizadoEm: new Date().toISOString() };
+
+            try {
+                if (idSendoEditado) {
+                    await updateDoc(doc(db, 'Artigos Fabricados', idSendoEditado), dados);
+                    mostrarAlertaCustomizado("Conjunto atualizado com sucesso!", "Sucesso");
+                } else {
+                    dados.criadoEm = new Date().toISOString();
+                    await addDoc(collection(db, 'Artigos Fabricados'), dados);
+                    mostrarAlertaCustomizado("Conjunto criado com sucesso!", "Sucesso");
+                }
+                fecharModal(); 
+                voltarBundle(); 
+            } catch (error) { mostrarAlertaCustomizado("Erro ao salvar conjunto.", "Erro"); } finally { btnSalvar.disabled = false; btnSalvar.innerText = "Salvar"; }
         }
 
         function renderTabela(aba) {
@@ -718,6 +836,27 @@
                         </tr>
                         <tr id="detalhes-${item.id}" class="details-row"><td colspan="3" style="padding: 10px 20px;">${precosHtml}</td></tr>`;
                     });
+                } else if (aba === 'Artigos Fabricados') {
+                    tableHTML += `<thead><tr><th>Nome do Conjunto</th><th>Custo Total (€)</th><th>Qtd. Artigos</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
+                    listaDados.forEach(item => {
+                        let artigosHtml = '';
+                        if(item.artigos && item.artigos.length > 0) {
+                            artigosHtml = `<table class="inner-table"><tr><th>Artigo</th><th>Tabela Utilizada</th><th>Custo (€)</th></tr>`;
+                            item.artigos.forEach((a) => {
+                                artigosHtml += `<tr><td>${a.codigo} - ${a.categoria}</td><td>Preço ${a.tabelaIndex + 1}</td><td>${a.custo.toFixed(2)}</td></tr>`;
+                            });
+                            artigosHtml += `</table>`;
+                        }
+
+                        tableHTML += `
+                        <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-${item.id}', event)">
+                            <td>${escapeHTML(item.nome || '')}</td>
+                            <td>${(item.custoTotal || 0).toFixed(2)}</td>
+                            <td>${item.artigos ? item.artigos.length : 0}</td>
+                            <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="event.stopPropagation(); abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="event.stopPropagation(); prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
+                        </tr>
+                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="4" style="padding: 10px 20px;">${artigosHtml}</td></tr>`;
+                    });
                 }
                 
                 tableHTML += `</tbody></table>`;
@@ -732,6 +871,15 @@
         function gerarCamposFormulario(abaAtual, item = null) {
             const container = document.getElementById('dynamic-fields');
             let html = '';
+
+            // Toggling modal footer buttons based on the view
+            if (abaAtual === 'Artigos Fabricados') {
+                document.getElementById('btn-guardar-texto').style.display = 'none';
+                document.getElementById('btn-avancar-bundle').style.display = 'flex';
+            } else {
+                document.getElementById('btn-guardar-texto').style.display = 'flex';
+                document.getElementById('btn-avancar-bundle').style.display = 'none';
+            }
 
             if (['Clientes', 'Fornecedores', 'Vendedores'].includes(abaAtual)) {
                 html = `
@@ -769,18 +917,39 @@
                         </div>
                     `;
                 }
+            } else if (abaAtual === 'Artigos Fabricados') {
+                let opcoesArtigos = `<option value="">Buscar pelo Código ou Categoria...</option>`;
+                dadosCadastrados['Artigos'].forEach(art => {
+                    opcoesArtigos += `<option value="${art.id}">${art.codigo} - ${art.categoria}</option>`;
+                });
+
+                html = `
+                    <div class="form-group">
+                        <label for="select-artigo-bundle">Adicionar Artigo ao Conjunto</label>
+                        <select id="select-artigo-bundle" class="form-control" onchange="mostrarPrecosBundle(this.value)">
+                            ${opcoesArtigos}
+                        </select>
+                    </div>
+                    <div id="area-precos-bundle"></div>
+                    <div id="area-lista-bundle" style="margin-top: 20px;"></div>
+                `;
             }
             container.innerHTML = html;
+            
             if (abaAtual === 'Artigos' && item) { for(let i=1; i<=5; i++) calcularPrecoFinal(i); }
+            if (abaAtual === 'Artigos Fabricados') { renderListaBundle(); }
         }
 
         window.acionarCadastro = function() {
             idSendoEditado = null;
+            artigosBundleTemp = []; 
+            nomeConjuntoSendoEditado = '';
+
             const abaAtual = document.getElementById('subview-title').innerText;
-            const permitidos = ['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos'];
+            const permitidos = ['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos', 'Artigos Fabricados'];
             
             if (permitidos.includes(abaAtual)) {
-                let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : abaAtual.slice(0, -1));
+                let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : (abaAtual === 'Artigos Fabricados' ? 'Conjunto' : abaAtual.slice(0, -1)));
                 gerarCamposFormulario(abaAtual);
                 document.getElementById('modal-titulo').innerText = `Novo(a) ${singular}`;
                 document.getElementById('btn-guardar-texto').innerText = `Guardar ${singular}`;
@@ -796,9 +965,14 @@
             if(!item) return;
 
             idSendoEditado = id;
+            if (abaAtual === 'Artigos Fabricados') {
+                artigosBundleTemp = [...item.artigos]; 
+                nomeConjuntoSendoEditado = item.nome;
+            }
+
             gerarCamposFormulario(abaAtual, item);
 
-            let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : abaAtual.slice(0, -1));
+            let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : (abaAtual === 'Artigos Fabricados' ? 'Conjunto' : abaAtual.slice(0, -1)));
             document.getElementById('modal-titulo').innerText = `Editar ${singular}`;
             document.getElementById('btn-guardar-texto').innerText = `Atualizar ${singular}`;
             abrirModal(abaAtual);
@@ -827,9 +1001,11 @@
 
         window.salvarDadosDb = async function(event) {
             event.preventDefault();
+            const abaAtual = document.getElementById('subview-title').innerText;
+            if (abaAtual === 'Artigos Fabricados') return; // Usa outra função para salvar.
+
             const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
 
-            const abaAtual = document.getElementById('subview-title').innerText;
             let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : abaAtual.slice(0, -1));
             let dadosSubmetidos = {};
 
@@ -858,7 +1034,7 @@
         window.abrirModal = function(abaAtual) {
             const modal = document.getElementById('modal-cadastro');
             const box = modal.querySelector('.modal-box');
-            if(abaAtual === 'Artigos') { box.style.maxWidth = '650px'; } else { box.style.maxWidth = '500px'; }
+            if(abaAtual === 'Artigos' || abaAtual === 'Artigos Fabricados') { box.style.maxWidth = '650px'; } else { box.style.maxWidth = '500px'; }
             
             modal.style.display = 'flex';
             setTimeout(() => { modal.classList.add('active'); }, 10);
@@ -866,7 +1042,14 @@
 
         window.fecharModal = function() {
             const modal = document.getElementById('modal-cadastro'); modal.classList.remove('active');
-            setTimeout(() => { modal.style.display = 'none'; document.getElementById('dynamic-fields').innerHTML = ''; idSendoEditado = null; document.getElementById('btn-guardar-texto').disabled = false; }, 300);
+            setTimeout(() => { 
+                modal.style.display = 'none'; 
+                document.getElementById('dynamic-fields').innerHTML = ''; 
+                idSendoEditado = null; 
+                artigosBundleTemp = []; 
+                nomeConjuntoSendoEditado = '';
+                document.getElementById('btn-guardar-texto').disabled = false; 
+            }, 300);
         }
 
         window.mostrarAlertaCustomizado = function(mensagem, titulo = 'Notificação') {
