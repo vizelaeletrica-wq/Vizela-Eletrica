@@ -1,315 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TECNOWATT - Sistema de Gestão</title>
-    <!-- Favicon na aba do navegador -->
     <link rel="icon" type="image/png" href="favicon.png">
-    
-    <style>
-        :root {
-            /* Paleta Preto Fosco do Sistema */
-            --bg-sidebar: #1a1a1a; 
-            --bg-sidebar-hover: #2d2d2d;
-            --bg-sidebar-active: #333333;
-            --text-sidebar: #9ca3af;
-            --text-sidebar-active: #ffffff;
-            --bg-main: #f9fafb;
-            
-            /* Paleta Amarelo/Logo e Botões */
-            --primary: #F5A623; 
-            --primary-hover: #E09612;
-            --text-on-primary: #111827; 
-            
-            --text-dark: #111827;
-            --text-muted: #6b7280;
-            --card-bg: #ffffff;
-            --border: #e5e7eb;
-            --danger: #ef4444;
-            --danger-hover: #dc2626;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
-
-        body { background-color: var(--bg-main); overflow: hidden; height: 100vh; }
-
-        /* ================= TELA DE LOGIN & REGISTO (CLEAN & MODERNO) ================= */
-        #login-screen {
-            display: flex;
-            height: 100vh; width: 100vw;
-            align-items: center; justify-content: center;
-            background: #f3f4f6; /* Fundo limpo e claro */
-            position: absolute; top: 0; left: 0; z-index: 1000;
-        }
-
-        .login-container {
-            display: flex;
-            width: 100%;
-            max-width: 1100px; /* Largura máxima para manter o layout no computador */
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-        }
-
-        .login-brand {
-            flex: 1;
-            display: flex;
-            justify-content: flex-start;
-            align-items: center;
-        }
-
-        /* Logo gigante na esquerda (apenas no PC) */
-        .login-brand img {
-            max-width: 380px; 
-            height: auto;
-            object-fit: contain;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .login-box-wrapper {
-            flex: 1;
-            display: flex;
-            justify-content: flex-end; /* Alinha o cartão para a direita */
-        }
-
-        /* Cartão de login Clean (Branco) */
-        .login-card {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-            width: 100%; max-width: 420px;
-            text-align: center;
-            color: var(--text-dark);
-        }
-        
-        .login-card h1 { font-size: 1.75rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }
-        .login-card p { color: #6b7280; font-size: 0.95rem; margin-bottom: 24px; }
-
-        #view-login, #view-register { transition: opacity 0.3s ease; }
-        #view-register { display: none; }
-
-        .auth-form { text-align: left; }
-        .auth-input-group { margin-bottom: 16px; position: relative; }
-        .auth-input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: #374151; margin-bottom: 6px; }
-        .auth-input-wrapper { position: relative; display: flex; align-items: center; }
-        
-        /* Inputs versão clara */
-        .auth-input { width: 100%; padding: 10px 12px; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.95rem; color: #111827; transition: all 0.2s; }
-        .auth-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.15); padding-right: 40px; }
-        input[type="password"], input.pwd-field { padding-right: 40px; } 
-        
-        .eye-btn { position: absolute; right: 10px; background: none; border: none; color: #9ca3af; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px; border-radius: 4px; }
-        .eye-btn:hover { color: #111827; background-color: #f3f4f6; }
-        .eye-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-
-        /* Botões amarelos com letra preta */
-        .btn-auth { width: 100%; background-color: var(--primary); color: var(--text-on-primary); border: none; padding: 12px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 8px; }
-        .btn-auth:hover { background-color: var(--primary-hover); }
-        .btn-auth:disabled { background-color: #6b7280; color: #d1d5db; cursor: not-allowed; }
-
-        .divider { display: flex; align-items: center; text-align: center; margin: 24px 0; color: #6b7280; font-size: 0.85rem; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #e5e7eb; }
-        .divider::before { margin-right: .5em; } .divider::after { margin-left: .5em; }
-
-        .btn-google { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; background-color: #ffffff; color: #111827; border: 1px solid #d1d5db; padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
-        .btn-google:hover { background-color: #f3f4f6; }
-        .btn-google img { width: 20px; height: 20px; }
-
-        .auth-switch { margin-top: 24px; font-size: 0.9rem; color: #6b7280; }
-        .auth-link { color: var(--primary); text-decoration: none; font-weight: 600; cursor: pointer; }
-        .auth-link:hover { text-decoration: underline; color: var(--primary-hover); }
-
-        /* Comportamento responsivo para telemóveis */
-        @media (max-width: 768px) {
-            .login-container { padding: 0 20px; justify-content: center; }
-            .login-brand { display: none; } /* Esconde o Favicon grande na esquerda */
-            .login-box-wrapper { justify-content: center; }
-        }
-
-        /* ================= APP SCREEN (SISTEMA) ================= */
-        #app-screen { display: none; height: 100vh; width: 100vw; }
-
-        /* Barra Lateral Preto Fosco */
-        .sidebar { width: 240px; background-color: var(--bg-sidebar); color: var(--text-sidebar); display: flex; flex-direction: column; overflow-y: auto; border-right: 1px solid #2d2d2d; }
-        .sidebar::-webkit-scrollbar { width: 6px; }
-        .sidebar::-webkit-scrollbar-thumb { background-color: #4b5563; border-radius: 4px; }
-        
-        .sidebar-header { padding: 24px 20px; font-size: 1.25rem; font-weight: 800; border-bottom: 1px solid #2d2d2d; letter-spacing: 0.5px; display: flex; align-items: center; gap: 10px; }
-        .sidebar-header img { width: 24px; height: 24px; object-fit: contain; }
-
-        .menu-container { padding: 16px 0; display: flex; flex-direction: column; gap: 4px; }
-        .menu-btn { width: 100%; padding: 12px 20px; background: none; border: none; color: var(--text-sidebar); text-align: left; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 12px; }
-        .menu-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; fill: none; transition: stroke 0.2s ease; }
-        .menu-btn:hover { background-color: var(--bg-sidebar-hover); color: var(--text-sidebar-active); }
-        .menu-btn.active { background-color: var(--bg-sidebar-active); color: var(--text-sidebar-active); font-weight: 600; border-left: 4px solid var(--primary); padding-left: 16px; }
-
-        /* Área de Conteúdo */
-        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        header { background-color: var(--card-bg); border-bottom: 1px solid var(--border); padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .header-left { display: flex; align-items: center; gap: 16px; }
-        .header-right { display: flex; align-items: center; gap: 16px; }
-
-        /* Botões do Cabeçalho */
-        .btn-cadastrar { background-color: var(--primary); color: var(--text-on-primary); border: none; padding: 10px 20px; border-radius: 8px; font-size: 0.95rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(245, 166, 35, 0.2); transition: all 0.2s ease; }
-        .btn-cadastrar:hover { background-color: var(--primary-hover); box-shadow: 0 6px 8px -1px rgba(245, 166, 35, 0.3); transform: translateY(-1px); }
-        .btn-cadastrar svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; }
-
-        .btn-logout { background-color: #f3f4f6; color: var(--text-dark); border: 1px solid var(--border); padding: 9px 16px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease; }
-        .btn-logout:hover { background-color: #e5e7eb; color: var(--danger); }
-        .btn-logout svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; }
-
-        .hamburger-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between; width: 22px; height: 16px; padding: 0; }
-        .hamburger-btn span { display: block; height: 2px; width: 100%; background-color: var(--text-dark); border-radius: 2px; transition: all 0.2s ease; }
-        .hamburger-btn:hover span { background-color: var(--primary); }
-
-        .category-title { color: var(--text-dark); font-size: 1.4rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
-        .subview-indicator { color: var(--text-muted); font-size: 1.1rem; font-weight: 400; }
-
-        /* Dropdown */
-        .dropdown-menu { position: absolute; top: 70px; left: 40px; background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); width: 320px; max-height: 500px; overflow-y: auto; display: none; z-index: 100; animation: slideDown 0.15s ease; padding: 0; }
-        .dropdown-menu::-webkit-scrollbar { width: 5px; }
-        .dropdown-menu::-webkit-scrollbar-thumb { background-color: var(--border); border-radius: 4px; }
-        .dropdown-menu.active { display: block; }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .dropdown-section-title { padding: 12px 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--bg-sidebar); background-color: #f3f4f6; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); margin-top: 8px; margin-bottom: 4px; letter-spacing: 0.5px; }
-        .dropdown-section-title:first-child { margin-top: 0; border-top: none; border-top-left-radius: 8px; border-top-right-radius: 8px; }
-
-        .dropdown-item { width: 100%; padding: 10px 20px 10px 32px; background: none; border: none; text-align: left; font-size: 0.95rem; color: var(--text-dark); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; position: relative; }
-        .dropdown-item::before { content: ''; position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 4px; height: 4px; border-radius: 50%; background-color: var(--border); transition: background 0.15s ease; }
-        .dropdown-item:hover { background-color: #f9fafb; color: #E09612; }
-        .dropdown-item:hover::before { background-color: var(--primary); }
-        .dropdown-item.active { background-color: #fffbeb; color: #b45309; font-weight: 600; }
-        .dropdown-item.active::before { background-color: var(--primary); width: 6px; height: 6px; left: 19px; }
-
-        .content-area { padding: 40px; overflow-y: auto; flex: 1; }
-        .view-card { background-color: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 40px; text-align: center; color: var(--text-muted); font-size: 1rem; overflow-x: auto; }
-
-        /* Tabela de Dados Elegante */
-        .elegant-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; background-color: var(--card-bg); }
-        .elegant-table th { background-color: #f9fafb; color: var(--text-dark); padding: 14px 20px; font-weight: 600; border-bottom: 2px solid var(--border); letter-spacing: 0.3px; }
-        .elegant-table td { padding: 14px 20px; border-bottom: 1px solid var(--border); color: var(--text-dark); vertical-align: middle; }
-        .elegant-table tr:last-child td { border-bottom: none; }
-        .elegant-table tr:hover { background-color: #f9fafb; }
-        .clickable-row { cursor: pointer; transition: background-color 0.2s; }
-        .clickable-row:hover { background-color: #f3f4f6; }
-
-        /* Detalhes Artigos (Tabela Interna) */
-        .details-row { display: none; background-color: #f9fafb; }
-        .details-row.active { display: table-row; }
-        .inner-table { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 10px; background-color: #ffffff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        .inner-table th { background-color: #f3f4f6; padding: 8px 12px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        .inner-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-dark); }
-        .inner-table tr:last-child td { border-bottom: none; }
-
-        /* Botões Modernos de Ações na Tabela */
-        .action-buttons { display: flex; gap: 8px; }
-        .btn-action { background: none; border: none; padding: 8px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
-        .btn-action svg { width: 16px; height: 16px; stroke-width: 2; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; }
-        .btn-edit { background-color: #fffbeb; color: #d97706; }
-        .btn-edit:hover { background-color: #fef3c7; }
-        .btn-delete { background-color: #fef2f2; color: #ef4444; }
-        .btn-delete:hover { background-color: #fee2e2; }
-
-        /* Modals Gerais */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(26, 26, 26, 0.8); display: none; justify-content: center; align-items: center; z-index: 999; opacity: 0; transition: opacity 0.3s ease; }
-        .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-box { background-color: var(--card-bg); width: 100%; max-width: 500px; border-radius: 12px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.95); transition: transform 0.3s ease; overflow: hidden; }
-        .modal-overlay.active .modal-box { transform: scale(1); }
-        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { font-size: 1.25rem; color: var(--text-dark); font-weight: 700; }
-        .btn-close { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; transition: background 0.2s, color 0.2s; }
-        .btn-close:hover { background-color: #f3f4f6; color: #ef4444; }
-        .modal-body { padding: 24px; max-height: 70vh; overflow-y: auto; }
-        
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
-        .form-control { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.95rem; color: var(--text-dark); transition: all 0.2s; }
-        .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.1); }
-
-        .modal-footer { padding: 16px 24px; background-color: #f9fafb; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
-        
-        .btn-cancelar { background-color: #ffffff; color: var(--text-dark); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn-cancelar:hover { background-color: #f3f4f6; }
-        
-        .btn-salvar { background-color: var(--primary); color: var(--text-on-primary); border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: background 0.2s; display: flex; align-items: center; justify-content: center; }
-        .btn-salvar:hover { background-color: var(--primary-hover); }
-        .btn-salvar:disabled { background-color: #d1d5db; color: #6b7280; cursor: not-allowed; }
-
-        .btn-perigo { background-color: var(--danger); color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
-        .btn-perigo:hover { background-color: var(--danger-hover); }
-
-        /* ================= AJUSTES CIRÚRGICOS MOBILE DO SISTEMA ================= */
-        @media (max-width: 768px) {
-            body { overflow: hidden; }
-
-            #app-screen { height: 100dvh; width: 100vw; }
-
-            .sidebar {
-                position: fixed; left: 0; right: 0; bottom: 0; width: 100%; height: 70px;
-                z-index: 500; border-right: none; border-top: 1px solid #2d2d2d;
-                overflow: visible; flex-direction: row; box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.18);
-            }
-
-            .sidebar-header { display: none; }
-
-            .menu-container {
-                width: 100%; height: 100%; padding: 0 8px; display: flex;
-                flex-direction: row; align-items: center; justify-content: space-around; gap: 0;
-            }
-
-            .menu-btn {
-                flex: 1; width: auto; height: 100%; padding: 8px 0;
-                justify-content: center; align-items: center; text-align: center;
-                gap: 0; font-size: 0; border-left: none; border-top: 3px solid transparent; border-radius: 0;
-            }
-
-            .menu-btn svg { width: 25px; height: 25px; flex-shrink: 0; }
-
-            .menu-btn.active {
-                border-left: none; border-top: 3px solid var(--primary);
-                padding-left: 0; background-color: var(--bg-sidebar-active);
-            }
-
-            .main-content { width: 100%; }
-            header { padding: 14px 16px; flex-direction: column; align-items: stretch; gap: 12px; }
-            .header-left { width: 100%; gap: 12px; align-items: flex-start; }
-            .header-right { width: 100%; display: flex; gap: 8px; }
-
-            .category-title { font-size: 0.98rem; line-height: 1.3; flex-wrap: wrap; }
-            .subview-indicator { font-size: 0.9rem; }
-
-            .btn-cadastrar, .btn-logout { flex: 1; justify-content: center; padding: 10px 12px; white-space: nowrap; }
-
-            .dropdown-menu { top: 116px; left: 16px; right: 16px; width: auto; max-height: calc(100dvh - 205px); }
-            .content-area { padding: 18px; padding-bottom: 92px; }
-            .view-card { padding: 24px 18px; border-radius: 10px; }
-            .modal-box { width: calc(100vw - 28px); max-height: calc(100dvh - 110px); overflow-y: auto; }
-            .modal-overlay { align-items: center; padding-bottom: 70px; }
-        }
-
-        @media (max-width: 420px) {
-            .category-title { font-size: 0.9rem; }
-            .subview-indicator { font-size: 0.82rem; }
-            .btn-cadastrar, .btn-logout { font-size: 0.85rem; padding: 9px 8px; }
-            .content-area { padding: 14px; padding-bottom: 92px; }
-        }
-
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-container">
-            <!-- Logo gigante visível apenas no Computador -->
             <div class="login-brand">
                 <img src="favicon.png" alt="TECNOWATT Logo">
             </div>
@@ -319,7 +20,7 @@
                     <div id="view-login">
                         <h1><span style="color: var(--text-dark);">TECNO</span><span style="color: var(--primary);">WATT</span></h1>
                         <p>Faça login para aceder ao sistema</p>
-                        
+
                         <form class="auth-form" onsubmit="loginComEmail(event)">
                             <div class="auth-input-group">
                                 <label for="login-email">Email</label>
@@ -340,7 +41,7 @@
                         </form>
 
                         <div class="divider">ou</div>
-                        
+
                         <button class="btn-google" onclick="loginComGoogle()">
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
                             Entrar com Google
@@ -354,7 +55,7 @@
                     <div id="view-register">
                         <h1>Criar Conta</h1>
                         <p>Registe-se para aceder ao sistema</p>
-                        
+
                         <form class="auth-form" onsubmit="registrarComEmail(event)">
                             <div class="auth-input-group">
                                 <label for="reg-email">Email</label>
@@ -398,7 +99,10 @@
                 <span><span style="color: #ffffff;">TECNO</span><span style="color: var(--primary);">WATT</span></span>
             </div>
             <div class="menu-container">
-                <button class="menu-btn active" onclick="selectCategory('Tabelas', this)">
+                <button class="menu-btn active" onclick="selectCategory('Dashboard', this)">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9"></rect><rect x="14" y="3" width="7" height="5"></rect><rect x="14" y="12" width="7" height="9"></rect><rect x="3" y="16" width="7" height="5"></rect></svg> Dashboard
+                </button>
+                <button class="menu-btn" onclick="selectCategory('Tabelas', this)">
                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabelas
                 </button>
                 <button class="menu-btn" onclick="selectCategory('Documentos', this)">
@@ -420,11 +124,11 @@
                         <span></span><span></span><span></span>
                     </button>
                     <h1 class="category-title">
-                        <span id="main-category-title">Tabelas</span>
-                        <span class="subview-indicator">/</span>
-                        <span id="sub-category-title" class="subview-indicator" style="font-weight: 500; color: var(--text-dark);">Entidades</span>
-                        <span class="subview-indicator">></span>
-                        <span id="subview-title" class="subview-indicator">Clientes</span>
+                        <span id="main-category-title">Dashboard</span>
+                        <span class="subview-indicator" id="sep-1">/</span>
+                        <span id="sub-category-title" class="subview-indicator" style="font-weight: 500; color: var(--text-dark);"></span>
+                        <span class="subview-indicator" id="sep-2">&gt;</span>
+                        <span id="subview-title" class="subview-indicator">Resumo</span>
                     </h1>
                 </div>
                 <div class="header-right">
@@ -441,7 +145,7 @@
 
             <div class="content-area">
                 <div class="view-card" id="content-display">
-                    Selecione uma ação no menu hambúrguer para gerenciar os dados.
+                    A carregar...
                 </div>
             </div>
         </main>
@@ -458,7 +162,6 @@
             </div>
             <div class="modal-body">
                 <form id="form-cadastro" onsubmit="salvarDadosDb(event)">
-                    <!-- Campos injetados via JS -->
                     <div id="dynamic-fields"></div>
                 </form>
             </div>
@@ -487,6 +190,20 @@
                 <button class="btn-cancelar" onclick="voltarBundle()">Voltar</button>
                 <button class="btn-salvar" id="btn-salvar-bundle-final" onclick="salvarBundleFinal()">Salvar</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal Documento (Faturas, Guias, Notas, etc.) -->
+    <div class="modal-overlay" id="modal-documento" style="z-index: 1000;">
+        <div class="modal-box" style="max-width: 780px;">
+            <div class="modal-header">
+                <h2 id="documento-titulo">Documento</h2>
+                <button class="btn-close" onclick="fecharModalDocumento()" title="Fechar">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="documento-body"></div>
+            <div class="modal-footer" id="documento-footer"></div>
         </div>
     </div>
 
@@ -529,609 +246,6 @@
         </div>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyA0DDj72CDHc4gbjYLvee21vXAb1xysKoY",
-            authDomain: "vizela-eletrica.firebaseapp.com",
-            projectId: "vizela-eletrica",
-            storageBucket: "vizela-eletrica.firebasestorage.app",
-            messagingSenderId: "580578429133",
-            appId: "1:580578429133:web:d2e2dbbbfa9898e7eb4184"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
-
-        const sistemaModulos = {
-            'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns', 'Propriedades', 'Tabelas de Preços'], 'Stocks': ['Controlo de stocks', 'Contagens de Existências'] },
-            'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Notas de Débito'], 'Transporte': ['Guia de Remessa', 'Guia de Transporte'], 'Outros Documentos': ['Notas de Encomenda', 'Orçamentos', 'Fichas de Serviço', 'Faturas pro forma', 'Faturas de Consignação', 'Avenças', 'Documentos Internos', 'Consultas de mesa'], 'Liquidações': ['Recibos', 'Notas de Liquidação', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Simplificadas', 'Notas de Crédito', 'Notas de Débito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Vendedores': ['Guia de Pagamento'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
-            'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
-            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Impostos e retenções': ['Impostos e taxas', 'Retenções'], 'Agenda': ['Eventos Programados'], 'Referências Multibanco': ['Consultar', 'Configurar'], 'Mensagem SMS': ['Consultar', 'Configurar'], 'Assinaturas Digitais': ['Consultar', 'Configurar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas', 'Zonas Geográficas', 'Unidades de Medida', 'Mensagens Predefinidas'] }
-        };
-
-        let categoriaAtiva = 'Tabelas';
-        let dadosCadastrados = { 'Clientes': [], 'Fornecedores': [], 'Vendedores': [], 'Categorias': [], 'Artigos': [], 'Artigos Fabricados': [] };
-        let idSendoEditado = null;
-        let idParaExcluir = null;
-        let listenersAtivos = [];
-        
-        // Variaveis Temporárias para o Fluxo do "Artigos Fabricados"
-        let artigosBundleTemp = [];
-        let nomeConjuntoSendoEditado = '';
-
-        /* ---------------- GESTÃO DE INTERFACE LOGIN/REGISTO ---------------- */
-        window.alternarVista = function(vista) {
-            const login = document.getElementById('view-login');
-            const register = document.getElementById('view-register');
-            if (vista === 'register') { login.style.display = 'none'; register.style.display = 'block'; } 
-            else { register.style.display = 'none'; login.style.display = 'block'; }
-        }
-
-        window.togglePassword = function(inputId, iconId) {
-            const input = document.getElementById(inputId);
-            const icon = document.getElementById(iconId);
-            if (input.type === "password") {
-                input.type = "text";
-                icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
-            } else {
-                input.type = "password";
-                icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
-            }
-        }
-
-        /* ---------------- GESTÃO DE AUTENTICAÇÃO (LOGIN/REGISTO) ---------------- */
-        onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                if (user.emailVerified) {
-                    document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-screen').style.display = 'flex';
-                    iniciarListenersBancoDeDados();
-                } else {
-                    await signOut(auth); document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; pararListenersBancoDeDados();
-                }
-            } else {
-                document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-screen').style.display = 'none'; pararListenersBancoDeDados();
-            }
-        });
-
-        window.loginComEmail = async function(e) {
-            e.preventDefault();
-            const btn = document.getElementById('btn-login-email'); btn.disabled = true; btn.innerText = "A entrar...";
-            try {
-                const userCredential = await signInWithEmailAndPassword(auth, document.getElementById('login-email').value, document.getElementById('login-senha').value);
-                if (!userCredential.user.emailVerified) { await signOut(auth); mostrarAlertaCustomizado("Por favor, verifique a sua caixa de entrada e clique no link de confirmação para ativar o seu acesso.", "Acesso Bloqueado"); }
-            } catch (error) { mostrarAlertaCustomizado("Email ou senha inválidos.", "Erro no Login"); } finally { btn.disabled = false; btn.innerText = "Entrar"; }
-        }
-
-        window.registrarComEmail = async function(e) {
-            e.preventDefault();
-            const pass = document.getElementById('reg-senha').value; const passConf = document.getElementById('reg-senha-conf').value;
-            const btn = document.getElementById('btn-reg-email');
-
-            if (pass !== passConf) { mostrarAlertaCustomizado("As senhas não coincidem. Verifique e tente novamente.", "Atenção"); return; }
-            btn.disabled = true; btn.innerText = "A processar...";
-            try {
-                const userCredential = await createUserWithEmailAndPassword(auth, document.getElementById('reg-email').value, pass);
-                await sendEmailVerification(userCredential.user); await signOut(auth); 
-                mostrarAlertaCustomizado("Conta criada com sucesso! Enviámos um link de confirmação para o seu email.", "Verifique o seu Email");
-                alternarVista('login'); document.querySelectorAll('.auth-form').forEach(f => f.reset());
-            } catch (error) {
-                if (error.code === 'auth/email-already-in-use') mostrarAlertaCustomizado("Este email já está registado no sistema.", "Erro");
-                else if (error.code === 'auth/weak-password') mostrarAlertaCustomizado("A senha é muito fraca. Deve ter pelo menos 6 caracteres.", "Erro");
-                else mostrarAlertaCustomizado("Ocorreu um erro ao criar a conta. Tente novamente.", "Erro");
-            } finally { btn.disabled = false; btn.innerText = "Registar e Enviar Email"; }
-        }
-
-        window.loginComGoogle = function() { signInWithPopup(auth, provider).catch(() => mostrarAlertaCustomizado("Erro ao iniciar sessão com o Google.", "Erro de Acesso")); }
-        window.fazerLogout = function() { signOut(auth).catch(() => mostrarAlertaCustomizado("Erro ao encerrar sessão.", "Erro")); }
-
-        /* ---------------- GESTÃO DE BANCO DE DADOS EM TEMPO REAL ---------------- */
-        function iniciarListenersBancoDeDados() {
-            pararListenersBancoDeDados(); 
-            ['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos', 'Artigos Fabricados'].forEach(entidade => {
-                const unsub = onSnapshot(collection(db, entidade), (snapshot) => {
-                    dadosCadastrados[entidade] = [];
-                    snapshot.forEach((doc) => { dadosCadastrados[entidade].push({ id: doc.id, ...doc.data() }); });
-                    const abaAtual = document.getElementById('subview-title').innerText;
-                    if (abaAtual === entidade || (abaAtual === 'Armazéns' && entidade === 'Artigos')) { renderTabela(abaAtual); }
-                }, (error) => { console.error(`Permissões negadas para ${entidade}. Verifique as regras.`); });
-                listenersAtivos.push(unsub);
-            });
-        }
-
-        function pararListenersBancoDeDados() { listenersAtivos.forEach(unsub => unsub()); listenersAtivos = []; }
-
-        /* ---------------- NAVEGAÇÃO DO SISTEMA ---------------- */
-        window.selectCategory = function(categoryName, element) {
-            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active')); element.classList.add('active');
-            categoriaAtiva = categoryName; document.getElementById('main-category-title').innerText = categoryName;
-            const primeiroSubtitulo = Object.keys(sistemaModulos[categoryName])[0]; const primeiraAba = sistemaModulos[categoryName][primeiroSubtitulo][0];
-            updateContentView(categoryName, primeiroSubtitulo, primeiraAba);
-            document.getElementById('options-dropdown').classList.remove('active');
-        }
-
-        window.toggleDropdown = function(event) {
-            event.stopPropagation(); const dropdown = document.getElementById('options-dropdown');
-            renderDropdownStructure(); dropdown.classList.toggle('active');
-        }
-
-        function renderDropdownStructure() {
-            const dropdown = document.getElementById('options-dropdown'); dropdown.innerHTML = '';
-            const subCategorias = sistemaModulos[categoriaAtiva]; const abaAtual = document.getElementById('subview-title').innerText;
-
-            for (const subTitulo in subCategorias) {
-                const titleDiv = document.createElement('div'); titleDiv.className = 'dropdown-section-title'; titleDiv.innerText = subTitulo; dropdown.appendChild(titleDiv);
-                subCategorias[subTitulo].forEach(aba => {
-                    const btn = document.createElement('button'); btn.className = `dropdown-item ${aba === abaAtual ? 'active' : ''}`; btn.innerText = aba;
-                    btn.onclick = function() { updateContentView(categoriaAtiva, subTitulo, aba); dropdown.classList.remove('active'); };
-                    dropdown.appendChild(btn);
-                });
-            }
-        }
-
-        function updateContentView(categoria, subtitulo, aba) {
-            document.getElementById('sub-category-title').innerText = subtitulo; document.getElementById('subview-title').innerText = aba;
-            const display = document.getElementById('content-display');
-            const btnCadastrar = document.querySelector('.btn-cadastrar');
-            
-            // Ocultar botão "Cadastrar" exclusivamente na aba "Armazéns"
-            if (aba === 'Armazéns') {
-                btnCadastrar.style.display = 'none';
-            } else {
-                btnCadastrar.style.display = 'flex';
-            }
-            
-            if (['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns'].includes(aba)) {
-                renderTabela(aba);
-            } else {
-                display.style.textAlign = 'center'; display.style.padding = '40px';
-                display.innerHTML = `${categoria} > ${subtitulo} > Tela de ${aba} vazia, pronta para criação.`;
-            }
-        }
-
-        /* ---------------- LÓGICA DE PREÇOS E CONJUNTOS ---------------- */
-        window.calcularPrecoFinal = function(index) {
-            const custo = parseFloat(document.getElementById(`custo-${index}`).value) || 0;
-            const margem = parseFloat(document.getElementById(`margem-${index}`).value) || 0;
-            const venda = custo + (custo * (margem / 100));
-            document.getElementById(`venda-${index}`).value = venda.toFixed(2);
-        }
-
-        window.toggleLinhaDetalhes = function(id, event) {
-            if(event.target.closest('.action-buttons')) return;
-            const tr = document.getElementById(id);
-            if(tr) tr.classList.toggle('active');
-        }
-
-        // Funções específicas do Workflow Artigos Fabricados
-        window.mostrarPrecosBundle = function(artigoId) {
-            const container = document.getElementById('area-precos-bundle');
-            if(!artigoId) { container.innerHTML = ''; return; }
-            const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
-            if(!artigo || !artigo.precos) return;
-
-            let html = `<table class="inner-table" style="cursor: pointer; margin-top: 10px;">
-                <tr><th colspan="4" style="text-align:center; background-color: #fef3c7; color: #d97706; padding: 6px;">Clique na linha do preço desejado para adicionar ao conjunto</th></tr>
-                <tr><th>Tabela</th><th>Custo (€)</th><th>Margem (%)</th><th>Preço Venda (€)</th></tr>`;
-            
-            artigo.precos.forEach((p, idx) => {
-                let final = p.custo + (p.custo * (p.margem / 100));
-                html += `<tr class="clickable-row" onclick="escolherPrecoBundle('${artigo.id}', ${idx}, ${p.custo})">
-                    <td>Preço ${idx+1}</td><td>${p.custo.toFixed(2)}</td><td>${p.margem.toFixed(2)}</td><td>${final.toFixed(2)}</td>
-                </tr>`;
-            });
-            html += `</table>`;
-            container.innerHTML = html;
-        }
-
-        window.escolherPrecoBundle = function(artigoId, tabelaIndex, custo) {
-            const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
-            artigosBundleTemp.push({ id: artigo.id, codigo: artigo.codigo, categoria: artigo.categoria, tabelaIndex: tabelaIndex, custo: custo });
-            
-            document.getElementById('select-artigo-bundle').value = '';
-            document.getElementById('area-precos-bundle').innerHTML = '';
-            renderListaBundle();
-        }
-
-        window.removerDoBundle = function(index) {
-            artigosBundleTemp.splice(index, 1);
-            renderListaBundle();
-        }
-
-        window.renderListaBundle = function() {
-            const container = document.getElementById('area-lista-bundle');
-            if (artigosBundleTemp.length === 0) {
-                container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; text-align: center;">Nenhum artigo adicionado ao conjunto no momento.</p>`;
-                return;
-            }
-            let html = `<h3 style="font-size: 0.95rem; margin: 15px 0 10px 0; color: var(--primary);">Artigos no Conjunto</h3>
-                <table class="elegant-table" style="font-size: 0.85rem;">
-                <thead><tr><th>Artigo</th><th>Tabela Usada</th><th>Custo (€)</th><th style="width: 50px;">Ação</th></tr></thead><tbody>`;
-            let total = 0;
-            artigosBundleTemp.forEach((item, idx) => {
-                total += item.custo;
-                html += `<tr>
-                    <td>${item.codigo} - ${item.categoria}</td>
-                    <td>Preço ${item.tabelaIndex + 1}</td>
-                    <td>${item.custo.toFixed(2)}</td>
-                    <td><button type="button" class="btn-action btn-delete" style="padding: 4px;" onclick="removerDoBundle(${idx})" title="Remover"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></td>
-                </tr>`;
-            });
-            html += `<tr style="font-weight: 700; background-color: #f9fafb;"><td colspan="2" style="text-align: right;">Custo Total:</td><td colspan="2">${total.toFixed(2)} €</td></tr>`;
-            html += `</tbody></table>`;
-            container.innerHTML = html;
-        }
-
-        window.avancarBundle = function() {
-            if (artigosBundleTemp.length === 0) { mostrarAlertaCustomizado("Adicione pelo menos um artigo ao conjunto antes de avançar.", "Atenção"); return; }
-            document.getElementById('nome-conjunto-input').value = nomeConjuntoSendoEditado || '';
-            const modal = document.getElementById('modal-nome-conjunto');
-            modal.style.display = 'flex'; setTimeout(() => { modal.classList.add('active'); }, 10);
-        }
-
-        window.voltarBundle = function() {
-            const modal = document.getElementById('modal-nome-conjunto');
-            modal.classList.remove('active'); setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
-
-        window.salvarBundleFinal = async function() {
-            const nome = document.getElementById('nome-conjunto-input').value.trim();
-            if(!nome) { mostrarAlertaCustomizado("Digite um nome para salvar o conjunto.", "Atenção"); return; }
-            
-            const btnSalvar = document.getElementById('btn-salvar-bundle-final');
-            btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
-
-            let custoTotal = artigosBundleTemp.reduce((sum, item) => sum + item.custo, 0);
-
-            const dados = { nome: nome, artigos: artigosBundleTemp, custoTotal: custoTotal, atualizadoEm: new Date().toISOString() };
-
-            try {
-                if (idSendoEditado) {
-                    await updateDoc(doc(db, 'Artigos Fabricados', idSendoEditado), dados);
-                    mostrarAlertaCustomizado("Conjunto atualizado com sucesso!", "Sucesso");
-                } else {
-                    dados.criadoEm = new Date().toISOString();
-                    await addDoc(collection(db, 'Artigos Fabricados'), dados);
-                    mostrarAlertaCustomizado("Conjunto criado com sucesso!", "Sucesso");
-                }
-                fecharModal(); 
-                voltarBundle(); 
-            } catch (error) { mostrarAlertaCustomizado("Erro ao salvar conjunto.", "Erro"); } finally { btnSalvar.disabled = false; btnSalvar.innerText = "Salvar"; }
-        }
-
-        function renderTabela(aba) {
-            const display = document.getElementById('content-display');
-            const listaDados = aba === 'Armazéns' ? dadosCadastrados['Artigos'] : dadosCadastrados[aba];
-            
-            if (!listaDados || listaDados.length === 0) {
-                display.style.textAlign = 'center'; display.style.padding = '40px';
-                let textoRegisto = `Nenhum registo de ${aba.toLowerCase()} encontrado`;
-                display.innerHTML = `<div style="color: var(--text-muted);">${textoRegisto}. ${aba !== 'Armazéns' ? 'Clique no botão <strong>+ Cadastrar</strong> no cabeçalho para adicionar dados.' : ''}</div>`;
-            } else {
-                display.style.textAlign = 'left'; display.style.padding = '0';
-                let tableHTML = `<table class="elegant-table">`;
-                
-                if (['Clientes', 'Fornecedores', 'Vendedores'].includes(aba)) {
-                    tableHTML += `<thead><tr><th>Nome</th><th>Morada</th><th>Código Postal</th><th>Telefone</th><th>NIF</th><th>Ações</th></tr></thead><tbody>`;
-                    listaDados.forEach(item => {
-                        tableHTML += `<tr>
-                            <td>${escapeHTML(item.nome || '')}</td><td>${escapeHTML(item.morada || '')}</td><td>${escapeHTML(item.codigoPostal || '')}</td><td>${escapeHTML(item.telefone || '')}</td><td>${escapeHTML(item.nif || '')}</td>
-                            <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
-                        </tr>`;
-                    });
-                } else if (aba === 'Categorias') {
-                    tableHTML += `<thead><tr><th>Material</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
-                    listaDados.forEach(item => {
-                        tableHTML += `<tr>
-                            <td>${escapeHTML(item.material || '')}</td>
-                            <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
-                        </tr>`;
-                    });
-                } else if (aba === 'Artigos') {
-                    tableHTML += `<thead><tr><th>Código</th><th>Categoria</th><th>Armazém</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
-                    listaDados.forEach(item => {
-                        let precosHtml = '';
-                        if(item.precos && item.precos.length > 0) {
-                            precosHtml = `<table class="inner-table"><tr><th>Tabela</th><th>Custo (€)</th><th>Margem (%)</th><th>Preço Venda (€)</th></tr>`;
-                            item.precos.forEach((p, idx) => {
-                                let final = p.custo + (p.custo * (p.margem / 100));
-                                precosHtml += `<tr><td>Preço ${idx+1}</td><td>${p.custo.toFixed(2)}</td><td>${p.margem.toFixed(2)}</td><td>${final.toFixed(2)}</td></tr>`;
-                            });
-                            precosHtml += `</table>`;
-                        }
-
-                        tableHTML += `
-                        <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-${item.id}', event)">
-                            <td>${escapeHTML(item.codigo || '')}</td><td>${escapeHTML(item.categoria || '')}</td><td>${escapeHTML(item.armazem || '')}</td>
-                            <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="event.stopPropagation(); abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="event.stopPropagation(); prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
-                        </tr>
-                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="4" style="padding: 10px 20px;">${precosHtml}</td></tr>`;
-                    });
-                } else if (aba === 'Artigos Fabricados') {
-                    tableHTML += `<thead><tr><th>Nome do Conjunto</th><th>Custo Total (€)</th><th>Qtd. Artigos</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
-                    listaDados.forEach(item => {
-                        let artigosHtml = '';
-                        if(item.artigos && item.artigos.length > 0) {
-                            artigosHtml = `<table class="inner-table"><tr><th>Artigo</th><th>Tabela Utilizada</th><th>Custo (€)</th></tr>`;
-                            item.artigos.forEach((a) => {
-                                artigosHtml += `<tr><td>${a.codigo} - ${a.categoria}</td><td>Preço ${a.tabelaIndex + 1}</td><td>${a.custo.toFixed(2)}</td></tr>`;
-                            });
-                            artigosHtml += `</table>`;
-                        }
-
-                        tableHTML += `
-                        <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-${item.id}', event)">
-                            <td>${escapeHTML(item.nome || '')}</td>
-                            <td>${(item.custoTotal || 0).toFixed(2)}</td>
-                            <td>${item.artigos ? item.artigos.length : 0}</td>
-                            <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="event.stopPropagation(); abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="event.stopPropagation(); prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
-                        </tr>
-                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="4" style="padding: 10px 20px;">${artigosHtml}</td></tr>`;
-                    });
-                } else if (aba === 'Armazéns') {
-                    // Lógica para agrupar e exibir os artigos por Armazém dinamicamente
-                    const artigosMap = {};
-                    listaDados.forEach(a => {
-                        const arm = a.armazem && a.armazem.trim() !== '' ? a.armazem : 'Sem Armazém Definido';
-                        if(!artigosMap[arm]) artigosMap[arm] = [];
-                        artigosMap[arm].push(a);
-                    });
-
-                    const armazensNomes = Object.keys(artigosMap).sort();
-
-                    if (armazensNomes.length === 0) {
-                        display.style.textAlign = 'center'; display.style.padding = '40px';
-                        display.innerHTML = `<div style="color: var(--text-muted);">Nenhum artigo registado para ser listado nos armazéns.</div>`;
-                        return; // Sai cedo se não houver artigos
-                    }
-
-                    tableHTML += `<thead><tr><th>Nome do Armazém</th><th>Qtd. de Artigos Registados</th></tr></thead><tbody>`;
-                    
-                    armazensNomes.forEach((armName, index) => {
-                        const itens = artigosMap[armName];
-                        let artigosHtml = `<table class="inner-table"><tr><th>Código do Artigo</th><th>Categoria</th></tr>`;
-                        itens.forEach(a => {
-                            artigosHtml += `<tr><td>${escapeHTML(a.codigo || '')}</td><td>${escapeHTML(a.categoria || '')}</td></tr>`;
-                        });
-                        artigosHtml += `</table>`;
-
-                        tableHTML += `
-                        <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-arm-${index}', event)">
-                            <td style="font-weight: 600;">${escapeHTML(armName)}</td>
-                            <td>${itens.length}</td>
-                        </tr>
-                        <tr id="detalhes-arm-${index}" class="details-row"><td colspan="2" style="padding: 10px 20px;">${artigosHtml}</td></tr>`;
-                    });
-                }
-                
-                tableHTML += `</tbody></table>`;
-                display.innerHTML = tableHTML;
-            }
-        }
-
-        function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
-
-        /* ---------------- FUNÇÕES CRUD E GERAÇÃO DE CAMPOS ---------------- */
-
-        function gerarCamposFormulario(abaAtual, item = null) {
-            const container = document.getElementById('dynamic-fields');
-            let html = '';
-
-            // Toggling modal footer buttons based on the view
-            if (abaAtual === 'Artigos Fabricados') {
-                document.getElementById('btn-guardar-texto').style.display = 'none';
-                document.getElementById('btn-avancar-bundle').style.display = 'flex';
-            } else {
-                document.getElementById('btn-guardar-texto').style.display = 'flex';
-                document.getElementById('btn-avancar-bundle').style.display = 'none';
-            }
-
-            if (['Clientes', 'Fornecedores', 'Vendedores'].includes(abaAtual)) {
-                html = `
-                    <div class="form-group"><label for="nome">Nome</label><input type="text" id="nome" class="form-control" placeholder="Introduza o nome" value="${item ? item.nome : ''}" required></div>
-                    <div class="form-group"><label for="morada">Morada</label><input type="text" id="morada" class="form-control" placeholder="Introduza a morada" value="${item ? item.morada : ''}" required></div>
-                    <div class="form-group"><label for="codigo-postal">Código postal</label><input type="text" id="codigo-postal" class="form-control" placeholder="Ex: 1000-001" value="${item ? item.codigoPostal : ''}" required></div>
-                    <div class="form-group"><label for="telefone">Telefone</label><input type="tel" id="telefone" class="form-control" placeholder="Introduza o contacto telefónico" value="${item ? item.telefone : ''}" required></div>
-                    <div class="form-group"><label for="nif">NIF</label><input type="text" id="nif" class="form-control" placeholder="NIF (9 dígitos)" value="${item ? item.nif : ''}" required></div>
-                `;
-            } else if (abaAtual === 'Categorias') {
-                html = `<div class="form-group"><label for="material">Material</label><input type="text" id="material" class="form-control" placeholder="Introduza o material (ex: Cobre)" value="${item ? item.material : ''}" required></div>`;
-            } else if (abaAtual === 'Artigos') {
-                let opcoesCategoria = `<option value="">Selecione um material...</option>`;
-                dadosCadastrados['Categorias'].forEach(cat => {
-                    let selected = (item && item.categoria === cat.material) ? 'selected' : '';
-                    opcoesCategoria += `<option value="${cat.material}" ${selected}>${cat.material}</option>`;
-                });
-
-                html = `
-                    <div style="display: flex; gap: 12px; margin-bottom: 8px;">
-                        <div class="form-group" style="flex: 1;"><label for="codigo">Código</label><input type="text" id="codigo" class="form-control" placeholder="Ex: ART-001" value="${item ? item.codigo : ''}" required></div>
-                        <div class="form-group" style="flex: 1;"><label for="categoria-select">Categoria</label><select id="categoria-select" class="form-control" required>${opcoesCategoria}</select></div>
-                        <div class="form-group" style="flex: 1;"><label for="armazem-input">Armazém</label><input type="text" id="armazem-input" class="form-control" placeholder="Ex: A1" value="${item ? item.armazem : ''}" required></div>
-                    </div>
-                    <h3 style="font-size: 0.95rem; margin: 10px 0; color: var(--primary);">Definição de Preços</h3>
-                `;
-
-                for(let i=1; i<=5; i++) {
-                    let pCusto = item && item.precos && item.precos[i-1] ? item.precos[i-1].custo : '';
-                    let pMargem = item && item.precos && item.precos[i-1] ? item.precos[i-1].margem : '';
-                    html += `
-                        <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; padding-bottom: 12px; border-bottom: 1px dashed var(--border);">
-                            <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Custo ${i} (€)</label><input type="number" id="custo-${i}" class="form-control" step="0.01" value="${pCusto}" oninput="calcularPrecoFinal(${i})"></div>
-                            <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Margem ${i} (%)</label><input type="number" id="margem-${i}" class="form-control" step="0.01" value="${pMargem}" oninput="calcularPrecoFinal(${i})"></div>
-                            <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Venda ${i} (€)</label><input type="text" id="venda-${i}" class="form-control" readonly style="background-color: #f3f4f6; color: #374151;"></div>
-                        </div>
-                    `;
-                }
-            } else if (abaAtual === 'Artigos Fabricados') {
-                let opcoesArtigos = `<option value="">Buscar pelo Código ou Categoria...</option>`;
-                dadosCadastrados['Artigos'].forEach(art => {
-                    opcoesArtigos += `<option value="${art.id}">${art.codigo} - ${art.categoria}</option>`;
-                });
-
-                html = `
-                    <div class="form-group">
-                        <label for="select-artigo-bundle">Adicionar Artigo ao Conjunto</label>
-                        <select id="select-artigo-bundle" class="form-control" onchange="mostrarPrecosBundle(this.value)">
-                            ${opcoesArtigos}
-                        </select>
-                    </div>
-                    <div id="area-precos-bundle"></div>
-                    <div id="area-lista-bundle" style="margin-top: 20px;"></div>
-                `;
-            }
-            container.innerHTML = html;
-            
-            if (abaAtual === 'Artigos' && item) { for(let i=1; i<=5; i++) calcularPrecoFinal(i); }
-            if (abaAtual === 'Artigos Fabricados') { renderListaBundle(); }
-        }
-
-        window.acionarCadastro = function() {
-            idSendoEditado = null;
-            artigosBundleTemp = []; 
-            nomeConjuntoSendoEditado = '';
-
-            const abaAtual = document.getElementById('subview-title').innerText;
-            const permitidos = ['Clientes', 'Fornecedores', 'Vendedores', 'Categorias', 'Artigos', 'Artigos Fabricados'];
-            
-            if (permitidos.includes(abaAtual)) {
-                let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : (abaAtual === 'Artigos Fabricados' ? 'Conjunto' : abaAtual.slice(0, -1)));
-                gerarCamposFormulario(abaAtual);
-                document.getElementById('modal-titulo').innerText = `Novo(a) ${singular}`;
-                document.getElementById('btn-guardar-texto').innerText = `Guardar ${singular}`;
-                abrirModal(abaAtual);
-            } else {
-                mostrarAlertaCustomizado(`A funcionalidade de cadastro para a aba "${abaAtual}" será implementada em breve.`, 'Aviso');
-            }
-        }
-
-        window.abrirEdicao = function(id) {
-            const abaAtual = document.getElementById('subview-title').innerText;
-            const item = dadosCadastrados[abaAtual].find(d => d.id === id);
-            if(!item) return;
-
-            idSendoEditado = id;
-            if (abaAtual === 'Artigos Fabricados') {
-                artigosBundleTemp = [...item.artigos]; 
-                nomeConjuntoSendoEditado = item.nome;
-            }
-
-            gerarCamposFormulario(abaAtual, item);
-
-            let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : (abaAtual === 'Artigos Fabricados' ? 'Conjunto' : abaAtual.slice(0, -1)));
-            document.getElementById('modal-titulo').innerText = `Editar ${singular}`;
-            document.getElementById('btn-guardar-texto').innerText = `Atualizar ${singular}`;
-            abrirModal(abaAtual);
-        }
-
-        window.prepararExclusao = function(id) {
-            idParaExcluir = id;
-            const modal = document.getElementById('modal-exclusao'); modal.style.display = 'flex';
-            setTimeout(() => { modal.classList.add('active'); }, 10);
-        }
-
-        window.fecharModalExclusao = function() {
-            const modal = document.getElementById('modal-exclusao'); modal.classList.remove('active');
-            setTimeout(() => { modal.style.display = 'none'; idParaExcluir = null; }, 300);
-        }
-
-        window.confirmarExclusao = async function() {
-            if (!idParaExcluir) return;
-            const btnConfirmar = document.getElementById('btn-confirmar-exclusao'); btnConfirmar.disabled = true; btnConfirmar.innerText = "A eliminar...";
-            const abaAtual = document.getElementById('subview-title').innerText;
-            try {
-                await deleteDoc(doc(db, abaAtual, idParaExcluir));
-                fecharModalExclusao(); mostrarAlertaCustomizado('Registo eliminado com sucesso!', 'Sucesso');
-            } catch (error) { mostrarAlertaCustomizado('Não foi possível eliminar o registo.', 'Erro'); } finally { btnConfirmar.disabled = false; btnConfirmar.innerText = "Sim, Eliminar"; }
-        }
-
-        window.salvarDadosDb = async function(event) {
-            event.preventDefault();
-            const abaAtual = document.getElementById('subview-title').innerText;
-            if (abaAtual === 'Artigos Fabricados' || abaAtual === 'Armazéns') return; // Armazéns não salva direto, Fabricados usa outra função.
-
-            const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
-
-            let singular = abaAtual === 'Categorias' ? 'Categoria' : (abaAtual === 'Artigos' ? 'Artigo' : abaAtual.slice(0, -1));
-            let dadosSubmetidos = {};
-
-            if (['Clientes', 'Fornecedores', 'Vendedores'].includes(abaAtual)) {
-                dadosSubmetidos = { nome: document.getElementById('nome').value, morada: document.getElementById('morada').value, codigoPostal: document.getElementById('codigo-postal').value, telefone: document.getElementById('telefone').value, nif: document.getElementById('nif').value };
-            } else if (abaAtual === 'Categorias') {
-                dadosSubmetidos = { material: document.getElementById('material').value };
-            } else if (abaAtual === 'Artigos') {
-                dadosSubmetidos = { codigo: document.getElementById('codigo').value, categoria: document.getElementById('categoria-select').value, armazem: document.getElementById('armazem-input').value, precos: [] };
-                for(let i=1; i<=5; i++) {
-                    dadosSubmetidos.precos.push({ custo: parseFloat(document.getElementById(`custo-${i}`).value) || 0, margem: parseFloat(document.getElementById(`margem-${i}`).value) || 0 });
-                }
-            }
-            dadosSubmetidos.atualizadoEm = new Date().toISOString();
-            
-            try {
-                if (idSendoEditado) {
-                    await updateDoc(doc(db, abaAtual, idSendoEditado), dadosSubmetidos); mostrarAlertaCustomizado(`${singular} atualizado com sucesso!`, 'Sucesso');
-                } else {
-                    dadosSubmetidos.criadoEm = new Date().toISOString(); await addDoc(collection(db, abaAtual), dadosSubmetidos); mostrarAlertaCustomizado(`${singular} cadastrado com sucesso!`, 'Sucesso');
-                }
-                document.getElementById('form-cadastro').reset(); fecharModal();
-            } catch (error) { mostrarAlertaCustomizado("Erro ao salvar! Tente novamente.", "Erro"); } finally { btnSalvar.disabled = false; btnSalvar.innerText = idSendoEditado ? `Atualizar ${singular}` : `Guardar ${singular}`; }
-        }
-
-        window.abrirModal = function(abaAtual) {
-            const modal = document.getElementById('modal-cadastro');
-            const box = modal.querySelector('.modal-box');
-            if(abaAtual === 'Artigos' || abaAtual === 'Artigos Fabricados') { box.style.maxWidth = '650px'; } else { box.style.maxWidth = '500px'; }
-            
-            modal.style.display = 'flex';
-            setTimeout(() => { modal.classList.add('active'); }, 10);
-        }
-
-        window.fecharModal = function() {
-            const modal = document.getElementById('modal-cadastro'); modal.classList.remove('active');
-            setTimeout(() => { 
-                modal.style.display = 'none'; 
-                document.getElementById('dynamic-fields').innerHTML = ''; 
-                idSendoEditado = null; 
-                artigosBundleTemp = []; 
-                nomeConjuntoSendoEditado = '';
-                document.getElementById('btn-guardar-texto').disabled = false; 
-            }, 300);
-        }
-
-        window.mostrarAlertaCustomizado = function(mensagem, titulo = 'Notificação') {
-            document.getElementById('alerta-titulo').innerText = titulo; document.getElementById('alerta-mensagem').innerText = mensagem;
-            const modalAlerta = document.getElementById('modal-alerta'); modalAlerta.style.display = 'flex'; setTimeout(() => { modalAlerta.classList.add('active'); }, 10);
-        }
-
-        window.fecharAlerta = function() {
-            const modalAlerta = document.getElementById('modal-alerta'); modalAlerta.classList.remove('active'); setTimeout(() => { modalAlerta.style.display = 'none'; }, 300);
-        }
-
-        /* ---------------- EVENTOS GLOBAIS E MÁSCARAS ---------------- */
-        document.addEventListener('input', function (e) {
-            if(e.target.id === 'codigo-postal') {
-                let value = e.target.value.replace(/\D/g, ''); let formattedValue = '';
-                if (value.length > 0) formattedValue = value.substring(0, 4);
-                if (value.length > 4) formattedValue += '-' + value.substring(4, 7);
-                e.target.value = formattedValue;
-            } else if (e.target.id === 'nif') {
-                e.target.value = e.target.value.replace(/\D/g, '').substring(0, 9);
-            }
-        });
-
-        document.addEventListener('click', (event) => {
-            const dropdown = document.getElementById('options-dropdown');
-            if (dropdown && dropdown.classList.contains('active') && !event.target.closest('.header-left')) { dropdown.classList.remove('active'); }
-            const clickFora = [ { overlayId: 'modal-cadastro', closeFunc: fecharModal }, { overlayId: 'modal-exclusao', closeFunc: fecharModalExclusao }, { overlayId: 'modal-alerta', closeFunc: fecharAlerta } ];
-            clickFora.forEach(m => { const overlay = document.getElementById(m.overlayId); if (overlay && event.target === overlay) { m.closeFunc(); } });
-        });
-
-        document.addEventListener('DOMContentLoaded', () => { renderDropdownStructure(); });
-    </script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

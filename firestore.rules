@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Qualquer utilizador autenticado e com email verificado (mesma condição
+    // usada no login do sistema) pode ler e escrever em qualquer coleção.
+    // Adequado para uma ferramenta interna de uma única empresa.
+    // Se no futuro quiser permissões diferentes por Cargo (ver Configurações >
+    // Grupos e Permissões de Utilizadores), este é o sítio onde isso se implementa.
+    match /{document=**} {
+      allow read, write: if request.auth != null && request.auth.token.email_verified == true;
+    }
+  }
+}
