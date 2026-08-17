@@ -1076,24 +1076,43 @@
             const p = artigo.precos[idx] || artigo.precos[0];
             return p.custo + (p.custo * (p.margem / 100));
         }
-        function renderSeletorArtigoDocumento(containerId, movimento) {
+        function renderSeletorArtigoDocumento(containerId, movimento, precoSelecionavel) {
             // NOVO: cada artigo tem um único armazém e um único stock (deixou de existir a escolha fixa A/B) —
             // o armazém aparece só como informação, junto do artigo.
             let opcoes = `<option value="">Selecione um artigo...</option>`;
             dadosCadastrados['Artigos'].forEach(a => { opcoes += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)} (Armazém: ${escapeHTML(a.armazem || '-')}, Stock: ${a.stock != null ? a.stock : 0})</option>`; });
+            // NOVO: em documentos de venda o preço não é digitado — escolhe-se uma das 5 tabelas de preço já cadastradas no artigo.
+            const campoPreco = precoSelecionavel
+                ? `<select id="${containerId}-preco" class="form-control"><option value="0">Selecione o artigo primeiro...</option></select>`
+                : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0">`;
             return `
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}')">${opcoes}</select></div>
+                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', ${precoSelecionavel ? 'true' : 'false'})">${opcoes}</select></div>
                     <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1"></div>
-                    <div class="form-group" style="flex:1; min-width:110px;"><label>Preço Unit. (€)</label><input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0"></div>
+                    <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)'}</label>${campoPreco}</div>
                     <div class="form-group" style="flex:0;"><button type="button" class="btn-cancelar" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+ Adicionar</button></div>
                 </div>
                 <div id="${containerId}-lista"></div>
                 <div id="${containerId}-total" style="text-align:right; font-weight:800; font-size:1.05rem; margin-top:10px; color: var(--text-dark);"></div>
             `;
         }
-        window.sugerirPrecoItemDocumento = function(containerId) {
+        window.sugerirPrecoItemDocumento = function(containerId, precoSelecionavel) {
+            const campoPreco = document.getElementById(`${containerId}-preco`);
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === document.getElementById(`${containerId}-artigo`).value);
+            if (precoSelecionavel) {
+                if (!artigo) { campoPreco.innerHTML = '<option value="0">Selecione o artigo primeiro...</option>'; return; }
+                if (!artigo.precos || artigo.precos.length === 0) { campoPreco.innerHTML = '<option value="0">Este artigo não tem preços definidos</option>'; return; }
+                const clienteSelect = document.getElementById('doc-cliente');
+                const cliente = clienteSelect ? dadosCadastrados['Clientes'].find(c => c.id === clienteSelect.value) : null;
+                const indiceSugerido = cliente && cliente.tabelaPreco ? cliente.tabelaPreco - 1 : 0;
+                let opts = '';
+                artigo.precos.forEach((p, idx) => {
+                    const final = p.custo + (p.custo * (p.margem / 100));
+                    opts += `<option value="${final.toFixed(2)}" ${idx === indiceSugerido ? 'selected' : ''}>Preço ${idx + 1} — ${formatMoeda(final)}</option>`;
+                });
+                campoPreco.innerHTML = opts;
+                return;
+            }
             if (!artigo) return;
             const clienteSelect = document.getElementById('doc-cliente');
             const cliente = clienteSelect ? dadosCadastrados['Clientes'].find(c => c.id === clienteSelect.value) : null;
@@ -1180,7 +1199,7 @@
                         ${cfg.exigeCliente ? `<div class="form-group"><label>${cfg.entidadeLabel || 'Cliente'}</label><select id="doc-cliente" class="form-control" required>${opcoesCliente}</select></div>` : ''}
                         <div class="form-group"><label>Data</label><input type="date" id="doc-data" class="form-control" value="${hojeISO()}"></div>
                         <h3 style="font-size:0.95rem; margin: 14px 0 8px; color: var(--primary);">Artigos</h3>
-                        ${renderSeletorArtigoDocumento('doc', cfg.movimentoStock)}
+                        ${renderSeletorArtigoDocumento('doc', cfg.movimentoStock, cfg.precoSelecionavel)}
                     `;
                     document.getElementById('modal-titulo').innerText = `Novo(a) ${cfg.singular}`;
                     document.getElementById('btn-guardar-texto').innerText = `Guardar ${cfg.singular}`;
@@ -1230,8 +1249,8 @@
         window.emitirReciboDeFatura = (colecaoOrigem, faturaId) => emitirRecibo(colecaoOrigem, faturaId, 'RecibosVenda', 'REC', 'clienteId', 'clienteNome');
 
         /* ---- Documentos > Venda ---- */
-        registrarDocumentoComItens('Faturas', { collection: 'Faturas', singular: 'Fatura', prefixo: 'FT', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pendente', reciboFn: 'emitirReciboDeFatura' });
-        registrarDocumentoComItens('Faturas Simplificada', { collection: 'FaturasSimplificadas', singular: 'Fatura Simplificada', prefixo: 'FS', exigeCliente: false, movimentoStock: 'saida', statusInicial: 'Pago' });
+        registrarDocumentoComItens('Faturas', { collection: 'Faturas', singular: 'Fatura', prefixo: 'FT', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pendente', reciboFn: 'emitirReciboDeFatura', precoSelecionavel: true });
+        registrarDocumentoComItens('Faturas Simplificada', { collection: 'FaturasSimplificadas', singular: 'Fatura Simplificada', prefixo: 'FS', exigeCliente: false, movimentoStock: 'saida', statusInicial: 'Pago', precoSelecionavel: true });
         registrarDocumentoComItens('Faturas-Recibo', { collection: 'FaturasRecibo', singular: 'Fatura-Recibo', prefixo: 'FR', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pago' });
 
         /* ---- Documentos > Outros Documentos > Fichas de Serviço (1 cliente = 1 obra, sempre separadas) ---- */
