@@ -551,7 +551,7 @@
         const storage = getStorage(app);
 
         const sistemaModulos = {
-            'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns', 'Propriedades', 'Tabelas de Preços'], 'Stocks': ['Controlo de stocks', 'Contagens de Existências'] },
+            'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns'], 'Stocks': ['Controlo de stocks'] },
             'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Notas de Débito'], 'Transporte': ['Guia de Remessa', 'Guia de Transporte'], 'Outros Documentos': ['Notas de Encomenda', 'Orçamentos', 'Fichas de Serviço', 'Faturas pro forma', 'Faturas de Consignação', 'Avenças', 'Documentos Internos', 'Consultas de mesa'], 'Liquidações': ['Recibos', 'Notas de Liquidação', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Simplificadas', 'Notas de Crédito', 'Notas de Débito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Vendedores': ['Guia de Pagamento'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
             'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Impostos e retenções': ['Impostos e taxas', 'Retenções'], 'Agenda': ['Eventos Programados'], 'Referências Multibanco': ['Consultar', 'Configurar'], 'Mensagem SMS': ['Consultar', 'Configurar'], 'Assinaturas Digitais': ['Consultar', 'Configurar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas', 'Zonas Geográficas', 'Unidades de Medida', 'Mensagens Predefinidas'] }
@@ -576,6 +576,7 @@
 
         // Novas coleções do Firestore usadas pelas telas implementadas agora
         const NOVAS_COLECOES = [
+            'Armazéns',
             'Faturas', 'FaturasSimplificadas', 'FaturasRecibo', 'GuiaRemessa', 'Fichas de Serviço',
             'Faturas pro forma', 'Avenças', 'RecibosVenda', 'NotasCreditoVenda', 'Devoluções Pagamento',
             'NotasEncomendaFornecedor', 'FaturasFornecedor', 'FaturasSimplificadasFornecedor',
@@ -930,7 +931,7 @@
                         </tr>`;
                     });
                 } else if (aba === 'Artigos') {
-                    tableHTML += `<thead><tr><th>Código</th><th>Categoria</th><th>Armazém</th><th>Stock A</th><th>Stock B</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
+                    tableHTML += `<thead><tr><th>Código</th><th>Categoria</th><th>Armazém</th><th>Stock</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
                     listaDados.forEach(item => {
                         let precosHtml = '';
                         if(item.precos && item.precos.length > 0) {
@@ -944,10 +945,10 @@
 
                         tableHTML += `
                         <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-${item.id}', event)">
-                            <td>${escapeHTML(item.codigo || '')}</td><td>${escapeHTML(item.categoria || '')}</td><td>${escapeHTML(item.armazem || '')}</td><td>${item.stockA != null ? item.stockA : 0}</td><td>${item.stockB != null ? item.stockB : 0}</td>
+                            <td>${escapeHTML(item.codigo || '')}</td><td>${escapeHTML(item.categoria || '')}</td><td>${escapeHTML(item.armazem || '')}</td><td>${item.stock != null ? item.stock : 0}</td>
                             <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="event.stopPropagation(); abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="event.stopPropagation(); prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
                         </tr>
-                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="6" style="padding: 10px 20px;">${precosHtml}</td></tr>`;
+                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="5" style="padding: 10px 20px;">${precosHtml}</td></tr>`;
                     });
                 } else if (aba === 'Artigos Fabricados') {
                     tableHTML += `<thead><tr><th>Nome do Conjunto</th><th>Custo Total (€)</th><th>Qtd. Artigos</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
@@ -1076,12 +1077,13 @@
             return p.custo + (p.custo * (p.margem / 100));
         }
         function renderSeletorArtigoDocumento(containerId, movimento) {
+            // NOVO: cada artigo tem um único armazém e um único stock (deixou de existir a escolha fixa A/B) —
+            // o armazém aparece só como informação, junto do artigo.
             let opcoes = `<option value="">Selecione um artigo...</option>`;
-            dadosCadastrados['Artigos'].forEach(a => { opcoes += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)}</option>`; });
+            dadosCadastrados['Artigos'].forEach(a => { opcoes += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)} (Armazém: ${escapeHTML(a.armazem || '-')}, Stock: ${a.stock != null ? a.stock : 0})</option>`; });
             return `
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div class="form-group" style="flex:2; min-width:180px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}')">${opcoes}</select></div>
-                    ${movimento !== 'nenhum' ? `<div class="form-group" style="flex:1; min-width:90px;"><label>Armazém</label><select id="${containerId}-armazem" class="form-control"><option value="A">A</option><option value="B">B</option></select></div>` : ''}
+                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}')">${opcoes}</select></div>
                     <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1"></div>
                     <div class="form-group" style="flex:1; min-width:110px;"><label>Preço Unit. (€)</label><input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0"></div>
                     <div class="form-group" style="flex:0;"><button type="button" class="btn-cancelar" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+ Adicionar</button></div>
@@ -1101,16 +1103,14 @@
             const artigoId = document.getElementById(`${containerId}-artigo`).value;
             const qtd = parseInt(document.getElementById(`${containerId}-qtd`).value) || 0;
             const preco = parseFloat(document.getElementById(`${containerId}-preco`).value) || 0;
-            const armazemEl = document.getElementById(`${containerId}-armazem`);
-            const armazem = armazemEl ? armazemEl.value : null;
             if (!artigoId || qtd <= 0) { mostrarAlertaCustomizado('Selecione um artigo e uma quantidade válida.', 'Atenção'); return; }
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
-            if (movimento === 'saida' && armazem) {
-                const disponivel = armazem === 'A' ? (artigo.stockA || 0) : (artigo.stockB || 0);
-                const jaNoCarrinho = itensDocumentoTemp.filter(i => i.artigoId === artigoId && i.armazem === armazem).reduce((s, i) => s + i.quantidade, 0);
-                if (qtd + jaNoCarrinho > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no Armazém ${armazem}. Disponível: ${disponivel}.`, 'Atenção'); return; }
+            if (movimento === 'saida') {
+                const disponivel = artigo.stock || 0;
+                const jaNoCarrinho = itensDocumentoTemp.filter(i => i.artigoId === artigoId).reduce((s, i) => s + i.quantidade, 0);
+                if (qtd + jaNoCarrinho > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no Armazém ${artigo.armazem || '-'}. Disponível: ${disponivel}.`, 'Atenção'); return; }
             }
-            itensDocumentoTemp.push({ artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem, quantidade: qtd, precoUnit: preco, subtotal: qtd * preco });
+            itensDocumentoTemp.push({ artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: artigo.armazem || '', quantidade: qtd, precoUnit: preco, subtotal: qtd * preco });
             document.getElementById(`${containerId}-qtd`).value = 1;
             document.getElementById(`${containerId}-preco`).value = 0;
             renderListaItensDocumento(containerId);
@@ -1136,9 +1136,7 @@
         async function aplicarMovimentoStock(itens, movimento) {
             const sinal = movimento === 'saida' ? -1 : 1;
             for (const it of itens) {
-                if (!it.armazem) continue;
-                const campo = it.armazem === 'A' ? 'stockA' : 'stockB';
-                await updateDoc(doc(db, 'Artigos', it.artigoId), { [campo]: increment(sinal * it.quantidade) });
+                await updateDoc(doc(db, 'Artigos', it.artigoId), { stock: increment(sinal * it.quantidade) });
             }
         }
         function detalheItensHtml(item) {
@@ -1665,13 +1663,10 @@
             },
             cadastro: function() {
                 let opcoesArtigos = `<option value="">Selecione um artigo...</option>`;
-                dadosCadastrados['Artigos'].forEach(a => { opcoesArtigos += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)}</option>`; });
+                dadosCadastrados['Artigos'].forEach(a => { opcoesArtigos += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)} (Armazém: ${escapeHTML(a.armazem || '-')}, Stock: ${a.stock != null ? a.stock : 0})</option>`; });
                 document.getElementById('dynamic-fields').innerHTML = `
                     <div class="form-group"><label for="nq-artigo">Artigo</label><select id="nq-artigo" class="form-control" required>${opcoesArtigos}</select></div>
-                    <div style="display:flex; gap:12px;">
-                        <div class="form-group" style="flex:1;"><label for="nq-armazem">Armazém</label><select id="nq-armazem" class="form-control"><option value="A">A</option><option value="B">B</option></select></div>
-                        <div class="form-group" style="flex:1;"><label for="nq-qtd">Quantidade</label><input type="number" id="nq-qtd" class="form-control" min="1" step="1" value="1" required></div>
-                    </div>
+                    <div class="form-group"><label for="nq-qtd">Quantidade</label><input type="number" id="nq-qtd" class="form-control" min="1" step="1" value="1" required></div>
                     <div class="form-group"><label for="nq-motivo">Motivo</label><select id="nq-motivo" class="form-control"><option value="Queimou">Queimou</option><option value="Quebrou">Quebrou</option><option value="Desperdício">Desperdício</option></select></div>
                 `;
                 document.getElementById('modal-titulo').innerText = 'Nova Nota de Quebra';
@@ -1680,15 +1675,14 @@
                 salvarEspecialAtual = async function() {
                     const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
                     const artigoId = document.getElementById('nq-artigo').value;
-                    const armazem = document.getElementById('nq-armazem').value;
                     const quantidade = parseInt(document.getElementById('nq-qtd').value) || 0;
                     const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
-                    const disponivel = armazem === 'A' ? (artigo?.stockA || 0) : (artigo?.stockB || 0);
+                    const disponivel = artigo?.stock || 0;
                     if (!artigoId || quantidade <= 0) { mostrarAlertaCustomizado('Selecione o artigo e uma quantidade válida.', 'Atenção'); btnSalvar.disabled = false; return; }
-                    if (quantidade > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no Armazém ${armazem}. Disponível: ${disponivel}.`, 'Atenção'); btnSalvar.disabled = false; return; }
+                    if (quantidade > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no Armazém ${artigo.armazem || '-'}. Disponível: ${disponivel}.`, 'Atenção'); btnSalvar.disabled = false; return; }
                     try {
-                        await addDoc(collection(db, 'Nota de Quebra'), { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem, quantidade, motivo: document.getElementById('nq-motivo').value, data: hojeISO(), criadoEm: new Date().toISOString() });
-                        await updateDoc(doc(db, 'Artigos', artigoId), { [armazem === 'A' ? 'stockA' : 'stockB']: increment(-quantidade) });
+                        await addDoc(collection(db, 'Nota de Quebra'), { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: artigo.armazem || '', quantidade, motivo: document.getElementById('nq-motivo').value, data: hojeISO(), criadoEm: new Date().toISOString() });
+                        await updateDoc(doc(db, 'Artigos', artigoId), { stock: increment(-quantidade) });
                         mostrarAlertaCustomizado('Nota de quebra registada e stock atualizado!', 'Sucesso');
                         fecharModal();
                     } catch (e) { mostrarAlertaCustomizado('Erro ao registar.', 'Erro'); btnSalvar.disabled = false; }
@@ -1704,7 +1698,7 @@
                 let html = `
                     <div class="view-card" style="text-align:left; margin-bottom: 20px;">
                         <h3 style="margin-bottom:10px; color: var(--text-dark);">Importar stock antigo (Excel/CSV)</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">O ficheiro deve ser .csv com as colunas: <strong>codigo,armazem,quantidade</strong> (armazem = A ou B). Ideal para lançar de uma vez o stock que já existia antes do sistema.</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">O ficheiro deve ser .csv com as colunas: <strong>codigo,quantidade</strong>. O stock é somado ao armazém já definido em cada artigo. Ideal para lançar de uma vez o stock que já existia antes do sistema.</p>
                         <input type="file" id="input-csv-entrada" accept=".csv" class="form-control" style="max-width:400px;">
                         <button class="btn-salvar" style="margin-top:12px;" onclick="processarEntradaInventario()">Importar Ficheiro</button>
                         <div id="resultado-entrada-inventario" style="margin-top:14px; font-size:0.9rem;"></div>
@@ -1726,13 +1720,12 @@
                 const linhas = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
                 let atualizados = 0, naoEncontrados = [];
                 for (const linha of linhas) {
-                    const [codigo, armazem, quantidadeStr] = linha.split(',').map(v => (v || '').trim());
+                    const [codigo, quantidadeStr] = linha.split(',').map(v => (v || '').trim());
                     if (!codigo || codigo.toLowerCase() === 'codigo') continue;
                     const artigo = dadosCadastrados['Artigos'].find(a => a.codigo === codigo);
                     const qtd = parseInt(quantidadeStr) || 0;
-                    const arm = (armazem || 'A').toUpperCase() === 'B' ? 'B' : 'A';
                     if (!artigo || qtd <= 0) { naoEncontrados.push(codigo); continue; }
-                    await updateDoc(doc(db, 'Artigos', artigo.id), { [arm === 'A' ? 'stockA' : 'stockB']: increment(qtd) });
+                    await updateDoc(doc(db, 'Artigos', artigo.id), { stock: increment(qtd) });
                     atualizados++;
                 }
                 await addDoc(collection(db, 'MovimentosInventario'), { tipo: 'entrada', totalLinhas: atualizados, origem: input.files[0].name, data: hojeISO(), criadoEm: new Date().toISOString() });
@@ -1754,8 +1747,8 @@
                     </div>`;
                 const artigos = dadosCadastrados['Artigos'];
                 if (artigos.length > 0) {
-                    html += `<table class="elegant-table" id="tabela-print-inventario"><thead><tr><th>Código</th><th>Categoria</th><th>Stock A</th><th>Stock B</th><th>Total</th></tr></thead><tbody>`;
-                    artigos.forEach(a => { html += `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.categoria)}</td><td>${a.stockA || 0}</td><td>${a.stockB || 0}</td><td>${(a.stockA || 0) + (a.stockB || 0)}</td></tr>`; });
+                    html += `<table class="elegant-table" id="tabela-print-inventario"><thead><tr><th>Código</th><th>Categoria</th><th>Armazém</th><th>Stock</th></tr></thead><tbody>`;
+                    artigos.forEach(a => { html += `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.categoria)}</td><td>${escapeHTML(a.armazem || '-')}</td><td>${a.stock != null ? a.stock : 0}</td></tr>`; });
                     html += `</tbody></table>`;
                 }
                 display.innerHTML = html;
@@ -1763,8 +1756,8 @@
         };
         window.exportarInventarioCSV = function() {
             const artigos = dadosCadastrados['Artigos'];
-            let csv = 'codigo,categoria,stockA,stockB,total\n';
-            artigos.forEach(a => { csv += `${a.codigo},${a.categoria},${a.stockA || 0},${a.stockB || 0},${(a.stockA || 0) + (a.stockB || 0)}\n`; });
+            let csv = 'codigo,categoria,armazem,stock\n';
+            artigos.forEach(a => { csv += `${a.codigo},${a.categoria},${a.armazem || ''},${a.stock != null ? a.stock : 0}\n`; });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -2046,10 +2039,9 @@
                     return;
                 }
                 display.style.textAlign = 'left'; display.style.padding = '0';
-                let html = `<table class="elegant-table"><thead><tr><th>Código</th><th>Produto (Categoria)</th><th>Descrição</th><th>Qtd. Armazém A</th><th>Qtd. Armazém B</th><th>Qtd. Total</th></tr></thead><tbody>`;
+                let html = `<table class="elegant-table"><thead><tr><th>Código</th><th>Produto (Categoria)</th><th>Armazém</th><th>Qtd.</th></tr></thead><tbody>`;
                 artigos.forEach(a => {
-                    const total = (a.stockA || 0) + (a.stockB || 0);
-                    html += `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.categoria)}</td><td>${escapeHTML(a.armazem || '-')}</td><td>${a.stockA || 0}</td><td>${a.stockB || 0}</td><td style="font-weight:700;">${total}</td></tr>`;
+                    html += `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.categoria)}</td><td>${escapeHTML(a.armazem || '-')}</td><td style="font-weight:700;">${a.stock != null ? a.stock : 0}</td></tr>`;
                 });
                 html += `</tbody></table>`;
                 display.innerHTML = html;
@@ -2093,16 +2085,26 @@
                     let selected = (item && item.categoria === cat.material) ? 'selected' : '';
                     opcoesCategoria += `<option value="${cat.material}" ${selected}>${cat.material}</option>`;
                 });
+                // NOVO: Armazém passou a ser escolhido de uma lista de armazéns já criados (com opção de criar um novo aqui mesmo)
+                let opcoesArmazemArtigo = `<option value="">Selecione um armazém...</option>`;
+                dadosCadastrados['Armazéns'].forEach(arm => {
+                    let selected = (item && item.armazem === arm.nome) ? 'selected' : '';
+                    opcoesArmazemArtigo += `<option value="${escapeHTML(arm.nome)}" ${selected}>${escapeHTML(arm.nome)}</option>`;
+                });
+                opcoesArmazemArtigo += `<option value="__novo__">+ Criar novo armazém...</option>`;
 
                 html = `
                     <div style="display: flex; gap: 12px; margin-bottom: 8px;">
                         <div class="form-group" style="flex: 1;"><label for="codigo">Código</label><input type="text" id="codigo" class="form-control" placeholder="Ex: ART-001" value="${item ? item.codigo : ''}" required></div>
                         <div class="form-group" style="flex: 1;"><label for="categoria-select">Categoria</label><select id="categoria-select" class="form-control" required>${opcoesCategoria}</select></div>
-                        <div class="form-group" style="flex: 1;"><label for="armazem-input">Armazém</label><input type="text" id="armazem-input" class="form-control" placeholder="Ex: A1" value="${item ? item.armazem : ''}" required></div>
                     </div>
                     <div style="display: flex; gap: 12px; margin-bottom: 8px;">
-                        <div class="form-group" style="flex: 1;"><label for="stock-a-input">Stock no Armazém A</label><input type="number" id="stock-a-input" class="form-control" min="0" step="1" value="${item && item.stockA != null ? item.stockA : 0}"></div>
-                        <div class="form-group" style="flex: 1;"><label for="stock-b-input">Stock no Armazém B</label><input type="number" id="stock-b-input" class="form-control" min="0" step="1" value="${item && item.stockB != null ? item.stockB : 0}"></div>
+                        <div class="form-group" style="flex: 1;">
+                            <label for="armazem-select">Armazém</label>
+                            <select id="armazem-select" class="form-control" required onchange="document.getElementById('armazem-novo-nome').style.display = this.value === '__novo__' ? 'block' : 'none';">${opcoesArmazemArtigo}</select>
+                            <input type="text" id="armazem-novo-nome" class="form-control" placeholder="Nome do novo armazém" style="display:none; margin-top:8px;">
+                        </div>
+                        <div class="form-group" style="flex: 1;"><label for="stock-input">Stock neste Armazém</label><input type="number" id="stock-input" class="form-control" min="0" step="1" value="${item && item.stock != null ? item.stock : 0}"></div>
                     </div>
                     <h3 style="font-size: 0.95rem; margin: 10px 0; color: var(--primary);">Definição de Preços</h3>
                 `;
@@ -2236,10 +2238,17 @@
             } else if (abaAtual === 'Categorias') {
                 dadosSubmetidos = { material: document.getElementById('material').value };
             } else if (abaAtual === 'Artigos') {
-                dadosSubmetidos = { codigo: document.getElementById('codigo').value, categoria: document.getElementById('categoria-select').value, armazem: document.getElementById('armazem-input').value, precos: [] };
-                // NOVO: quantidade em stock separada por armazém (pedido nas notas: "os artigos vão estar em 2 armazéns")
-                dadosSubmetidos.stockA = parseInt(document.getElementById('stock-a-input').value) || 0;
-                dadosSubmetidos.stockB = parseInt(document.getElementById('stock-b-input').value) || 0;
+                // NOVO: Armazém é escolhido de uma lista já criada; se for um nome novo, cria-se primeiro o registo em "Armazéns".
+                let nomeArmazemEscolhido = document.getElementById('armazem-select').value;
+                if (!nomeArmazemEscolhido) { mostrarAlertaCustomizado('Selecione (ou crie) um armazém.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = idSendoEditado ? 'Atualizar Artigo' : 'Guardar Artigo'; return; }
+                if (nomeArmazemEscolhido === '__novo__') {
+                    nomeArmazemEscolhido = document.getElementById('armazem-novo-nome').value.trim();
+                    if (!nomeArmazemEscolhido) { mostrarAlertaCustomizado('Digite o nome do novo armazém.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = idSendoEditado ? 'Atualizar Artigo' : 'Guardar Artigo'; return; }
+                    const jaExiste = dadosCadastrados['Armazéns'].find(a => a.nome.toLowerCase() === nomeArmazemEscolhido.toLowerCase());
+                    if (!jaExiste) { await addDoc(collection(db, 'Armazéns'), { nome: nomeArmazemEscolhido, criadoEm: new Date().toISOString() }); }
+                }
+                dadosSubmetidos = { codigo: document.getElementById('codigo').value, categoria: document.getElementById('categoria-select').value, armazem: nomeArmazemEscolhido, precos: [] };
+                dadosSubmetidos.stock = parseInt(document.getElementById('stock-input').value) || 0;
                 for(let i=1; i<=5; i++) {
                     dadosSubmetidos.precos.push({ custo: parseFloat(document.getElementById(`custo-${i}`).value) || 0, margem: parseFloat(document.getElementById(`margem-${i}`).value) || 0 });
                 }
