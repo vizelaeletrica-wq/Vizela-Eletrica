@@ -1082,16 +1082,20 @@
             let opcoes = `<option value="">Selecione um artigo...</option>`;
             dadosCadastrados['Artigos'].forEach(a => { opcoes += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)} (Armazém: ${escapeHTML(a.armazem || '-')}, Stock: ${a.stock != null ? a.stock : 0})</option>`; });
             // NOVO: em documentos de venda o preço não é digitado — escolhe-se uma das 5 tabelas de preço já cadastradas no artigo.
+            // NOVO: impede que pressionar Enter num destes campos submeta o formulário do documento sem querer
+            // (isso disparava "Guardar" antes de o artigo ter sido efetivamente adicionado à lista) — Enter agora só adiciona à lista.
+            const semSubmeterNoEnter = `onkeydown="if(event.key==='Enter'){event.preventDefault(); adicionarItemDocumento('${containerId}','${movimento}');}"`;
             const campoPreco = precoSelecionavel
-                ? `<select id="${containerId}-preco" class="form-control"><option value="0">Selecione o artigo primeiro...</option></select>`
-                : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0">`;
+                ? `<select id="${containerId}-preco" class="form-control" ${semSubmeterNoEnter}><option value="0">Selecione o artigo primeiro...</option></select>`
+                : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0" ${semSubmeterNoEnter}>`;
             return `
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', ${precoSelecionavel ? 'true' : 'false'})">${opcoes}</select></div>
-                    <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1"></div>
+                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', ${precoSelecionavel ? 'true' : 'false'})" ${semSubmeterNoEnter}>${opcoes}</select></div>
+                    <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
                     <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)'}</label>${campoPreco}</div>
-                    <div class="form-group" style="flex:0;"><button type="button" class="btn-cancelar" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+ Adicionar</button></div>
+                    <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+ Adicionar à Lista</button></div>
                 </div>
+                <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">Escolha o artigo, a quantidade e o preço, depois clique em <strong>"+ Adicionar à Lista"</strong>. Só os artigos que aparecerem na lista abaixo entram no documento ao Guardar.</p>
                 <div id="${containerId}-lista"></div>
                 <div id="${containerId}-total" style="text-align:right; font-weight:800; font-size:1.05rem; margin-top:10px; color: var(--text-dark);"></div>
             `;
