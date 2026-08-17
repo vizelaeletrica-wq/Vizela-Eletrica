@@ -1255,7 +1255,7 @@
         /* ---- Documentos > Venda ---- */
         registrarDocumentoComItens('Faturas', { collection: 'Faturas', singular: 'Fatura', prefixo: 'FT', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pendente', reciboFn: 'emitirReciboDeFatura', precoSelecionavel: true });
         registrarDocumentoComItens('Faturas Simplificada', { collection: 'FaturasSimplificadas', singular: 'Fatura Simplificada', prefixo: 'FS', exigeCliente: false, movimentoStock: 'saida', statusInicial: 'Pago', precoSelecionavel: true });
-        registrarDocumentoComItens('Faturas-Recibo', { collection: 'FaturasRecibo', singular: 'Fatura-Recibo', prefixo: 'FR', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pago' });
+        registrarDocumentoComItens('Faturas-Recibo', { collection: 'FaturasRecibo', singular: 'Fatura-Recibo', prefixo: 'FR', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pago', precoSelecionavel: true });
 
         /* ---- Documentos > Outros Documentos > Fichas de Serviço (1 cliente = 1 obra, sempre separadas) ---- */
         TELAS_ESPECIAIS['Fichas de Serviço'] = {
