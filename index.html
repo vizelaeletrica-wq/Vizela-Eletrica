@@ -247,6 +247,45 @@
         .btn-perigo { background-color: var(--danger); color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
         .btn-perigo:hover { background-color: var(--danger-hover); }
 
+
+        /* Badges de estado */
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2px; vertical-align: middle; }
+        .badge-success { background: #dcfce7; color: #166534; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-muted { background: #f3f4f6; color: #6b7280; }
+
+        /* Calendário das Avenças (D S T Q Q S S) */
+        .cal-wrap { padding: 20px; }
+        .cal-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .cal-title { font-size: 1.25rem; font-weight: 700; color: var(--text-dark); min-width: 170px; text-align: center; }
+        .cal-nav { display: flex; align-items: center; gap: 8px; }
+        .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text-muted); margin-top: 12px; }
+        .cal-legend span::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: middle; }
+        .cal-legend .l-pendente::before { background: #F5A623; } .cal-legend .l-feito::before { background: #10b981; }
+        .cal-legend .l-atraso::before { background: #ef4444; } .cal-legend .l-cancelada::before { background: #9ca3af; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .cal-wd { background: #1a1a1a; color: #fff; text-align: center; padding: 8px 0; font-weight: 700; font-size: 0.85rem; }
+        .cal-day { background: #ffffff; min-height: 104px; padding: 6px; cursor: pointer; text-align: left; overflow: hidden; }
+        .cal-day:hover { background: #fffbeb; }
+        .cal-day.vazio { background: #f9fafb; cursor: default; }
+        .cal-day.vazio:hover { background: #f9fafb; }
+        .cal-num { font-size: 0.82rem; font-weight: 600; color: var(--text-dark); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .cal-day.hoje .cal-num { background: var(--primary); color: var(--text-on-primary); }
+        .cal-chip { font-size: 0.72rem; border-radius: 4px; padding: 3px 6px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; border-left: 3px solid; }
+        .cal-chip.pendente { background: #fffbeb; color: #92400e; border-color: #F5A623; }
+        .cal-chip.feito { background: #ecfdf5; color: #065f46; border-color: #10b981; }
+        .cal-chip.atraso { background: #fef2f2; color: #991b1b; border-color: #ef4444; }
+        .cal-chip.cancelada { background: #f3f4f6; color: #6b7280; border-color: #9ca3af; text-decoration: line-through; }
+        @media (max-width: 768px) {
+            .cal-wrap { padding: 12px; }
+            .cal-day { min-height: 58px; padding: 3px; }
+            .cal-chip { font-size: 0; height: 7px; padding: 0; margin-top: 3px; border-left-width: 0; border-radius: 3px; }
+            .cal-chip.pendente { background: #F5A623; } .cal-chip.feito { background: #10b981; }
+            .cal-chip.atraso { background: #ef4444; } .cal-chip.cancelada { background: #9ca3af; }
+        }
+
         /* ================= AJUSTES CIRÚRGICOS MOBILE DO SISTEMA ================= */
         @media (max-width: 768px) {
             body { overflow: hidden; }
@@ -552,9 +591,9 @@
 
         const sistemaModulos = {
             'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns'], 'Stocks': ['Controlo de stocks'] },
-            'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Notas de Débito'], 'Transporte': ['Guia de Remessa', 'Guia de Transporte'], 'Outros Documentos': ['Notas de Encomenda', 'Orçamentos', 'Fichas de Serviço', 'Faturas pro forma', 'Faturas de Consignação', 'Avenças', 'Documentos Internos', 'Consultas de mesa'], 'Liquidações': ['Recibos', 'Notas de Liquidação', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Simplificadas', 'Notas de Crédito', 'Notas de Débito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Vendedores': ['Guia de Pagamento'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
+            'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Simplificadas', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
-            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Impostos e retenções': ['Impostos e taxas', 'Retenções'], 'Agenda': ['Eventos Programados'], 'Referências Multibanco': ['Consultar', 'Configurar'], 'Mensagem SMS': ['Consultar', 'Configurar'], 'Assinaturas Digitais': ['Consultar', 'Configurar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas', 'Zonas Geográficas', 'Unidades de Medida', 'Mensagens Predefinidas'] }
+            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Agenda': ['Eventos Programados'], 'Referências Multibanco': ['Consultar'], 'Mensagem SMS': ['Consultar'], 'Assinaturas Digitais': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas'] }
         };
 
         let categoriaAtiva = 'Tabelas';
@@ -914,11 +953,13 @@
 
                 if (['Clientes', 'Fornecedores', 'Vendedores'].includes(aba)) {
                     const temTabelaPreco = aba === 'Clientes'; // NOVO
-                    tableHTML += `<thead><tr><th>Nome</th><th>Morada</th><th>Código Postal</th><th>Telefone</th><th>NIF</th>${temTabelaPreco ? '<th>Tabela de Preço</th>' : ''}<th>Ações</th></tr></thead><tbody>`;
+                    const campoCredito = aba === 'Clientes' ? 'saldoCredito' : (aba === 'Fornecedores' ? 'saldoCreditoFornecedor' : null);
+                    tableHTML += `<thead><tr><th>Nome</th><th>Morada</th><th>Código Postal</th><th>Telefone</th><th>NIF</th>${temTabelaPreco ? '<th>Tabela de Preço</th>' : ''}${campoCredito ? '<th>Crédito</th>' : ''}<th>Ações</th></tr></thead><tbody>`;
                     listaDados.forEach(item => {
                         tableHTML += `<tr>
                             <td>${escapeHTML(item.nome || '')}</td><td>${escapeHTML(item.morada || '')}</td><td>${escapeHTML(item.codigoPostal || '')}</td><td>${escapeHTML(item.telefone || '')}</td><td>${escapeHTML(item.nif || '')}</td>
                             ${temTabelaPreco ? `<td>${item.tabelaPreco ? 'Preço ' + item.tabelaPreco : '-'}</td>` : ''}
+                            ${campoCredito ? `<td>${formatMoeda(item[campoCredito] || 0)}</td>` : ''}
                             <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
                         </tr>`;
                     });
@@ -1020,8 +1061,8 @@
            e função escapeHTML já existentes acima.
            ================================================================ */
         function formatMoeda(v) { return (Number(v) || 0).toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €'; }
-        function formatDataPt(iso) { if (!iso) return ''; const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString('pt-PT'); }
-        function hojeISO() { return new Date().toISOString().slice(0, 10); }
+        function formatDataPt(iso) { if (!iso) return ''; if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) { const [a, m, d] = iso.split('-'); return `${d}/${m}/${a}`; } const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString('pt-PT'); }
+        function hojeISO() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
         function alertaData(dataISO) {
             if (!dataISO) return '-';
             const dias = Math.floor((new Date(dataISO) - new Date(hojeISO())) / (1000 * 60 * 60 * 24));
@@ -1031,7 +1072,7 @@
             return `${formatDataPt(dataISO)}${badge}`;
         }
         function badgeStatus(status) {
-            const mapa = { 'Pago': 'badge-success', 'Concluído': 'badge-success', 'Pendente': 'badge-warning', 'Em Aberto': 'badge-warning', 'Cancelado': 'badge-danger', 'Convertido': 'badge-info' };
+            const mapa = { 'Pago': 'badge-success', 'Concluído': 'badge-success', 'Pendente': 'badge-warning', 'Em Aberto': 'badge-warning', 'Cancelado': 'badge-danger', 'Convertido': 'badge-info', 'Ativa': 'badge-success', 'Cancelada': 'badge-danger', 'Concluída': 'badge-success', 'Atrasada': 'badge-danger' };
             return `<span class="badge ${mapa[status] || 'badge-muted'}">${escapeHTML(status || '-')}</span>`;
         }
         async function proximoNumeroDocumento(colecaoNome, prefixo) {
@@ -1090,9 +1131,9 @@
                 : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0" ${semSubmeterNoEnter}>`;
             return `
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', ${precoSelecionavel ? 'true' : 'false'})" ${semSubmeterNoEnter}>${opcoes}</select></div>
+                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
                     <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
-                    <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)'}</label>${campoPreco}</div>
+                    <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel === 'custo' ? 'Tabela de Custo' : (precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)')}</label>${campoPreco}</div>
                     <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+ Adicionar à Lista</button></div>
                 </div>
                 <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">Escolha o artigo, a quantidade e o preço, depois clique em <strong>"+ Adicionar à Lista"</strong>. Só os artigos que aparecerem na lista abaixo entram no documento ao Guardar.</p>
@@ -1103,23 +1144,30 @@
         window.sugerirPrecoItemDocumento = function(containerId, precoSelecionavel) {
             const campoPreco = document.getElementById(`${containerId}-preco`);
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === document.getElementById(`${containerId}-artigo`).value);
+            const clienteSelect = document.getElementById('doc-cliente');
+            // O campo "doc-cliente" pode guardar um cliente OU uma Folha de Obra (Guia de Remessa); nesse caso procura-se o cliente da obra.
+            let cliente = null;
+            if (clienteSelect) {
+                cliente = dadosCadastrados['Clientes'].find(c => c.id === clienteSelect.value);
+                if (!cliente) {
+                    const obra = (dadosCadastrados['Fichas de Serviço'] || []).find(o => o.id === clienteSelect.value);
+                    if (obra) cliente = dadosCadastrados['Clientes'].find(c => c.id === obra.clienteId);
+                }
+            }
             if (precoSelecionavel) {
+                const modoCusto = precoSelecionavel === 'custo';
                 if (!artigo) { campoPreco.innerHTML = '<option value="0">Selecione o artigo primeiro...</option>'; return; }
                 if (!artigo.precos || artigo.precos.length === 0) { campoPreco.innerHTML = '<option value="0">Este artigo não tem preços definidos</option>'; return; }
-                const clienteSelect = document.getElementById('doc-cliente');
-                const cliente = clienteSelect ? dadosCadastrados['Clientes'].find(c => c.id === clienteSelect.value) : null;
-                const indiceSugerido = cliente && cliente.tabelaPreco ? cliente.tabelaPreco - 1 : 0;
+                const indiceSugerido = (!modoCusto && cliente && cliente.tabelaPreco) ? cliente.tabelaPreco - 1 : 0;
                 let opts = '';
                 artigo.precos.forEach((p, idx) => {
-                    const final = p.custo + (p.custo * (p.margem / 100));
-                    opts += `<option value="${final.toFixed(2)}" ${idx === indiceSugerido ? 'selected' : ''}>Preço ${idx + 1} — ${formatMoeda(final)}</option>`;
+                    const valor = modoCusto ? p.custo : p.custo + (p.custo * (p.margem / 100));
+                    opts += `<option value="${valor.toFixed(2)}" ${idx === indiceSugerido ? 'selected' : ''}>${modoCusto ? 'Custo' : 'Preço'} ${idx + 1} — ${formatMoeda(valor)}</option>`;
                 });
                 campoPreco.innerHTML = opts;
                 return;
             }
             if (!artigo) return;
-            const clienteSelect = document.getElementById('doc-cliente');
-            const cliente = clienteSelect ? dadosCadastrados['Clientes'].find(c => c.id === clienteSelect.value) : null;
             document.getElementById(`${containerId}-preco`).value = precoClienteParaArtigo(artigo, cliente).toFixed(2);
         }
         window.adicionarItemDocumento = function(containerId, movimento) {
@@ -1127,6 +1175,7 @@
             const qtd = parseInt(document.getElementById(`${containerId}-qtd`).value) || 0;
             const preco = parseFloat(document.getElementById(`${containerId}-preco`).value) || 0;
             if (!artigoId || qtd <= 0) { mostrarAlertaCustomizado('Selecione um artigo e uma quantidade válida.', 'Atenção'); return; }
+            if (document.getElementById(`${containerId}-preco`).tagName === 'SELECT' && preco <= 0) { mostrarAlertaCustomizado('Este artigo não tem preço definido. Defina os preços no cadastro do artigo.', 'Atenção'); return; }
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
             if (movimento === 'saida') {
                 const disponivel = artigo.stock || 0;
@@ -1135,7 +1184,9 @@
             }
             itensDocumentoTemp.push({ artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: artigo.armazem || '', quantidade: qtd, precoUnit: preco, subtotal: qtd * preco });
             document.getElementById(`${containerId}-qtd`).value = 1;
-            document.getElementById(`${containerId}-preco`).value = 0;
+            document.getElementById(`${containerId}-artigo`).value = '';
+            const campoPrecoReset = document.getElementById(`${containerId}-preco`);
+            if (campoPrecoReset.tagName === 'SELECT') { campoPrecoReset.innerHTML = '<option value="0">Selecione o artigo primeiro...</option>'; } else { campoPrecoReset.value = 0; }
             renderListaItensDocumento(containerId);
         }
         window.removerItemDocumento = function(containerId, index) { itensDocumentoTemp.splice(index, 1); renderListaItensDocumento(containerId); }
@@ -1189,7 +1240,7 @@
                     [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
                         html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)">
                             <td>${escapeHTML(item.numero)}</td>${cfg.exigeCliente ? `<td>${escapeHTML(item[campoNome] || '-')}</td>` : ''}<td>${formatDataPt(item.data)}</td><td>${formatMoeda(item.total)}</td><td>${badgeStatus(item.status)}</td>
-                            <td><div class="action-buttons">${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (dar baixa)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
+                            <td><div class="action-buttons">${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (dar baixa)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.orcamentoFn ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.orcamentoFn}('${item.id}')" title="Gerar Orçamento"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
                         </tr>
                         <tr id="det-${item.id}" class="details-row"><td colspan="${cfg.exigeCliente ? 6 : 5}" style="padding:10px 20px;">${detalheItensHtml(item)}</td></tr>`;
                     });
@@ -1257,14 +1308,14 @@
         registrarDocumentoComItens('Faturas Simplificada', { collection: 'FaturasSimplificadas', singular: 'Fatura Simplificada', prefixo: 'FS', exigeCliente: false, movimentoStock: 'saida', statusInicial: 'Pago', precoSelecionavel: true });
         registrarDocumentoComItens('Faturas-Recibo', { collection: 'FaturasRecibo', singular: 'Fatura-Recibo', prefixo: 'FR', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pago', precoSelecionavel: true });
 
-        /* ---- Documentos > Outros Documentos > Fichas de Serviço (1 cliente = 1 obra, sempre separadas) ---- */
-        TELAS_ESPECIAIS['Fichas de Serviço'] = {
+        /* ---- Documentos > Outros Documentos > Folha de Obra (1 cliente = 1 obra, sempre separadas) ---- */
+        TELAS_ESPECIAIS['Folha de Obra'] = {
             dependeDe: ['Fichas de Serviço'],
             render: function(display) {
                 const lista = dadosCadastrados['Fichas de Serviço'];
                 if (!lista || lista.length === 0) {
                     display.style.textAlign = 'center'; display.style.padding = '40px';
-                    display.innerHTML = `<div style="color: var(--text-muted);">Nenhuma ficha de serviço criada. Clique em <strong>+ Cadastrar</strong> para adicionar.</div>`;
+                    display.innerHTML = `<div style="color: var(--text-muted);">Nenhuma folha de obra criada. Clique em <strong>+ Cadastrar</strong> para adicionar.</div>`;
                     return;
                 }
                 display.style.textAlign = 'left'; display.style.padding = '0';
@@ -1292,7 +1343,7 @@
                     </select></div>
                 </div>
             `;
-            document.getElementById('modal-titulo').innerText = item ? 'Editar Ficha de Serviço' : 'Nova Ficha de Serviço';
+            document.getElementById('modal-titulo').innerText = item ? 'Editar Folha de Obra' : 'Nova Folha de Obra';
             document.getElementById('btn-guardar-texto').innerText = item ? 'Atualizar' : 'Guardar';
             abrirModal('500px');
             salvarEspecialAtual = async function() {
@@ -1304,8 +1355,8 @@
                     status: document.getElementById('fs-status').value, atualizadoEm: new Date().toISOString()
                 };
                 try {
-                    if (item) { await updateDoc(doc(db, 'Fichas de Serviço', item.id), dados); mostrarAlertaCustomizado('Ficha de Serviço atualizada!', 'Sucesso'); }
-                    else { dados.criadoEm = new Date().toISOString(); await addDoc(collection(db, 'Fichas de Serviço'), dados); mostrarAlertaCustomizado('Ficha de Serviço criada!', 'Sucesso'); }
+                    if (item) { await updateDoc(doc(db, 'Fichas de Serviço', item.id), dados); mostrarAlertaCustomizado('Folha de Obra atualizada!', 'Sucesso'); }
+                    else { dados.criadoEm = new Date().toISOString(); await addDoc(collection(db, 'Fichas de Serviço'), dados); mostrarAlertaCustomizado('Folha de Obra criada!', 'Sucesso'); }
                     fecharModal();
                 } catch (e) { mostrarAlertaCustomizado('Erro ao salvar.', 'Erro'); btnSalvar.disabled = false; }
             };
@@ -1314,15 +1365,15 @@
         /* ---- Documentos > Transporte > Guia de Remessa (ligada à Ficha de Serviço) ---- */
         registrarDocumentoComItens('Guia de Remessa', {
             collection: 'GuiaRemessa', singular: 'Guia de Remessa', prefixo: 'GR',
-            exigeCliente: true, entidadeCollection: 'Fichas de Serviço', entidadeLabel: 'Obra (Ficha de Serviço)',
+            exigeCliente: true, entidadeCollection: 'Fichas de Serviço', entidadeLabel: 'Obra (Folha de Obra)',
             entidadeNomeFn: (obra) => `${obra.clienteNome} - ${obra.descricao}`,
-            movimentoStock: 'saida', statusInicial: 'Emitida'
+            movimentoStock: 'saida', statusInicial: 'Emitida', precoSelecionavel: 'venda'
         });
 
-        /* ---- Documentos > Outros Documentos > Faturas pro forma ---- */
+        /* ---- Documentos > Venda > Faturas pro forma ---- */
         registrarDocumentoComItens('Faturas pro forma', {
             collection: 'Faturas pro forma', singular: 'Fatura pro forma', prefixo: 'PF',
-            exigeCliente: true, movimentoStock: 'nenhum', statusInicial: 'Em Aberto', converterFn: 'converterProFormaEmFatura'
+            exigeCliente: true, movimentoStock: 'nenhum', statusInicial: 'Em Aberto', converterFn: 'converterProFormaEmFatura', orcamentoFn: 'gerarOrcamentoProForma', precoSelecionavel: 'venda'
         });
         window.converterProFormaEmFatura = async function(proFormaId) {
             const pf = dadosCadastrados['Faturas pro forma'].find(p => p.id === proFormaId);
@@ -1339,109 +1390,290 @@
             } catch (e) { mostrarAlertaCustomizado('Erro ao converter em fatura.', 'Erro'); }
         }
 
-        /* ---- Documentos > Outros Documentos > Avenças (calendário de tarefas recorrentes) ---- */
-        let avencaEntradasTemp = [];
+        window.gerarOrcamentoProForma = function(proFormaId) {
+            const pf = dadosCadastrados['Faturas pro forma'].find(p => p.id === proFormaId);
+            if (!pf) return;
+            const emp = dadosEmpresa || {};
+            const cli = dadosCadastrados['Clientes'].find(c => c.id === pf.clienteId) || {};
+            const dataEmissao = pf.data || hojeISO();
+            const validade = new Date(dataEmissao); validade.setDate(validade.getDate() + 30);
+            const numeroOrc = (pf.numero || '').replace(/^PF/, 'ORC');
+            let linhas = '';
+            (pf.itens || []).forEach((it, i) => {
+                linhas += `<tr><td class="n">${i + 1}</td><td>${escapeHTML(it.codigo)} — ${escapeHTML(it.categoria)}</td><td class="r">${it.quantidade}</td><td class="r">${formatMoeda(it.precoUnit)}</td><td class="r">${formatMoeda(it.subtotal)}</td></tr>`;
+            });
+            const logoUrl = new URL('favicon.png', window.location.href).href;
+            const html = `<!DOCTYPE html><html lang="pt-PT"><head><meta charset="UTF-8"><title>Orçamento ${escapeHTML(numeroOrc)}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif}
+body{background:#e5e7eb;color:#111827;padding:24px}
+.page{background:#fff;max-width:820px;margin:0 auto;padding:48px 52px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.top{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:4px solid #F5A623;padding-bottom:22px}
+.brand{display:flex;gap:14px;align-items:center}
+.brand img{width:62px;height:62px;object-fit:contain}
+.brand h1{font-size:1.7rem;font-weight:800;letter-spacing:.5px}.brand h1 span{color:#F5A623}
+.brand p,.emp p{font-size:.82rem;color:#6b7280;line-height:1.5}
+.titulo{text-align:right}.titulo h2{font-size:1.9rem;font-weight:300;letter-spacing:3px;color:#1a1a1a;text-transform:uppercase}
+.titulo p{font-size:.85rem;color:#6b7280;margin-top:4px}.titulo strong{color:#111827}
+.meta{display:flex;gap:24px;margin:30px 0}
+.box{flex:1;background:#f9fafb;border-left:4px solid #F5A623;border-radius:4px;padding:14px 18px}
+.box h3{font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:6px}
+.box p{font-size:.92rem;line-height:1.5}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+thead th{background:#1a1a1a;color:#fff;font-size:.75rem;text-transform:uppercase;letter-spacing:.8px;padding:11px 12px;text-align:left}
+thead th.r,td.r{text-align:right}thead th.n,td.n{width:40px;text-align:center}
+td{padding:12px;border-bottom:1px solid #e5e7eb;font-size:.92rem}
+tbody tr:nth-child(even){background:#fafafa}
+.total{display:flex;justify-content:flex-end;margin-top:22px}
+.total div{background:#1a1a1a;color:#fff;border-radius:6px;padding:14px 26px;text-align:right}
+.total small{display:block;font-size:.7rem;letter-spacing:1px;text-transform:uppercase;color:#F5A623}
+.total strong{font-size:1.6rem}
+.notas{margin-top:34px;font-size:.82rem;color:#6b7280;line-height:1.6;border-top:1px solid #e5e7eb;padding-top:16px}
+.rodape{margin-top:30px;text-align:center;font-size:.78rem;color:#9ca3af}
+.acoes{max-width:820px;margin:0 auto 16px;display:flex;justify-content:flex-end;gap:10px}
+.acoes button{background:#F5A623;border:none;color:#111827;font-weight:700;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.95rem}
+@media print{body{background:#fff;padding:0}.page{box-shadow:none;max-width:none;padding:24px 8px}.acoes{display:none}}
+</style></head><body>
+<div class="acoes"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
+<div class="page">
+ <div class="top">
+  <div class="brand"><img src="${logoUrl}" alt="" onerror="this.style.display='none'"><div><h1>TECNO<span>WATT</span></h1>
+   <div class="emp"><p>${escapeHTML(emp.nome || '')}${emp.nif ? ' · NIF ' + escapeHTML(emp.nif) : ''}</p><p>${escapeHTML(emp.morada || '')}${emp.codigoPostal ? ', ' + escapeHTML(emp.codigoPostal) : ''}</p><p>${escapeHTML(emp.telefone || '')}${emp.email ? ' · ' + escapeHTML(emp.email) : ''}</p></div></div></div>
+  <div class="titulo"><h2>Orçamento</h2><p>Nº <strong>${escapeHTML(numeroOrc)}</strong></p><p>Data: <strong>${formatDataPt(dataEmissao)}</strong></p><p>Válido até: <strong>${formatDataPt(validade.toISOString())}</strong></p></div>
+ </div>
+ <div class="meta">
+  <div class="box"><h3>Cliente</h3><p><strong>${escapeHTML(pf.clienteNome || cli.nome || '-')}</strong></p><p>${escapeHTML(cli.morada || '')}${cli.codigoPostal ? ', ' + escapeHTML(cli.codigoPostal) : ''}</p><p>${cli.nif ? 'NIF ' + escapeHTML(cli.nif) : ''}${cli.telefone ? ' · ' + escapeHTML(cli.telefone) : ''}</p></div>
+ </div>
+ <table><thead><tr><th class="n">#</th><th>Descrição</th><th class="r">Qtd.</th><th class="r">Preço Unit.</th><th class="r">Subtotal</th></tr></thead><tbody>${linhas}</tbody></table>
+ <div class="total"><div><small>Total do Orçamento</small><strong>${formatMoeda(pf.total)}</strong></div></div>
+ <div class="notas"><strong>Condições:</strong> Este orçamento é válido por 30 dias a partir da data de emissão. Os valores apresentados são meramente informativos e não constituem fatura.</div>
+ <div class="rodape">Obrigado pela sua preferência.</div>
+</div></body></html>`;
+            const janela = window.open('', '_blank');
+            if (!janela) { mostrarAlertaCustomizado('O navegador bloqueou a nova janela. Permita pop-ups para este site e tente novamente.', 'Atenção'); return; }
+            janela.document.write(html);
+            janela.document.close();
+        }
+
+        /* ---- Documentos > Outros Documentos > Avenças (calendário D S T Q Q S S) ---- */
+        const MESES_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const DIAS_SEMANA_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+        let avencaCalendario = { ano: new Date().getFullYear(), mes: new Date().getMonth() };
+
+        function isoLocal(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+        function dataDeISO(iso) { const [a, m, d] = iso.split('-').map(Number); return new Date(a, m - 1, d); }
+        function gerarDatasAvenca(dataISO, repetir, ocorrencias) {
+            const n = repetir === 'nao' ? 1 : Math.max(1, Math.min(60, ocorrencias || 1));
+            const base = dataDeISO(dataISO); const datas = [];
+            for (let k = 0; k < n; k++) {
+                if (repetir === 'semanal') datas.push(isoLocal(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 7 * k)));
+                else if (repetir === 'quinzenal') datas.push(isoLocal(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 14 * k)));
+                else if (repetir === 'mensal') {
+                    const alvo = new Date(base.getFullYear(), base.getMonth() + k, 1);
+                    const ultimoDia = new Date(base.getFullYear(), base.getMonth() + k + 1, 0).getDate();
+                    alvo.setDate(Math.min(base.getDate(), ultimoDia));
+                    datas.push(isoLocal(alvo));
+                } else datas.push(dataISO);
+            }
+            return datas;
+        }
+        function estadoTarefaAvenca(avenca, e) {
+            if (e.cancelada || (avenca.ativa === false && !e.feito)) return 'cancelada';
+            if (e.feito) return 'feito';
+            return e.data < hojeISO() ? 'atraso' : 'pendente';
+        }
+        const ROTULO_ESTADO_AVENCA = { pendente: 'Pendente', feito: 'Concluída', atraso: 'Atrasada', cancelada: 'Cancelada' };
+        function rerenderAvencas() { TELAS_ESPECIAIS['Avenças'].render(document.getElementById('content-display')); }
+        window.mudarMesAvenca = function(delta) { const d = new Date(avencaCalendario.ano, avencaCalendario.mes + delta, 1); avencaCalendario = { ano: d.getFullYear(), mes: d.getMonth() }; rerenderAvencas(); }
+        window.irParaHojeAvenca = function() { const d = new Date(); avencaCalendario = { ano: d.getFullYear(), mes: d.getMonth() }; rerenderAvencas(); }
+
         TELAS_ESPECIAIS['Avenças'] = {
             dependeDe: ['Avenças'],
             render: function(display) {
-                const lista = dadosCadastrados['Avenças'];
-                if (!lista || lista.length === 0) {
-                    display.style.textAlign = 'center'; display.style.padding = '40px';
-                    display.innerHTML = `<div style="color: var(--text-muted);">Nenhuma avença criada. Clique em <strong>+ Cadastrar</strong> para adicionar.</div>`;
-                    return;
-                }
-                display.style.textAlign = 'left'; display.style.padding = '0';
+                const { ano, mes } = avencaCalendario;
+                const avencas = dadosCadastrados['Avenças'] || [];
                 const hoje = hojeISO();
-                let html = `<table class="elegant-table"><thead><tr><th>Cliente</th><th>Título</th><th>Próxima Tarefa</th><th>Status</th><th style="width:100px;">Ações</th></tr></thead><tbody>`;
-                lista.forEach(item => {
-                    const pendentes = (item.entradas || []).filter(e => !e.feito).sort((a, b) => a.data.localeCompare(b.data));
-                    const proxima = pendentes[0];
-                    let proximaHtml = '<span style="color:var(--text-muted);">Sem tarefas pendentes</span>';
-                    if (proxima) {
-                        const atrasada = proxima.data < hoje;
-                        proximaHtml = `${formatDataPt(proxima.data)} — ${escapeHTML(proxima.descricao)} ${atrasada ? '<span class="badge badge-danger">Atrasada</span>' : (proxima.data === hoje ? '<span class="badge badge-warning">Hoje</span>' : '')}`;
-                    }
-                    html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)">
-                        <td>${escapeHTML(item.clienteNome)}</td><td>${escapeHTML(item.titulo)}</td><td>${proximaHtml}</td><td>${badgeStatus(item.ativa === false ? 'Cancelado' : 'Concluído')}</td>
-                        <td><div class="action-buttons">${item.ativa !== false ? `<button class="btn-action btn-delete" onclick="event.stopPropagation(); cancelarAvenca('${item.id}')" title="Cancelar Avença"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></button>` : ''}${botaoExcluirNovo('Avenças', item.id)}</div></td>
-                    </tr>
-                    <tr id="det-${item.id}" class="details-row"><td colspan="5" style="padding:10px 20px;">${renderEntradasAvenca(item)}</td></tr>`;
-                });
-                html += `</tbody></table>`;
-                display.innerHTML = html;
+                const porDia = {};
+                avencas.forEach(av => (av.entradas || []).forEach((e, idx) => { (porDia[e.data] = porDia[e.data] || []).push({ av, e, idx }); }));
+
+                const primeiroDiaSemana = new Date(ano, mes, 1).getDay();
+                const diasNoMes = new Date(ano, mes + 1, 0).getDate();
+                let celulas = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((l, i) => `<div class="cal-wd" title="${DIAS_SEMANA_PT[i]}">${l}</div>`).join('');
+                for (let i = 0; i < primeiroDiaSemana; i++) celulas += '<div class="cal-day vazio"></div>';
+                for (let d = 1; d <= diasNoMes; d++) {
+                    const iso = isoLocal(new Date(ano, mes, d));
+                    const chips = (porDia[iso] || []).map(t => {
+                        const est = estadoTarefaAvenca(t.av, t.e);
+                        const txt = `${t.av.clienteNome || ''}: ${t.e.descricao}`;
+                        return `<div class="cal-chip ${est}" title="${escapeHTML(txt)} (${ROTULO_ESTADO_AVENCA[est]})" onclick="event.stopPropagation(); abrirEditarTarefaAvenca('${t.av.id}',${t.idx})">${escapeHTML(txt)}</div>`;
+                    }).join('');
+                    celulas += `<div class="cal-day ${iso === hoje ? 'hoje' : ''}" onclick="abrirNovaTarefaAvenca('${iso}')"><div class="cal-num">${d}</div>${chips}</div>`;
+                }
+                const resto = (7 - ((primeiroDiaSemana + diasNoMes) % 7)) % 7;
+                for (let i = 0; i < resto; i++) celulas += '<div class="cal-day vazio"></div>';
+
+                // Lista das tarefas do mês (leitura fácil, sobretudo no telemóvel)
+                const prefixo = `${ano}-${String(mes + 1).padStart(2, '0')}-`;
+                const tarefasMes = [];
+                Object.keys(porDia).filter(k => k.startsWith(prefixo)).sort().forEach(k => porDia[k].forEach(t => tarefasMes.push(t)));
+                let listaMes = `<p style="color:var(--text-muted); padding: 4px 0 0 0;">Nenhuma tarefa em ${MESES_PT[mes]}. Clique num dia do calendário para adicionar.</p>`;
+                if (tarefasMes.length > 0) {
+                    listaMes = `<table class="elegant-table"><thead><tr><th>Data</th><th>Cliente</th><th>Avença</th><th>O que fazer</th><th>Estado</th></tr></thead><tbody>`;
+                    tarefasMes.forEach(t => {
+                        const est = estadoTarefaAvenca(t.av, t.e);
+                        listaMes += `<tr class="clickable-row" onclick="abrirEditarTarefaAvenca('${t.av.id}',${t.idx})"><td>${DIAS_SEMANA_PT[dataDeISO(t.e.data).getDay()].slice(0, 3)}, ${formatDataPt(t.e.data)}</td><td>${escapeHTML(t.av.clienteNome)}</td><td>${escapeHTML(t.av.titulo)}</td><td>${escapeHTML(t.e.descricao)}</td><td>${badgeStatus(ROTULO_ESTADO_AVENCA[est])}</td></tr>`;
+                    });
+                    listaMes += `</tbody></table>`;
+                }
+
+                // Lista das avenças (contratos)
+                let listaAvencas = `<p style="color:var(--text-muted);">Nenhuma avença criada. Clique em <strong>+ Cadastrar</strong> para criar a primeira.</p>`;
+                if (avencas.length > 0) {
+                    listaAvencas = `<table class="elegant-table"><thead><tr><th>Cliente</th><th>Avença</th><th>Tarefas Pendentes</th><th>Estado</th><th style="width:110px;">Ações</th></tr></thead><tbody>`;
+                    avencas.forEach(av => {
+                        const pend = (av.entradas || []).filter(e => ['pendente', 'atraso'].includes(estadoTarefaAvenca(av, e))).length;
+                        listaAvencas += `<tr><td>${escapeHTML(av.clienteNome)}</td><td>${escapeHTML(av.titulo)}</td><td>${pend}</td><td>${badgeStatus(av.ativa === false ? 'Cancelada' : 'Ativa')}</td>
+                            <td><div class="action-buttons">${av.ativa !== false ? `<button class="btn-action btn-edit" onclick="cancelarAvenca('${av.id}')" title="Cancelar Avença"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></button>` : ''}${botaoExcluirNovo('Avenças', av.id)}</div></td></tr>`;
+                    });
+                    listaAvencas += `</tbody></table>`;
+                }
+
+                display.style.textAlign = 'left'; display.style.padding = '0';
+                display.innerHTML = `<div class="cal-wrap">
+                    <div class="cal-bar">
+                        <div class="cal-nav"><button class="btn-cancelar" onclick="mudarMesAvenca(-1)" title="Mês anterior">&#8249;</button><button class="btn-cancelar" onclick="irParaHojeAvenca()">Hoje</button><button class="btn-cancelar" onclick="mudarMesAvenca(1)" title="Mês seguinte">&#8250;</button></div>
+                        <div class="cal-title">${MESES_PT[mes]} ${ano}</div>
+                        <div style="min-width:170px; text-align:right; font-size:0.8rem; color:var(--text-muted);">Clique num dia para adicionar<br>Clique numa tarefa para editar ou cancelar</div>
+                    </div>
+                    <div class="cal-grid">${celulas}</div>
+                    <div class="cal-legend"><span class="l-pendente">Pendente</span><span class="l-feito">Concluída</span><span class="l-atraso">Atrasada</span><span class="l-cancelada">Cancelada</span></div>
+                    <h3 style="margin: 26px 0 8px; font-size: 1rem; color: var(--text-dark);">Tarefas de ${MESES_PT[mes]}</h3>
+                    ${listaMes}
+                    <h3 style="margin: 26px 0 8px; font-size: 1rem; color: var(--text-dark);">Avenças</h3>
+                    ${listaAvencas}
+                </div>`;
             },
             cadastro: function() { abrirFormAvenca(); }
         };
-        function renderEntradasAvenca(item) {
-            if (!item.entradas || item.entradas.length === 0) return '<span style="color:var(--text-muted);">Sem tarefas cadastradas.</span>';
-            let html = `<table class="inner-table"><tr><th>Data</th><th>O que deve ser feito</th><th>Status</th><th></th></tr>`;
-            [...item.entradas].sort((a, b) => a.data.localeCompare(b.data)).forEach((e) => {
-                const idxReal = item.entradas.indexOf(e);
-                html += `<tr><td>${formatDataPt(e.data)}</td><td>${escapeHTML(e.descricao)}</td><td>${badgeStatus(e.feito ? 'Concluído' : 'Pendente')}</td>
-                    <td>${!e.feito ? `<button type="button" class="btn-action btn-edit" onclick="marcarTarefaAvencaFeita('${item.id}',${idxReal})" title="Marcar como feito"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}</td></tr>`;
-            });
-            html += `</table>`;
-            return html;
+
+        function htmlRepeticaoAvenca() {
+            return `<div style="display:flex; gap:12px;">
+                <div class="form-group" style="flex:1;"><label for="av-repetir">Repetir</label>
+                    <select id="av-repetir" class="form-control" onchange="document.getElementById('av-ocorr-wrap').style.display = this.value === 'nao' ? 'none' : 'block'">
+                        <option value="nao">Não repetir</option><option value="semanal">Semanalmente</option><option value="quinzenal">Quinzenalmente</option><option value="mensal">Mensalmente</option>
+                    </select></div>
+                <div class="form-group" id="av-ocorr-wrap" style="flex:1; display:none;"><label for="av-ocorr">Nº de ocorrências</label><input type="number" id="av-ocorr" class="form-control" min="2" max="60" value="12"></div>
+            </div>`;
         }
-        window.marcarTarefaAvencaFeita = async function(avencaId, idx) {
-            const item = dadosCadastrados['Avenças'].find(a => a.id === avencaId);
-            if (!item) return;
-            const entradas = [...item.entradas]; entradas[idx] = { ...entradas[idx], feito: true };
-            await updateDoc(doc(db, 'Avenças', avencaId), { entradas });
+        function lerRepeticaoAvenca(dataISO) {
+            const repetir = document.getElementById('av-repetir').value;
+            const ocorr = parseInt(document.getElementById('av-ocorr').value) || 1;
+            return gerarDatasAvenca(dataISO, repetir, ocorr);
         }
+
+        window.abrirNovaTarefaAvenca = function(dataISO) {
+            const ativas = (dadosCadastrados['Avenças'] || []).filter(a => a.ativa !== false);
+            if (ativas.length === 0) { mostrarAlertaCustomizado('Crie primeiro uma avença (botão + Cadastrar) para poder adicionar tarefas ao calendário.', 'Atenção'); return; }
+            const opcoes = opcoesSelectNovo(ativas.map(a => ({ value: a.id, label: `${a.clienteNome} — ${a.titulo}` })), ativas.length === 1 ? ativas[0].id : '', 'Selecione a avença...');
+            document.getElementById('dynamic-fields').innerHTML = `
+                <div class="form-group"><label for="av-avenca">Avença</label><select id="av-avenca" class="form-control" required>${opcoes}</select></div>
+                <div class="form-group"><label for="av-data">Data</label><input type="date" id="av-data" class="form-control" value="${dataISO}" required></div>
+                <div class="form-group"><label for="av-descricao">O que deve ser feito</label><input type="text" id="av-descricao" class="form-control" placeholder="Ex: Verificar disjuntores" required></div>
+                ${htmlRepeticaoAvenca()}
+            `;
+            document.getElementById('modal-titulo').innerText = `Nova Tarefa — ${formatDataPt(dataISO)}`;
+            document.getElementById('btn-guardar-texto').innerText = 'Guardar Tarefa';
+            abrirModal('500px');
+            salvarEspecialAtual = async function() {
+                const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
+                const av = dadosCadastrados['Avenças'].find(a => a.id === document.getElementById('av-avenca').value);
+                const data = document.getElementById('av-data').value;
+                const descricao = document.getElementById('av-descricao').value.trim();
+                if (!av || !data || !descricao) { mostrarAlertaCustomizado('Preencha a avença, a data e o que deve ser feito.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar Tarefa'; return; }
+                const novas = lerRepeticaoAvenca(data).map(d => ({ data: d, descricao, feito: false, cancelada: false }));
+                try { await updateDoc(doc(db, 'Avenças', av.id), { entradas: [...(av.entradas || []), ...novas] }); fecharModal(); }
+                catch (e) { mostrarAlertaCustomizado('Erro ao guardar a tarefa.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar Tarefa'; }
+            };
+        }
+
+        window.abrirEditarTarefaAvenca = function(avencaId, idx) {
+            const av = dadosCadastrados['Avenças'].find(a => a.id === avencaId);
+            const e = av && av.entradas ? av.entradas[idx] : null;
+            if (!e) return;
+            const est = estadoTarefaAvenca(av, e);
+            const estadoAtual = est === 'cancelada' ? 'cancelada' : (est === 'feito' ? 'feito' : 'pendente');
+            document.getElementById('dynamic-fields').innerHTML = `
+                <p style="margin-bottom:14px; color:var(--text-muted); font-size:0.9rem;"><strong style="color:var(--text-dark);">${escapeHTML(av.clienteNome)}</strong> — ${escapeHTML(av.titulo)}</p>
+                <div class="form-group"><label for="av-data">Data</label><input type="date" id="av-data" class="form-control" value="${e.data}" required></div>
+                <div class="form-group"><label for="av-descricao">O que deve ser feito</label><input type="text" id="av-descricao" class="form-control" value="${escapeHTML(e.descricao)}" required></div>
+                <div class="form-group"><label for="av-estado">Estado</label><select id="av-estado" class="form-control">
+                    <option value="pendente" ${estadoAtual === 'pendente' ? 'selected' : ''}>Pendente</option>
+                    <option value="feito" ${estadoAtual === 'feito' ? 'selected' : ''}>Concluída</option>
+                    <option value="cancelada" ${estadoAtual === 'cancelada' ? 'selected' : ''}>Cancelada</option>
+                </select></div>
+                <button type="button" id="av-btn-eliminar" class="btn-perigo" onclick="eliminarTarefaAvenca('${avencaId}',${idx})">Eliminar tarefa</button>
+            `;
+            document.getElementById('modal-titulo').innerText = 'Editar Tarefa';
+            document.getElementById('btn-guardar-texto').innerText = 'Atualizar';
+            abrirModal('500px');
+            salvarEspecialAtual = async function() {
+                const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
+                const atual = dadosCadastrados['Avenças'].find(a => a.id === avencaId);
+                const entradas = [...(atual.entradas || [])];
+                const estado = document.getElementById('av-estado').value;
+                entradas[idx] = { ...entradas[idx], data: document.getElementById('av-data').value, descricao: document.getElementById('av-descricao').value.trim(), feito: estado === 'feito', cancelada: estado === 'cancelada' };
+                try { await updateDoc(doc(db, 'Avenças', avencaId), { entradas }); fecharModal(); }
+                catch (err) { mostrarAlertaCustomizado('Erro ao atualizar a tarefa.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = 'Atualizar'; }
+            };
+        }
+        window.eliminarTarefaAvenca = async function(avencaId, idx) {
+            const btn = document.getElementById('av-btn-eliminar');
+            if (btn && btn.dataset.confirmar !== '1') { btn.dataset.confirmar = '1'; btn.innerText = 'Clique de novo para confirmar'; return; }
+            const atual = dadosCadastrados['Avenças'].find(a => a.id === avencaId);
+            if (!atual) return;
+            const entradas = [...(atual.entradas || [])]; entradas.splice(idx, 1);
+            try { await updateDoc(doc(db, 'Avenças', avencaId), { entradas }); fecharModal(); }
+            catch (err) { mostrarAlertaCustomizado('Erro ao eliminar a tarefa.', 'Erro'); }
+        }
+
         window.cancelarAvenca = async function(avencaId) {
-            await updateDoc(doc(db, 'Avenças', avencaId), { ativa: false });
-            mostrarAlertaCustomizado('Avença cancelada.', 'Sucesso');
+            const av = dadosCadastrados['Avenças'].find(a => a.id === avencaId);
+            if (!av) return;
+            const entradas = (av.entradas || []).map(e => e.feito ? e : { ...e, cancelada: true });
+            await updateDoc(doc(db, 'Avenças', avencaId), { ativa: false, entradas });
+            mostrarAlertaCustomizado('Avença cancelada. As tarefas pendentes foram marcadas como canceladas.', 'Sucesso');
         }
-        window.adicionarEntradaAvenca = function() {
-            const data = document.getElementById('avenca-data').value;
-            const descricao = document.getElementById('avenca-descricao').value.trim();
-            if (!data || !descricao) { mostrarAlertaCustomizado('Preencha a data e a descrição da tarefa.', 'Atenção'); return; }
-            avencaEntradasTemp.push({ data, descricao, feito: false });
-            document.getElementById('avenca-descricao').value = '';
-            renderListaEntradasAvencaTemp();
-        }
-        window.removerEntradaAvencaTemp = function(idx) { avencaEntradasTemp.splice(idx, 1); renderListaEntradasAvencaTemp(); }
-        function renderListaEntradasAvencaTemp() {
-            const container = document.getElementById('avenca-lista-temp');
-            if (!container) return;
-            if (avencaEntradasTemp.length === 0) { container.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">Nenhuma tarefa adicionada ao calendário desta avença.</p>`; return; }
-            let html = `<table class="inner-table"><tr><th>Data</th><th>Descrição</th><th></th></tr>`;
-            [...avencaEntradasTemp].sort((a, b) => a.data.localeCompare(b.data)).forEach((e) => {
-                const idxReal = avencaEntradasTemp.indexOf(e);
-                html += `<tr><td>${formatDataPt(e.data)}</td><td>${escapeHTML(e.descricao)}</td><td><button type="button" class="btn-action btn-delete" onclick="removerEntradaAvencaTemp(${idxReal})"><svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></td></tr>`;
-            });
-            html += `</table>`;
-            container.innerHTML = html;
-        }
+
         function abrirFormAvenca() {
-            avencaEntradasTemp = [];
             const opcoesCliente = opcoesSelectNovo(dadosCadastrados['Clientes'].map(c => ({ value: c.id, label: c.nome })), '', 'Selecione o cliente...');
             document.getElementById('dynamic-fields').innerHTML = `
                 <div class="form-group"><label for="av-cliente">Cliente</label><select id="av-cliente" class="form-control" required>${opcoesCliente}</select></div>
                 <div class="form-group"><label for="av-titulo">Título da Avença</label><input type="text" id="av-titulo" class="form-control" placeholder="Ex: Manutenção mensal quadro elétrico" required></div>
-                <h3 style="font-size: 0.95rem; margin: 14px 0 8px; color: var(--primary);">Calendário de Tarefas</h3>
-                <div style="display:flex; gap:10px; align-items:flex-end;">
-                    <div class="form-group" style="flex:1;"><label>Data</label><input type="date" id="avenca-data" class="form-control"></div>
-                    <div class="form-group" style="flex:2;"><label>O que deve ser feito nesse dia</label><input type="text" id="avenca-descricao" class="form-control" placeholder="Ex: Verificar disjuntores"></div>
-                    <div class="form-group" style="flex:0;"><button type="button" class="btn-cancelar" onclick="adicionarEntradaAvenca()">+ Adicionar</button></div>
+                <h3 style="font-size: 0.95rem; margin: 14px 0 8px; color: var(--primary);">Primeira tarefa (opcional)</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">Pode deixar em branco e adicionar tarefas depois, clicando nos dias do calendário.</p>
+                <div style="display:flex; gap:12px;">
+                    <div class="form-group" style="flex:1;"><label for="av-data">Data</label><input type="date" id="av-data" class="form-control"></div>
+                    <div class="form-group" style="flex:2;"><label for="av-descricao">O que deve ser feito</label><input type="text" id="av-descricao" class="form-control" placeholder="Ex: Verificar disjuntores"></div>
                 </div>
-                <div id="avenca-lista-temp"></div>
+                ${htmlRepeticaoAvenca()}
             `;
             document.getElementById('modal-titulo').innerText = 'Nova Avença';
             document.getElementById('btn-guardar-texto').innerText = 'Guardar Avença';
-            abrirModal('600px');
-            renderListaEntradasAvencaTemp();
+            abrirModal('500px');
             salvarEspecialAtual = async function() {
-                if (avencaEntradasTemp.length === 0) { mostrarAlertaCustomizado('Adicione pelo menos uma tarefa ao calendário da avença.', 'Atenção'); return; }
                 const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
                 const clienteId = document.getElementById('av-cliente').value;
+                const data = document.getElementById('av-data').value;
+                const descricao = document.getElementById('av-descricao').value.trim();
+                if ((data && !descricao) || (!data && descricao)) { mostrarAlertaCustomizado('Para a primeira tarefa preencha a data e o que deve ser feito (ou deixe ambos em branco).', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar Avença'; return; }
+                const entradas = data ? lerRepeticaoAvenca(data).map(d => ({ data: d, descricao, feito: false, cancelada: false })) : [];
+                if (data) { const d0 = dataDeISO(data); avencaCalendario = { ano: d0.getFullYear(), mes: d0.getMonth() }; }
                 const dados = {
                     clienteId, clienteNome: dadosCadastrados['Clientes'].find(c => c.id === clienteId)?.nome || '',
-                    titulo: document.getElementById('av-titulo').value, entradas: avencaEntradasTemp, ativa: true, criadoEm: new Date().toISOString()
+                    titulo: document.getElementById('av-titulo').value, entradas, ativa: true, criadoEm: new Date().toISOString()
                 };
-                try { await addDoc(collection(db, 'Avenças'), dados); mostrarAlertaCustomizado('Avença criada!', 'Sucesso'); fecharModal(); }
-                catch (e) { mostrarAlertaCustomizado('Erro ao salvar avença.', 'Erro'); btnSalvar.disabled = false; }
+                try { await addDoc(collection(db, 'Avenças'), dados); fecharModal(); mostrarAlertaCustomizado(entradas.length ? 'Avença criada!' : 'Avença criada! Clique num dia do calendário para adicionar tarefas.', 'Sucesso'); }
+                catch (e) { mostrarAlertaCustomizado('Erro ao salvar avença.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar Avença'; }
             };
         }
 
@@ -1466,7 +1698,9 @@
         };
 
         /* ---- Motor genérico de devoluções (Nota de Crédito / Devolução de Pagamento),
-                reutilizado depois também do lado dos Fornecedores ---- */
+                reutilizado depois também do lado dos Fornecedores ----
+           Nota de Crédito: o artigo volta ao stock e o valor fica como CRÉDITO da entidade.
+           Devolução de Pagamento / Nota de Devolução: o artigo volta ao stock e o valor é REEMBOLSADO. ---- */
         const DEVOLUCAO_REGISTRY = {};
         let devolucaoContextoTemp = null;
         function listaDocumentosCombinados(colecoes) {
@@ -1474,20 +1708,43 @@
             colecoes.forEach(col => { (dadosCadastrados[col] || []).forEach(d => combos.push({ ...d, _colecao: col })); });
             return combos.sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || ''));
         }
+        // Quantidade de cada artigo que já foi devolvida (em qualquer devolução) a partir de um documento de origem
+        function quantidadesJaDevolvidas(cfg, colecaoOrigem, docId) {
+            const porArtigo = {};
+            (cfg.devolucaoColecoes || [cfg.collection]).forEach(col => {
+                (dadosCadastrados[col] || []).filter(d => d.origemColecao === colecaoOrigem && d.origemId === docId).forEach(d => {
+                    (d.itens || []).forEach(i => { porArtigo[i.artigoId] = (porArtigo[i.artigoId] || 0) + i.quantidade; });
+                });
+            });
+            return porArtigo;
+        }
         window.selecionarDocumentoDevolucao = function(valorCombinado, chave) {
             const areaItens = document.getElementById('devolucao-itens-area');
             if (!valorCombinado) { areaItens.innerHTML = ''; devolucaoContextoTemp = null; return; }
             const [colecao, docId] = valorCombinado.split('::');
             const origem = dadosCadastrados[colecao].find(d => d.id === docId);
-            if (!origem || !origem.itens || origem.itens.length === 0) { areaItens.innerHTML = '<p style="color:var(--text-muted);">Este documento não tem artigos associados.</p>'; devolucaoContextoTemp = null; return; }
             const cfg = DEVOLUCAO_REGISTRY[chave];
-            devolucaoContextoTemp = { colecaoOrigem: colecao, docId, origemNumero: origem.numero, entidadeId: origem[cfg.campoEntidadeId] || null, entidadeNome: origem[cfg.campoEntidadeNome] || '', itensOrigem: origem.itens };
-            let html = `<table class="inner-table"><tr><th>Artigo</th><th>Qtd Original</th><th>Preço/Custo Unit.</th><th>Qtd a Devolver</th></tr>`;
-            origem.itens.forEach((it, idx) => {
-                html += `<tr><td>${escapeHTML(it.codigo)} - ${escapeHTML(it.categoria)}</td><td>${it.quantidade}</td><td>${formatMoeda(it.precoUnit)}</td>
-                    <td><input type="number" class="form-control" id="devolver-qtd-${idx}" min="0" max="${it.quantidade}" value="0" style="width:90px;"></td></tr>`;
+            if (!origem || !origem.itens || origem.itens.length === 0) { areaItens.innerHTML = '<p style="color:var(--text-muted);">Este documento não tem artigos associados.</p>'; devolucaoContextoTemp = null; return; }
+            const entidadeId = origem[cfg.campoEntidadeId] || null;
+            if (cfg.creditoCollection && !entidadeId) {
+                areaItens.innerHTML = `<p style="color:var(--danger); font-size:0.9rem;">Este documento não tem ${cfg.entidadeLabel.toLowerCase()} associado, por isso não é possível gerar crédito. ${cfg.alternativa || ''}</p>`;
+                devolucaoContextoTemp = null; return;
+            }
+            // Reparte o que já foi devolvido pelas linhas do documento, para nunca devolver mais do que foi vendido/comprado
+            const restante = quantidadesJaDevolvidas(cfg, colecao, docId);
+            const linhas = origem.itens.map(it => {
+                const ja = Math.min(it.quantidade, restante[it.artigoId] || 0);
+                restante[it.artigoId] = (restante[it.artigoId] || 0) - ja;
+                return { ...it, jaDevolvida: ja, disponivel: it.quantidade - ja };
+            });
+            devolucaoContextoTemp = { colecaoOrigem: colecao, docId, origemNumero: origem.numero, entidadeId, entidadeNome: origem[cfg.campoEntidadeNome] || '', linhas };
+            let html = `<table class="inner-table"><tr><th>Artigo</th><th>Qtd Original</th><th>Já Devolvida</th><th>Preço/Custo Unit.</th><th>Qtd a Devolver</th></tr>`;
+            linhas.forEach((it, idx) => {
+                html += `<tr><td>${escapeHTML(it.codigo)} - ${escapeHTML(it.categoria)}</td><td>${it.quantidade}</td><td>${it.jaDevolvida}</td><td>${formatMoeda(it.precoUnit)}</td>
+                    <td><input type="number" class="form-control" id="devolver-qtd-${idx}" min="0" max="${it.disponivel}" value="0" style="width:90px;" ${it.disponivel === 0 ? 'disabled' : ''}></td></tr>`;
             });
             html += `</table>`;
+            if (linhas.every(l => l.disponivel === 0)) html += `<p style="color:var(--text-muted); font-size:0.85rem; margin-top:8px;">Todos os artigos deste documento já foram devolvidos.</p>`;
             areaItens.innerHTML = html;
         }
         function registrarNotaDevolucao(chave, cfg) {
@@ -1498,21 +1755,26 @@
                     const lista = dadosCadastrados[cfg.collection];
                     if (!lista || lista.length === 0) {
                         display.style.textAlign = 'center'; display.style.padding = '40px';
-                        display.innerHTML = `<div style="color: var(--text-muted);">Nenhum registo ainda.</div>`;
+                        display.innerHTML = `<div style="color: var(--text-muted);">Nenhum registo ainda. Clique em <strong>+ Cadastrar</strong> para registar uma devolução.</div>`;
                         return;
                     }
                     display.style.textAlign = 'left'; display.style.padding = '0';
-                    let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>${cfg.entidadeLabel}</th><th>Documento Origem</th><th>Valor</th><th>Data</th></tr></thead><tbody>`;
+                    let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>${cfg.entidadeLabel}</th><th>Documento Origem</th><th>Valor</th><th>Data</th><th style="width:70px;">Ações</th></tr></thead><tbody>`;
                     [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
-                        html += `<tr><td>${escapeHTML(item.numero)}</td><td>${escapeHTML(item.entidadeNome || '-')}</td><td>${escapeHTML(item.origemNumero)}</td><td>${formatMoeda(item.valor)}</td><td>${formatDataPt(item.data)}</td></tr>`;
+                        html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)"><td>${escapeHTML(item.numero)}</td><td>${escapeHTML(item.entidadeNome || '-')}</td><td>${escapeHTML(item.origemNumero)}</td><td>${formatMoeda(item.valor)}</td><td>${formatDataPt(item.data)}</td>
+                            <td><div class="action-buttons">${botaoExcluirNovo(cfg.collection, item.id)}</div></td></tr>
+                            <tr id="det-${item.id}" class="details-row"><td colspan="6" style="padding:10px 20px;">${detalheItensHtml(item)}</td></tr>`;
                     });
                     html += `</tbody></table>`;
                     display.innerHTML = html;
                 },
                 cadastro: function() {
                     devolucaoContextoTemp = null;
-                    const opcoes = listaDocumentosCombinados(cfg.origemColecoes).map(d => ({ value: `${d._colecao}::${d.id}`, label: `${d.numero} - ${d[cfg.campoEntidadeNome] || 'Sem ' + cfg.entidadeLabel} (${formatMoeda(d.total)})` }));
+                    // Só documentos com cliente/fornecedor podem gerar crédito
+                    const origens = listaDocumentosCombinados(cfg.origemColecoes).filter(d => !cfg.creditoCollection || d[cfg.campoEntidadeId]);
+                    const opcoes = origens.map(d => ({ value: `${d._colecao}::${d.id}`, label: `${d.numero} - ${d[cfg.campoEntidadeNome] || 'Sem ' + cfg.entidadeLabel} (${formatMoeda(d.total)})` }));
                     document.getElementById('dynamic-fields').innerHTML = `
+                        <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">${cfg.explicacao}</p>
                         <div class="form-group"><label>Documento de Origem</label><select id="devolucao-doc-origem" class="form-control" onchange="selecionarDocumentoDevolucao(this.value,'${chave}')" required>${opcoesSelectNovo(opcoes, '', 'Selecione o documento de origem...')}</select></div>
                         <div id="devolucao-itens-area"></div>
                     `;
@@ -1522,11 +1784,13 @@
                     salvarEspecialAtual = async function() {
                         if (!devolucaoContextoTemp) { mostrarAlertaCustomizado('Selecione o documento de origem.', 'Atenção'); return; }
                         const itensDevolvidos = [];
-                        devolucaoContextoTemp.itensOrigem.forEach((it, idx) => {
+                        for (let idx = 0; idx < devolucaoContextoTemp.linhas.length; idx++) {
+                            const { jaDevolvida, disponivel, ...base } = devolucaoContextoTemp.linhas[idx];
                             const campoQtd = document.getElementById(`devolver-qtd-${idx}`);
                             const qtd = campoQtd ? (parseInt(campoQtd.value) || 0) : 0;
-                            if (qtd > 0) itensDevolvidos.push({ ...it, quantidade: qtd, subtotal: qtd * it.precoUnit });
-                        });
+                            if (qtd > disponivel) { mostrarAlertaCustomizado(`Só é possível devolver até ${disponivel} unidade(s) de ${base.codigo}.`, 'Atenção'); return; }
+                            if (qtd > 0) itensDevolvidos.push({ ...base, quantidade: qtd, subtotal: qtd * base.precoUnit });
+                        }
                         if (itensDevolvidos.length === 0) { mostrarAlertaCustomizado('Indique a quantidade a devolver de pelo menos um artigo.', 'Atenção'); return; }
                         const valor = itensDevolvidos.reduce((s, i) => s + i.subtotal, 0);
                         const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
@@ -1541,22 +1805,29 @@
                             if (cfg.creditoCollection && devolucaoContextoTemp.entidadeId) {
                                 await updateDoc(doc(db, cfg.creditoCollection, devolucaoContextoTemp.entidadeId), { [cfg.creditoCampo]: increment(valor) });
                             }
-                            mostrarAlertaCustomizado(`${cfg.singular} registada com sucesso. ${cfg.mensagemCredito}`, 'Sucesso');
+                            mostrarAlertaCustomizado(`${cfg.singular} registada com sucesso. ${cfg.mensagemCredito.replace('{valor}', formatMoeda(valor))}`, 'Sucesso');
                             fecharModal();
-                        } catch (e) { mostrarAlertaCustomizado('Erro ao registar devolução.', 'Erro'); btnSalvar.disabled = false; }
+                        } catch (e) { mostrarAlertaCustomizado('Erro ao registar devolução.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = `Guardar ${cfg.singular}`; }
                     };
                 }
             };
         }
         registrarNotaDevolucao('Notas de Crédito', {
             collection: 'NotasCreditoVenda', singular: 'Nota de Crédito', prefixo: 'NC',
-            origemColecoes: ['Faturas', 'FaturasSimplificadas', 'FaturasRecibo'], campoEntidadeId: 'clienteId', campoEntidadeNome: 'clienteNome', entidadeLabel: 'Cliente',
-            movimentoStock: 'entrada', creditoCollection: 'Clientes', creditoCampo: 'saldoCredito', mensagemCredito: 'Stock reposto e crédito disponibilizado ao cliente.'
+            origemColecoes: ['Faturas', 'FaturasSimplificadas', 'FaturasRecibo'], devolucaoColecoes: ['NotasCreditoVenda', 'Devoluções Pagamento'],
+            campoEntidadeId: 'clienteId', campoEntidadeNome: 'clienteNome', entidadeLabel: 'Cliente',
+            movimentoStock: 'entrada', creditoCollection: 'Clientes', creditoCampo: 'saldoCredito',
+            alternativa: 'Use "Devoluções Pagamento" para reembolsar o valor.',
+            explicacao: 'O cliente devolve o artigo, o artigo volta ao stock e o valor pago fica como <strong>crédito</strong> do cliente.',
+            mensagemCredito: 'Stock reposto e crédito de {valor} adicionado ao cliente.'
         });
         registrarNotaDevolucao('Devoluções Pagamento', {
             collection: 'Devoluções Pagamento', singular: 'Devolução de Pagamento', prefixo: 'DP',
-            origemColecoes: ['Faturas', 'FaturasSimplificadas', 'FaturasRecibo'], campoEntidadeId: 'clienteId', campoEntidadeNome: 'clienteNome', entidadeLabel: 'Cliente',
-            movimentoStock: 'entrada', creditoCollection: null, creditoCampo: null, mensagemCredito: 'Stock reposto; valor a reembolsar diretamente ao cliente.'
+            origemColecoes: ['Faturas', 'FaturasSimplificadas', 'FaturasRecibo'], devolucaoColecoes: ['NotasCreditoVenda', 'Devoluções Pagamento'],
+            campoEntidadeId: 'clienteId', campoEntidadeNome: 'clienteNome', entidadeLabel: 'Cliente',
+            movimentoStock: 'entrada', creditoCollection: null, creditoCampo: null,
+            explicacao: 'O cliente devolve o artigo, o artigo volta ao stock e o valor pago é <strong>devolvido ao cliente</strong>.',
+            mensagemCredito: 'Stock reposto; {valor} a reembolsar ao cliente.'
         });
 
         /* ---- Documentos > Fornecedores (compras) ---- */
@@ -1566,31 +1837,33 @@
             collection: 'NotasEncomendaFornecedor', singular: 'Nota de Encomenda', prefixo: 'NE',
             exigeCliente: true, entidadeCollection: 'Fornecedores', entidadeLabel: 'Fornecedor',
             campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome',
-            movimentoStock: 'nenhum', statusInicial: 'Enviada'
+            movimentoStock: 'nenhum', statusInicial: 'Enviada', precoSelecionavel: 'custo'
         });
         registrarDocumentoComItens('Fornecedores::Faturas', {
             collection: 'FaturasFornecedor', singular: 'Fatura de Fornecedor', prefixo: 'FTF',
             exigeCliente: true, entidadeCollection: 'Fornecedores', entidadeLabel: 'Fornecedor',
             campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome',
-            movimentoStock: 'entrada', statusInicial: 'Pendente', reciboFn: 'emitirReciboFornecedor'
+            movimentoStock: 'entrada', statusInicial: 'Pendente', reciboFn: 'emitirReciboFornecedor', precoSelecionavel: 'custo'
         });
         registrarDocumentoComItens('Faturas Simplificadas', {
             collection: 'FaturasSimplificadasFornecedor', singular: 'Fatura Simplificada de Fornecedor', prefixo: 'FSF',
             exigeCliente: true, entidadeCollection: 'Fornecedores', entidadeLabel: 'Fornecedor',
             campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome',
-            movimentoStock: 'entrada', statusInicial: 'Pago'
+            movimentoStock: 'entrada', statusInicial: 'Pago', precoSelecionavel: 'custo'
         });
         registrarNotaDevolucao('Fornecedores::Notas de Crédito', {
             collection: 'NotasCreditoFornecedor', singular: 'Nota de Crédito (Fornecedor)', prefixo: 'NCF',
-            origemColecoes: ['FaturasFornecedor', 'FaturasSimplificadasFornecedor'], campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome', entidadeLabel: 'Fornecedor',
+            origemColecoes: ['FaturasFornecedor', 'FaturasSimplificadasFornecedor'], devolucaoColecoes: ['NotasCreditoFornecedor', 'NotasDevolucaoFornecedor'], campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome', entidadeLabel: 'Fornecedor',
             movimentoStock: 'saida', creditoCollection: 'Fornecedores', creditoCampo: 'saldoCreditoFornecedor',
-            mensagemCredito: 'Stock retirado (devolvido ao fornecedor) e valor ficou disponível como crédito com este fornecedor.'
+            alternativa: 'Use "Notas de Devolução".', explicacao: 'O artigo é devolvido ao fornecedor (sai do stock) e o valor fica como <strong>crédito</strong> com esse fornecedor.',
+            mensagemCredito: 'Stock retirado (devolvido ao fornecedor) e crédito de {valor} registado com este fornecedor.'
         });
         registrarNotaDevolucao('Notas de Devolução', {
             collection: 'NotasDevolucaoFornecedor', singular: 'Nota de Devolução', prefixo: 'ND',
-            origemColecoes: ['FaturasFornecedor', 'FaturasSimplificadasFornecedor'], campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome', entidadeLabel: 'Fornecedor',
+            origemColecoes: ['FaturasFornecedor', 'FaturasSimplificadasFornecedor'], devolucaoColecoes: ['NotasCreditoFornecedor', 'NotasDevolucaoFornecedor'], campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome', entidadeLabel: 'Fornecedor',
             movimentoStock: 'saida', creditoCollection: null, creditoCampo: null,
-            mensagemCredito: 'Stock retirado (devolvido ao fornecedor); o fornecedor devolve o dinheiro diretamente.'
+            explicacao: 'O artigo é devolvido ao fornecedor (sai do stock) e o fornecedor <strong>devolve o dinheiro</strong>.',
+            mensagemCredito: 'Stock retirado (devolvido ao fornecedor); o fornecedor devolve {valor} diretamente.'
         });
         TELAS_ESPECIAIS['Fornecedores::Recibos'] = {
             dependeDe: ['RecibosFornecedor'],
