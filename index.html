@@ -533,6 +533,18 @@
         .cal-chip { border-radius: 5px; padding: 3px 7px; font-weight: 500; }
         .cal-legend { font-size: 0.78rem; margin-top: 14px; }
 
+        /* ---------- AVENÇAS: abas ---------- */
+        .av-tabs { display: flex; gap: 4px; padding: 4px; background: #eef0f3; border-radius: 10px; width: fit-content; max-width: 100%; overflow-x: auto; margin-bottom: 22px; }
+        .av-tab { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border: none; background: transparent; border-radius: 7px; font-size: 0.88rem; font-weight: 600; color: var(--text-muted); cursor: pointer; white-space: nowrap; transition: background .15s, color .15s; }
+        .av-tab:hover { color: var(--ink); }
+        .av-tab.active { background: #fff; color: var(--ink); box-shadow: 0 1px 2px rgba(14, 19, 27, 0.1), 0 0 0 1px rgba(14, 19, 27, 0.04); }
+        .av-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: #e0e3e8; color: var(--ink-2); font-size: 0.74rem; font-weight: 600; text-align: center; }
+        .av-tab.active .av-count { background: var(--primary); color: var(--text-on-primary); }
+        .av-resumo { display: flex; gap: 22px; flex-wrap: wrap; margin: 0 0 16px; font-size: 0.9rem; color: var(--ink-2); }
+        .av-resumo span { display: inline-flex; align-items: center; gap: 8px; }
+        .av-intro { margin: 0 0 16px; color: var(--text-muted); font-size: 0.9rem; max-width: 70ch; }
+        .av-tabela { border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; background: #fff; }
+
         /* ---------- SCROLLBARS ---------- */
         .content-area::-webkit-scrollbar, .modal-body::-webkit-scrollbar, .view-card::-webkit-scrollbar { width: 8px; height: 8px; }
         .content-area::-webkit-scrollbar-thumb, .modal-body::-webkit-scrollbar-thumb, .view-card::-webkit-scrollbar-thumb { background: #d0d5dd; border-radius: 8px; }
@@ -559,6 +571,8 @@
             .elegant-table th, .elegant-table td { padding-left: 14px; padding-right: 14px; }
             .cal-wrap { padding: 12px; }
             .cal-day { min-height: 58px; padding: 3px; }
+            .av-tabs { width: 100%; }
+            .av-tab { flex: 1; justify-content: center; padding: 8px 10px; }
         }
     </style>
 </head>
@@ -1704,6 +1718,8 @@ tbody tr:nth-child(even){background:#fafafa}
         function rerenderAvencas() { TELAS_ESPECIAIS['Avenças'].render(document.getElementById('content-display')); }
         window.mudarMesAvenca = function(delta) { const d = new Date(avencaCalendario.ano, avencaCalendario.mes + delta, 1); avencaCalendario = { ano: d.getFullYear(), mes: d.getMonth() }; rerenderAvencas(); }
         window.irParaHojeAvenca = function() { const d = new Date(); avencaCalendario = { ano: d.getFullYear(), mes: d.getMonth() }; rerenderAvencas(); }
+        let avencaAba = 'calendario';
+        window.mudarAbaAvenca = function(id) { avencaAba = id; rerenderAvencas(); }
 
         TELAS_ESPECIAIS['Avenças'] = {
             dependeDe: ['Avenças'],
@@ -1730,46 +1746,74 @@ tbody tr:nth-child(even){background:#fafafa}
                 const resto = (7 - ((primeiroDiaSemana + diasNoMes) % 7)) % 7;
                 for (let i = 0; i < resto; i++) celulas += '<div class="cal-day vazio"></div>';
 
-                // Lista das tarefas do mês (leitura fácil, sobretudo no telemóvel)
+                // Resumo do mês e listas (cada coisa no seu painel, em abas)
                 const prefixo = `${ano}-${String(mes + 1).padStart(2, '0')}-`;
                 const tarefasMes = [];
                 Object.keys(porDia).filter(k => k.startsWith(prefixo)).sort().forEach(k => porDia[k].forEach(t => tarefasMes.push(t)));
-                let listaMes = `<p style="color:var(--text-muted); padding: 4px 0 0 0;">Nenhuma tarefa em ${MESES_PT[mes]}. Clique num dia do calendário para adicionar.</p>`;
+                const contagem = { pendente: 0, atraso: 0, feito: 0, cancelada: 0 };
+                tarefasMes.forEach(t => { contagem[estadoTarefaAvenca(t.av, t.e)]++; });
+
+                let listaMes = `<div class="view-card" style="padding:32px; border-style:dashed; box-shadow:none; background:transparent; color:var(--text-muted);">Nenhuma tarefa em ${MESES_PT[mes]}. Use <strong>+ Nova tarefa</strong> ou clique num dia no calendário.</div>`;
                 if (tarefasMes.length > 0) {
-                    listaMes = `<table class="elegant-table"><thead><tr><th>Data</th><th>Cliente</th><th>Avença</th><th>O que fazer</th><th>Estado</th></tr></thead><tbody>`;
+                    listaMes = `<div class="av-tabela"><table class="elegant-table"><thead><tr><th>Data</th><th>Cliente</th><th>Avença</th><th>O que fazer</th><th>Estado</th></tr></thead><tbody>`;
                     tarefasMes.forEach(t => {
                         const est = estadoTarefaAvenca(t.av, t.e);
                         listaMes += `<tr class="clickable-row" onclick="abrirEditarTarefaAvenca('${t.av.id}',${t.idx})"><td>${DIAS_SEMANA_PT[dataDeISO(t.e.data).getDay()].slice(0, 3)}, ${formatDataPt(t.e.data)}</td><td>${escapeHTML(t.av.clienteNome)}</td><td>${escapeHTML(t.av.titulo)}</td><td>${escapeHTML(t.e.descricao)}</td><td>${badgeStatus(ROTULO_ESTADO_AVENCA[est])}</td></tr>`;
                     });
-                    listaMes += `</tbody></table>`;
+                    listaMes += `</tbody></table></div>`;
                 }
 
                 // Lista das avenças (contratos)
-                let listaAvencas = `<p style="color:var(--text-muted);">Nenhuma avença criada. Clique em <strong>+ Cadastrar</strong> para criar a primeira.</p>`;
+                let listaAvencas = `<div class="view-card" style="padding:32px; border-style:dashed; box-shadow:none; background:transparent; color:var(--text-muted);">Nenhuma avença criada. Clique em <strong>+ Cadastrar</strong> para criar a primeira.</div>`;
                 if (avencas.length > 0) {
-                    listaAvencas = `<table class="elegant-table"><thead><tr><th>Cliente</th><th>Avença</th><th>Tarefas Pendentes</th><th>Estado</th><th style="width:110px;">Ações</th></tr></thead><tbody>`;
+                    listaAvencas = `<div class="av-tabela"><table class="elegant-table"><thead><tr><th>Cliente</th><th>Avença</th><th>Tarefas pendentes</th><th>Próxima tarefa</th><th>Estado</th><th style="width:110px;">Ações</th></tr></thead><tbody>`;
                     avencas.forEach(av => {
-                        const pend = (av.entradas || []).filter(e => ['pendente', 'atraso'].includes(estadoTarefaAvenca(av, e))).length;
-                        listaAvencas += `<tr><td>${escapeHTML(av.clienteNome)}</td><td>${escapeHTML(av.titulo)}</td><td>${pend}</td><td>${badgeStatus(av.ativa === false ? 'Cancelada' : 'Ativa')}</td>
+                        const abertas = (av.entradas || []).filter(e => ['pendente', 'atraso'].includes(estadoTarefaAvenca(av, e)));
+                        const proxima = abertas.map(e => e.data).sort()[0];
+                        listaAvencas += `<tr><td>${escapeHTML(av.clienteNome)}</td><td>${escapeHTML(av.titulo)}</td><td>${abertas.length}</td><td>${proxima ? formatDataPt(proxima) : '-'}</td><td>${badgeStatus(av.ativa === false ? 'Cancelada' : 'Ativa')}</td>
                             <td><div class="action-buttons">${av.ativa !== false ? `<button class="btn-action btn-edit" onclick="cancelarAvenca('${av.id}')" title="Cancelar Avença"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg></button>` : ''}${botaoExcluirNovo('Avenças', av.id)}</div></td></tr>`;
                     });
-                    listaAvencas += `</tbody></table>`;
+                    listaAvencas += `</tbody></table></div>`;
+                }
+
+                // Abas: Calendário | Tarefas | Avenças
+                const abas = [
+                    { id: 'calendario', label: 'Calendário', n: null },
+                    { id: 'tarefas', label: 'Tarefas', n: tarefasMes.length },
+                    { id: 'avencas', label: 'Avenças', n: avencas.length }
+                ];
+                const abaAtiva = abas.some(a => a.id === avencaAba) ? avencaAba : 'calendario';
+                const barraAbas = `<div class="av-tabs" role="tablist">${abas.map(a => `<button type="button" role="tab" aria-selected="${a.id === abaAtiva}" class="av-tab ${a.id === abaAtiva ? 'active' : ''}" onclick="mudarAbaAvenca('${a.id}')">${a.label}${a.n !== null ? `<span class="av-count">${a.n}</span>` : ''}</button>`).join('')}</div>`;
+
+                const ladoDireito = abaAtiva === 'tarefas'
+                    ? `<button type="button" class="btn-salvar" onclick="abrirNovaTarefaAvenca('${hoje}')">+ Nova tarefa</button>`
+                    : `<div style="min-width:170px; text-align:right; font-size:0.8rem; color:var(--text-muted);">Clique num dia para adicionar<br>Clique numa tarefa para editar ou cancelar</div>`;
+                const barraMes = `<div class="cal-bar">
+                        <div class="cal-nav"><button class="btn-cancelar" onclick="mudarMesAvenca(-1)" title="Mês anterior">&#8249;</button><button class="btn-cancelar" onclick="irParaHojeAvenca()">Hoje</button><button class="btn-cancelar" onclick="mudarMesAvenca(1)" title="Mês seguinte">&#8250;</button></div>
+                        <div class="cal-title">${MESES_PT[mes]} ${ano}</div>
+                        ${ladoDireito}
+                    </div>`;
+
+                let painel = '';
+                if (abaAtiva === 'calendario') {
+                    painel = `${barraMes}
+                        <div class="cal-grid">${celulas}</div>
+                        <div class="cal-legend"><span class="l-pendente">Pendente</span><span class="l-feito">Concluída</span><span class="l-atraso">Atrasada</span><span class="l-cancelada">Cancelada</span></div>`;
+                } else if (abaAtiva === 'tarefas') {
+                    painel = `${barraMes}
+                        <div class="av-resumo">
+                            <span>${badgeStatus('Pendente')} <strong>${contagem.pendente}</strong></span>
+                            <span>${badgeStatus('Atrasada')} <strong>${contagem.atraso}</strong></span>
+                            <span>${badgeStatus('Concluída')} <strong>${contagem.feito}</strong></span>
+                            <span>${badgeStatus('Cancelada')} <strong>${contagem.cancelada}</strong></span>
+                        </div>
+                        ${listaMes}`;
+                } else {
+                    painel = `<p class="av-intro">Cada avença é um contrato de manutenção de um cliente. As tarefas de cada avença aparecem no calendário e na aba Tarefas.</p>${listaAvencas}`;
                 }
 
                 display.style.textAlign = 'left'; display.style.padding = '0';
-                display.innerHTML = `<div class="cal-wrap">
-                    <div class="cal-bar">
-                        <div class="cal-nav"><button class="btn-cancelar" onclick="mudarMesAvenca(-1)" title="Mês anterior">&#8249;</button><button class="btn-cancelar" onclick="irParaHojeAvenca()">Hoje</button><button class="btn-cancelar" onclick="mudarMesAvenca(1)" title="Mês seguinte">&#8250;</button></div>
-                        <div class="cal-title">${MESES_PT[mes]} ${ano}</div>
-                        <div style="min-width:170px; text-align:right; font-size:0.8rem; color:var(--text-muted);">Clique num dia para adicionar<br>Clique numa tarefa para editar ou cancelar</div>
-                    </div>
-                    <div class="cal-grid">${celulas}</div>
-                    <div class="cal-legend"><span class="l-pendente">Pendente</span><span class="l-feito">Concluída</span><span class="l-atraso">Atrasada</span><span class="l-cancelada">Cancelada</span></div>
-                    <h3 style="margin: 26px 0 8px; font-size: 1rem; color: var(--text-dark);">Tarefas de ${MESES_PT[mes]}</h3>
-                    ${listaMes}
-                    <h3 style="margin: 26px 0 8px; font-size: 1rem; color: var(--text-dark);">Avenças</h3>
-                    ${listaAvencas}
-                </div>`;
+                display.innerHTML = `<div class="cal-wrap">${barraAbas}${painel}</div>`;
             },
             cadastro: function() { abrirFormAvenca(); }
         };
