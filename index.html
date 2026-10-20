@@ -587,6 +587,17 @@
         .perm-switch input:disabled + .perm-slider { opacity: .55; cursor: not-allowed; }
         #perm-lista { max-height: 52vh; overflow-y: auto; padding-right: 4px; }
         #modal-perm .modal-box, #card-perfil .modal-box { max-width: 560px; }
+        .sidebar-perfil { margin-top: auto; padding: 16px 14px; border-top: 1px solid rgba(255, 255, 255, 0.06); display: flex; align-items: center; gap: 12px; }
+        .sidebar-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex-shrink: 0; cursor: pointer; border: 2px solid var(--primary); }
+        .sidebar-perfil-info { flex: 1; min-width: 0; }
+        .sidebar-perfil-nome { color: #fff; font-weight: 600; font-size: .92rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-perfil-email { color: rgba(255, 255, 255, 0.45); font-size: .75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sidebar-sair { background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; padding: 8px; border-radius: 8px; display: flex; flex-shrink: 0; transition: color .15s, background .15s; }
+        .sidebar-sair:hover { color: var(--primary); background: rgba(255, 255, 255, 0.06); }
+        .sidebar-sair svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
+        @media (min-width: 769px) { .btn-logout { display: none; } }
+        @media (max-width: 768px) { .sidebar-perfil { display: none; } }
+        @media (max-width: 768px) {
     </style>
 </head>
 <body>
@@ -695,6 +706,16 @@
                     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Configurações
                 </button>
             </div>
+            <div class="sidebar-perfil">
+                <img id="sidebar-avatar" class="sidebar-avatar" alt="" src="" onclick="abrirEditarPerfil()" title="Alterar foto e nome">
+                <div class="sidebar-perfil-info" onclick="abrirEditarPerfil()" style="cursor:pointer;">
+                    <div id="sidebar-nome" class="sidebar-perfil-nome">Sem nome</div>
+                    <div id="sidebar-email" class="sidebar-perfil-email"></div>
+                </div>
+                <button class="sidebar-sair" onclick="fazerLogout()" title="Sair do Sistema">
+                    <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                </button>
+            </div>
         </nav>
 
         <main class="main-content">
@@ -761,10 +782,19 @@
             <form class="modal-body" onsubmit="guardarPerfil(event)">
                 <p style="color: var(--text-muted); margin-bottom: 18px;">Para começar, indique o seu nome. A foto é opcional.</p>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 18px;">
+                    <div id="perfil-recorte" style="display: none; flex-direction: column; align-items: center; gap: 10px;">
+                        <div id="perfil-caixa" style="width: 240px; height: 240px; border-radius: 50%; overflow: hidden; position: relative; background: #eef0f3; touch-action: none; cursor: grab;">
+                            <img id="perfil-imagem-recorte" alt="" draggable="false" style="position: absolute; max-width: none; user-select: none; pointer-events: none;">
+                        </div>
+                        <label style="font-size: .85rem; color: var(--text-muted);">Zoom</label>
+                        <input type="range" id="perfil-zoom" min="1" max="3" step="0.01" value="1" oninput="zoomRecorte(this.value)" style="width: 240px;">
+                        <button type="button" class="btn-salvar" onclick="aplicarRecorte()">Usar esta foto</button>
+                    </div>
                     <img id="perfil-preview" alt="" style="display: none; width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);">
                     <label class="btn-cancelar" style="cursor: pointer;">Escolher foto (opcional)
                         <input type="file" id="perfil-foto" accept="image/*" onchange="previsualizarFotoPerfil(this)" style="display: none;">
                     </label>
+                    <button type="button" id="perfil-cancelar" class="btn-cancelar" onclick="fecharCardPerfil()" style="display: none;">Cancelar</button>
                 </div>
                 <div class="form-group">
                     <label for="perfil-nome">Nome</label>
@@ -3087,17 +3117,21 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                     await setDoc(ref, { permissoes: todasPermissoesAtivas() }, { merge: true });
                 }
                 if (JSON.stringify(perfilAtual.permissoes) !== permsAntes) aplicarPermissoesMenu();
-                if (!perfilAtual.nome) abrirCardPerfil(); else ocultarOverlay('card-perfil');
+                atualizarSidebarPerfil();
+                if (!perfilAtual.nome && !document.getElementById('card-perfil').classList.contains('active')) abrirCardPerfil();
             });
             listenersAtivos.push(unsub);
         }
-        function abrirCardPerfil() {
+        function abrirCardPerfil(edicao = false) {
+            fotoPerfilTemp = '';
             document.getElementById('perfil-nome').value = perfilAtual?.nome || '';
-            if (!fotoPerfilTemp && perfilAtual?.foto) { fotoPerfilTemp = perfilAtual.foto; }
+            document.getElementById('perfil-recorte').style.display = 'none';
             const img = document.getElementById('perfil-preview');
-            img.src = fotoPerfilTemp || FOTO_PADRAO; img.style.display = 'block';
+            img.src = perfilAtual?.foto || FOTO_PADRAO; img.style.display = 'block';
+            document.getElementById('perfil-cancelar').style.display = (edicao || perfilAtual?.nome) ? '' : 'none';
             mostrarOverlay('card-perfil');
         }
+        window.fecharCardPerfil = function() { ocultarOverlay('card-perfil'); document.getElementById('perfil-recorte').style.display = 'none'; fotoPerfilTemp = ''; }
         function redimensionarImagem(file, tam) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -3117,8 +3151,8 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         window.previsualizarFotoPerfil = async function(input) {
             const file = input.files[0]; if (!file) return;
             try {
-                fotoPerfilTemp = await redimensionarImagem(file, 256);
-                const img = document.getElementById('perfil-preview'); img.src = fotoPerfilTemp; img.style.display = 'block';
+                const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+                recorteCarregar(dataUrl);
             } catch (e) { mostrarAlertaCustomizado('Não foi possível carregar a imagem.', 'Erro'); }
         }
         window.guardarPerfil = async function(e) {
@@ -3130,9 +3164,74 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 const dados = { nome };
                 if (fotoPerfilTemp) dados.foto = fotoPerfilTemp;
                 await updateDoc(doc(db, 'Utilizadores', perfilAtual.email), dados);
+                ocultarOverlay('card-perfil');
             } catch (err) { mostrarAlertaCustomizado('Erro ao guardar o perfil.', 'Erro'); }
             finally { btn.disabled = false; btn.innerText = 'Guardar perfil'; }
         }
+
+        /* ---------- Foto de perfil: recorte com zoom e arrastar ---------- */
+        const RECORTE = { img: null, B: 240, w: 0, h: 0, base: 1, zoom: 1, x: 0, y: 0, arrastando: false, sx: 0, sy: 0, ox: 0, oy: 0 };
+        function recorteEscala() { return RECORTE.base * RECORTE.zoom; }
+        function recorteLimitar() {
+            const e = recorteEscala(), B = RECORTE.B;
+            RECORTE.x = Math.min(0, Math.max(B - RECORTE.w * e, RECORTE.x));
+            RECORTE.y = Math.min(0, Math.max(B - RECORTE.h * e, RECORTE.y));
+        }
+        function recorteDesenhar() {
+            const img = document.getElementById('perfil-imagem-recorte'); const e = recorteEscala();
+            img.style.width = (RECORTE.w * e) + 'px'; img.style.height = (RECORTE.h * e) + 'px';
+            img.style.left = RECORTE.x + 'px'; img.style.top = RECORTE.y + 'px';
+        }
+        function recorteCarregar(dataUrl) {
+            const img = new Image();
+            img.onload = () => {
+                RECORTE.w = img.width; RECORTE.h = img.height;
+                RECORTE.base = Math.max(RECORTE.B / img.width, RECORTE.B / img.height);
+                RECORTE.zoom = 1;
+                RECORTE.x = (RECORTE.B - img.width * RECORTE.base) / 2;
+                RECORTE.y = (RECORTE.B - img.height * RECORTE.base) / 2;
+                document.getElementById('perfil-imagem-recorte').src = dataUrl;
+                document.getElementById('perfil-zoom').value = 1;
+                document.getElementById('perfil-recorte').style.display = 'flex';
+                document.getElementById('perfil-preview').style.display = 'none';
+                recorteDesenhar();
+            };
+            img.src = dataUrl;
+        }
+        window.zoomRecorte = function(valor) {
+            const antigo = recorteEscala();
+            const cx = (RECORTE.B / 2 - RECORTE.x) / antigo, cy = (RECORTE.B / 2 - RECORTE.y) / antigo;
+            RECORTE.zoom = parseFloat(valor);
+            const novo = recorteEscala();
+            RECORTE.x = RECORTE.B / 2 - cx * novo; RECORTE.y = RECORTE.B / 2 - cy * novo;
+            recorteLimitar(); recorteDesenhar();
+        }
+        window.aplicarRecorte = function() {
+            const e = recorteEscala(), B = RECORTE.B;
+            const canvas = document.createElement('canvas'); canvas.width = canvas.height = 256;
+            const img = document.getElementById('perfil-imagem-recorte');
+            canvas.getContext('2d').drawImage(img, (-RECORTE.x) / e, (-RECORTE.y) / e, B / e, B / e, 0, 0, 256, 256);
+            fotoPerfilTemp = canvas.toDataURL('image/jpeg', 0.9);
+            document.getElementById('perfil-recorte').style.display = 'none';
+            const prev = document.getElementById('perfil-preview'); prev.src = fotoPerfilTemp; prev.style.display = 'block';
+        }
+        function iniciarRecorte() {
+            const caixa = document.getElementById('perfil-caixa');
+            caixa.addEventListener('pointerdown', (ev) => { RECORTE.arrastando = true; RECORTE.sx = ev.clientX; RECORTE.sy = ev.clientY; RECORTE.ox = RECORTE.x; RECORTE.oy = RECORTE.y; caixa.setPointerCapture(ev.pointerId); caixa.style.cursor = 'grabbing'; });
+            caixa.addEventListener('pointermove', (ev) => { if (!RECORTE.arrastando) return; RECORTE.x = RECORTE.ox + (ev.clientX - RECORTE.sx); RECORTE.y = RECORTE.oy + (ev.clientY - RECORTE.sy); recorteLimitar(); recorteDesenhar(); });
+            const fim = () => { RECORTE.arrastando = false; caixa.style.cursor = 'grab'; };
+            caixa.addEventListener('pointerup', fim); caixa.addEventListener('pointercancel', fim);
+        }
+        iniciarRecorte();
+
+        /* ---------- Perfil na barra lateral ---------- */
+        function atualizarSidebarPerfil() {
+            if (!perfilAtual) return;
+            document.getElementById('sidebar-avatar').src = perfilAtual.foto || FOTO_PADRAO;
+            document.getElementById('sidebar-nome').innerText = perfilAtual.nome || 'Sem nome';
+            document.getElementById('sidebar-email').innerText = perfilAtual.email || '';
+        }
+        window.abrirEditarPerfil = function() { if (perfilAtual) abrirCardPerfil(true); }
 
         /* ---------- Presença (online/offline) e banimento ---------- */
         let heartbeatTimer = null;
