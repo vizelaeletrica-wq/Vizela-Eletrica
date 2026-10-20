@@ -631,6 +631,24 @@
             .cal-mes { min-width: 130px; font-size: .95rem; }
             .cal-mapa { height: 220px; }
         }
+        .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+        .cal-esquerda { min-width: 0; }
+        .cal-lateral { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: sticky; top: 0; }
+        .cal-lateral-titulo { padding: 14px 16px; font-weight: 700; color: var(--ink); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .cal-lateral-titulo span { background: var(--primary-tint); color: var(--ink); border-radius: 999px; padding: 2px 10px; font-size: .8rem; }
+        .cal-lateral-lista { max-height: calc(100vh - 300px); overflow-y: auto; }
+        .cal-item { padding: 12px 16px; border-bottom: 1px solid #eef0f3; cursor: pointer; border-left: 3px solid transparent; }
+        .cal-item:hover { background: var(--primary-tint); }
+        .cal-item.ativo { background: var(--primary-tint); border-left-color: var(--primary); }
+        .cal-item-data { font-size: .75rem; color: var(--text-muted); font-weight: 600; }
+        .cal-item-nome { font-weight: 600; color: var(--ink); margin-top: 2px; }
+        .cal-item-lugar { font-size: .82rem; color: var(--text-muted); margin-top: 2px; }
+        .cal-item-vazio { padding: 24px 16px; color: var(--text-muted); text-align: center; }
+        @media (max-width: 900px) {
+            .cal-layout { grid-template-columns: 1fr; }
+            .cal-lateral { position: static; }
+            .cal-lateral-lista { max-height: 320px; }
+        }
     </style>
 </head>
 <body>
@@ -726,10 +744,10 @@
                 <span><span style="color: #ffffff;">TECNO</span><span style="color: var(--primary);">WATT</span></span>
             </div>
             <div class="menu-container">
-                <button class="menu-btn" onclick="selectCategory('Dashboard', this)">
+                <button class="menu-btn active" onclick="selectCategory('Dashboard', this)">
                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Dashboard
                 </button>
-                <button class="menu-btn active" onclick="selectCategory('Tabelas', this)">
+                <button class="menu-btn" onclick="selectCategory('Tabelas', this)">
                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabelas
                 </button>
                 <button class="menu-btn" onclick="selectCategory('Documentos', this)">
@@ -761,11 +779,11 @@
                         <span></span><span></span><span></span>
                     </button>
                     <h1 class="category-title">
-                        <span id="main-category-title">Tabelas</span>
+                        <span id="main-category-title">Dashboard</span>
                         <span class="subview-indicator">/</span>
-                        <span id="sub-category-title" class="subview-indicator" style="font-weight: 500; color: var(--text-dark);">Entidades</span>
+                        <span id="sub-category-title" class="subview-indicator" style="font-weight: 500; color: var(--text-dark);">Início</span>
                         <span class="subview-indicator">></span>
-                        <span id="subview-title" class="subview-indicator">Clientes</span>
+                        <span id="subview-title" class="subview-indicator">Painel</span>
                     </h1>
                 </div>
                 <div class="header-right">
@@ -971,7 +989,7 @@
             'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Mensagem SMS': ['Consultar'], 'Assinaturas Digitais': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas'] }
         };
 
-        let categoriaAtiva = 'Tabelas';
+        let categoriaAtiva = 'Dashboard';
         let dadosCadastrados = { 'Clientes': [], 'Fornecedores': [], 'Vendedores': [], 'Categorias': [], 'Artigos': [], 'Artigos Fabricados': [] };
         let idSendoEditado = null;
         let idParaExcluir = null;
@@ -3626,6 +3644,23 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             }
             return `<div class="cal-dica">Clique num dia ou num evento para ver o horário, o lugar, o objetivo e o mapa.</div>`;
         }
+        function calListaLateral() {
+            const todos = [...calEventos()].sort((a, b) => ((a.data || '') + (a.hora || '')).localeCompare((b.data || '') + (b.hora || '')));
+            const itens = todos.length
+                ? todos.map(e => {
+                    const [a, m, d] = (e.data || '--').split('-');
+                    return `<div class="cal-item ${CAL.evento === e.id ? 'ativo' : ''}" onclick="calAbrirEvento('${e.id}')">
+                        <div class="cal-item-data">${d}/${m}/${a} · ${escapeHTML(e.hora || '-')}</div>
+                        <div class="cal-item-nome">${escapeHTML(e.titulo || '')}</div>
+                        <div class="cal-item-lugar">${escapeHTML(e.lugar || 'sem lugar')}</div>
+                    </div>`;
+                }).join('')
+                : `<div class="cal-item-vazio">Nenhum evento cadastrado.</div>`;
+            return `<aside class="cal-lateral">
+                <div class="cal-lateral-titulo">Todos os eventos <span>${todos.length}</span></div>
+                <div class="cal-lateral-lista">${itens}</div>
+            </aside>`;
+        }
         function calRender(display) {
             const porDia = {};
             calEventos().forEach(e => { if (e.data) (porDia[e.data] = porDia[e.data] || []).push(e); });
@@ -3659,8 +3694,13 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                     <button class="btn-cancelar" type="button" onclick="calNavegar(1)" title="Mês seguinte">›</button>
                     <button class="btn-cancelar" type="button" onclick="calIrHoje()">Hoje</button>
                 </div>
-                <div class="cal-grid">${cells}</div>
-                <div id="cal-painel">${calPainel(porDia)}</div>`;
+                <div class="cal-layout">
+                    <div class="cal-esquerda">
+                        <div class="cal-grid">${cells}</div>
+                        <div id="cal-painel">${calPainel(porDia)}</div>
+                    </div>
+                    ${calListaLateral()}
+                </div>`;
         }
 
         function irParaTela(cat, sub, aba) {
