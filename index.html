@@ -598,6 +598,40 @@
         @media (min-width: 769px) { .btn-logout { display: none; } }
         @media (max-width: 768px) { .sidebar-perfil { display: none; } }
         @media (max-width: 768px) {
+        .cal-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+        .cal-mes { font-weight: 700; font-size: 1.05rem; min-width: 190px; text-align: center; color: var(--ink); }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+        .cal-dow { padding: 8px; font-size: .78rem; font-weight: 600; color: var(--text-muted); text-align: center; background: #f7f8fa; border-bottom: 1px solid var(--border); }
+        .cal-cel { min-height: 96px; padding: 6px; border-right: 1px solid #eef0f3; border-bottom: 1px solid #eef0f3; cursor: pointer; display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
+        .cal-cel:nth-child(7n) { border-right: none; }
+        .cal-cel.vazia { background: #fafafa; cursor: default; }
+        .cal-cel:not(.vazia):hover { background: var(--primary-tint); }
+        .cal-cel.selecionado { box-shadow: inset 0 0 0 2px var(--primary); }
+        .cal-num { font-size: .8rem; font-weight: 600; color: var(--ink); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+        .cal-cel.hoje .cal-num { background: var(--primary); color: var(--text-on-primary); }
+        .cal-evt { font-size: .72rem; background: var(--primary-tint); border-left: 3px solid var(--primary); padding: 2px 5px; border-radius: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cal-mais { font-size: .7rem; color: var(--text-muted); }
+        .cal-linha { padding: 10px 12px; border-bottom: 1px solid #eef0f3; cursor: pointer; font-size: .92rem; }
+        .cal-linha:hover { background: var(--primary-tint); }
+        .cal-detalhe { margin-top: 18px; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .cal-det-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+        .cal-det-titulo { font-weight: 700; font-size: 1.1rem; color: var(--ink); }
+        .cal-det-sub { color: var(--text-muted); font-size: .9rem; margin-top: 2px; text-transform: capitalize; }
+        .cal-det-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 16px; color: var(--ink); }
+        .cal-det-grid span { display: block; font-size: .72rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px; }
+        .cal-mapa { width: 100%; height: 300px; border: 0; border-radius: 10px; margin-bottom: 14px; }
+        .cal-semmapa, .cal-dica { padding: 18px; text-align: center; color: var(--text-muted); background: #f7f8fa; border-radius: 10px; margin-top: 18px; }
+        .dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+        .dash-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+        .dash-card-titulo { font-weight: 600; color: var(--text-muted); }
+        .dash-card-num { font-size: 2rem; font-weight: 800; margin: 6px 0; color: var(--ink); }
+        .dash-card-sub { color: var(--text-muted); font-size: .85rem; margin-bottom: 14px; }
+        @media (max-width: 768px) {
+            .cal-cel { min-height: 62px; padding: 4px; }
+            .cal-evt { font-size: .6rem; padding: 1px 3px; }
+            .cal-mes { min-width: 130px; font-size: .95rem; }
+            .cal-mapa { height: 220px; }
+        }
     </style>
 </head>
 <body>
@@ -693,6 +727,9 @@
                 <span><span style="color: #ffffff;">TECNO</span><span style="color: var(--primary);">WATT</span></span>
             </div>
             <div class="menu-container">
+                <button class="menu-btn" onclick="selectCategory('Dashboard', this)">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg> Dashboard
+                </button>
                 <button class="menu-btn active" onclick="selectCategory('Tabelas', this)">
                     <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabelas
                 </button>
@@ -928,10 +965,11 @@
         const storage = getStorage(app);
 
         const sistemaModulos = {
+            'Dashboard': { 'Início': ['Painel'], 'Agenda': ['Calendário'] },
             'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns'], 'Stocks': ['Controlo de stocks'] },
             'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Recibo', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
-            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Agenda': ['Eventos Programados'], 'Referências Multibanco': ['Consultar'], 'Mensagem SMS': ['Consultar'], 'Assinaturas Digitais': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas'] }
+            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Mensagem SMS': ['Consultar'], 'Assinaturas Digitais': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Prazos de Vencimento', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas'] }
         };
 
         let categoriaAtiva = 'Tabelas';
@@ -3497,19 +3535,179 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 { key: 'dataImposto', label: 'Data do Imposto', render: item => alertaData(item.dataImposto) }
             ]
         });
-        registrarEntidadeSimples('Eventos Programados', {
+        /* ================================================================
+           DASHBOARD > Painel e Agenda > Calendário (eventos programados)
+           ================================================================ */
+        const EVENTO_CFG = {
             collection: 'Eventos Programados', singular: 'Evento',
             campos: [
-                { id: 'titulo', label: 'Título', type: 'text', placeholder: 'Ex: Visita técnica', required: true },
+                { id: 'titulo', label: 'Nome do evento', type: 'text', placeholder: 'Ex: Visita técnica', required: true },
                 { id: 'data', label: 'Data', type: 'date', required: true },
-                { id: 'descricao', label: 'Descrição', type: 'text', placeholder: 'Detalhes do evento', required: false }
-            ],
-            colunas: [
-                { key: 'titulo', label: 'Título' },
-                { key: 'data', label: 'Data', render: item => alertaData(item.data) },
-                { key: 'descricao', label: 'Descrição' }
+                { id: 'hora', label: 'Horário', type: 'time', required: true },
+                { id: 'lugar', label: 'Lugar', type: 'text', placeholder: 'Ex: Obra Rua das Flores', required: false },
+                { id: 'endereco', label: 'Endereço', type: 'text', placeholder: 'Rua, número, cidade', required: false },
+                { id: 'objetivo', label: 'Objetivo', type: 'text', placeholder: 'Para que é o evento', required: false }
             ]
-        });
+        };
+        const CAL = { ano: new Date().getFullYear(), mes: new Date().getMonth(), dia: null, evento: null };
+
+        function calEventos() { return dadosCadastrados['Eventos Programados'] || []; }
+        function calDataIso(ano, mes, dia) { return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`; }
+        function calFormatarDataLonga(iso) {
+            if (!iso) return '-';
+            const [a, m, d] = iso.split('-').map(Number);
+            return new Date(a, m - 1, d).toLocaleDateString('pt-PT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        function calEstaVisivel() { return document.getElementById('subview-title').innerText === 'Calendário'; }
+        function calRedesenhar() {
+            if (calEstaVisivel()) TELAS_ESPECIAIS['Calendário'].render(document.getElementById('content-display'));
+        }
+        window.calNavegar = function(delta) {
+            const d = new Date(CAL.ano, CAL.mes + delta, 1);
+            CAL.ano = d.getFullYear(); CAL.mes = d.getMonth(); CAL.dia = null; CAL.evento = null;
+            calRedesenhar();
+        }
+        window.calIrHoje = function() {
+            const h = new Date(); CAL.ano = h.getFullYear(); CAL.mes = h.getMonth(); CAL.dia = null; CAL.evento = null;
+            calRedesenhar();
+        }
+        window.calSelecionarDia = function(iso) { CAL.dia = iso; CAL.evento = null; calRedesenhar(); }
+        window.calAbrirEvento = function(id) {
+            const e = calEventos().find(x => x.id === id);
+            CAL.evento = id; if (e) CAL.dia = e.data;
+            calRedesenhar();
+        }
+        window.calFecharDetalhe = function() { CAL.evento = null; calRedesenhar(); }
+        window.calEditar = function(id) {
+            const e = calEventos().find(x => x.id === id);
+            if (e) abrirFormEntidadeSimples(EVENTO_CFG, e);
+        }
+
+        function calDetalhe(e) {
+            const endereco = (e.endereco || '').trim();
+            const lugar = (e.lugar || '').trim();
+            const alvo = endereco || lugar;
+            const mapa = alvo
+                ? `<iframe class="cal-mapa" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=${encodeURIComponent(alvo)}&output=embed"></iframe>`
+                : `<div class="cal-semmapa">Sem endereço cadastrado para mostrar no mapa.</div>`;
+            return `<div class="cal-detalhe">
+                <div class="cal-det-cab">
+                    <div>
+                        <div class="cal-det-titulo">${escapeHTML(e.titulo || '')}</div>
+                        <div class="cal-det-sub">${calFormatarDataLonga(e.data)} · ${escapeHTML(e.hora || '-')}</div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn-action" onclick="calEditar('${e.id}')" title="Editar"><svg viewBox="0 0 24 24"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg></button>
+                        ${botaoExcluirNovo(EVENTO_CFG.collection, e.id)}
+                    </div>
+                </div>
+                <div class="cal-det-grid">
+                    <div><span>Lugar</span>${escapeHTML(lugar || '-')}</div>
+                    <div><span>Endereço</span>${escapeHTML(endereco || '-')}</div>
+                    <div><span>Objetivo</span>${escapeHTML(e.objetivo || e.descricao || '-')}</div>
+                </div>
+                ${mapa}
+                <button class="btn-cancelar" type="button" onclick="calFecharDetalhe()">Fechar detalhes</button>
+            </div>`;
+        }
+        function calPainel(porDia) {
+            if (CAL.evento) {
+                const e = calEventos().find(x => x.id === CAL.evento);
+                if (e) return calDetalhe(e);
+                CAL.evento = null;
+            }
+            if (CAL.dia) {
+                const lista = porDia[CAL.dia] || [];
+                const linhas = lista.length
+                    ? lista.map(e => `<div class="cal-linha" onclick="calAbrirEvento('${e.id}')">
+                            <strong>${escapeHTML(e.hora || '-')}</strong> ${escapeHTML(e.titulo || '')}
+                            <span style="color:var(--text-muted);"> · ${escapeHTML(e.lugar || 'sem lugar')}</span></div>`).join('')
+                    : `<div style="color:var(--text-muted);">Sem eventos neste dia.</div>`;
+                return `<div class="cal-detalhe"><div class="cal-det-titulo" style="margin-bottom:10px;text-transform:capitalize;">${calFormatarDataLonga(CAL.dia)}</div>${linhas}</div>`;
+            }
+            return `<div class="cal-dica">Clique num dia ou num evento para ver o horário, o lugar, o objetivo e o mapa.</div>`;
+        }
+        function calRender(display) {
+            const porDia = {};
+            calEventos().forEach(e => { if (e.data) (porDia[e.data] = porDia[e.data] || []).push(e); });
+            Object.values(porDia).forEach(l => l.sort((a, b) => (a.hora || '').localeCompare(b.hora || '')));
+
+            const primeiro = new Date(CAL.ano, CAL.mes, 1);
+            const offset = (primeiro.getDay() + 6) % 7; // semana começa à segunda
+            const totalDias = new Date(CAL.ano, CAL.mes + 1, 0).getDate();
+            const hoje = new Date(); const hojeIso = calDataIso(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+            const tituloMes = primeiro.toLocaleDateString('pt-PT', { month: 'long', year: 'numeric' });
+            const tituloMesCap = tituloMes.charAt(0).toUpperCase() + tituloMes.slice(1);
+
+            let cells = '';
+            ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].forEach(d => { cells += `<div class="cal-dow">${d}</div>`; });
+            for (let i = 0; i < offset; i++) cells += `<div class="cal-cel vazia"></div>`;
+            for (let d = 1; d <= totalDias; d++) {
+                const iso = calDataIso(CAL.ano, CAL.mes, d);
+                const lista = porDia[iso] || [];
+                const chips = lista.slice(0, 3).map(e => `<div class="cal-evt" title="${escapeHTML(e.titulo || '')}" onclick="event.stopPropagation();calAbrirEvento('${e.id}')">${escapeHTML(e.hora || '')} ${escapeHTML(e.titulo || '')}</div>`).join('');
+                const mais = lista.length > 3 ? `<div class="cal-mais">+${lista.length - 3} mais</div>` : '';
+                cells += `<div class="cal-cel ${iso === hojeIso ? 'hoje' : ''} ${CAL.dia === iso ? 'selecionado' : ''}" onclick="calSelecionarDia('${iso}')"><div class="cal-num">${d}</div>${chips}${mais}</div>`;
+            }
+            const restantes = (7 - ((offset + totalDias) % 7)) % 7;
+            for (let i = 0; i < restantes; i++) cells += `<div class="cal-cel vazia"></div>`;
+
+            display.style.textAlign = 'left'; display.style.padding = '0';
+            display.innerHTML = `
+                <div class="cal-topo">
+                    <button class="btn-cancelar" type="button" onclick="calNavegar(-1)" title="Mês anterior">‹</button>
+                    <div class="cal-mes">${tituloMesCap}</div>
+                    <button class="btn-cancelar" type="button" onclick="calNavegar(1)" title="Mês seguinte">›</button>
+                    <button class="btn-cancelar" type="button" onclick="calIrHoje()">Hoje</button>
+                </div>
+                <div class="cal-grid">${cells}</div>
+                <div id="cal-painel">${calPainel(porDia)}</div>`;
+        }
+
+        function irParaTela(cat, sub, aba) {
+            const btn = botaoMenuCategoria(cat);
+            document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            categoriaAtiva = cat;
+            document.getElementById('main-category-title').innerText = cat;
+            updateContentView(cat, sub, aba);
+        }
+        window.irParaTela = irParaTela;
+
+        TELAS_ESPECIAIS['Painel'] = {
+            dependeDe: ['Eventos Programados'],
+            render: function(display) {
+                const h = new Date(); const hoje = calDataIso(h.getFullYear(), h.getMonth(), h.getDate());
+                const proximos = calEventos().filter(e => e.data >= hoje)
+                    .sort((a, b) => (a.data + (a.hora || '')).localeCompare(b.data + (b.hora || ''))).slice(0, 5);
+                const podeAgenda = temPermissao('Dashboard', 'Agenda', 'Calendário');
+                const lista = proximos.length
+                    ? proximos.map(e => `<div class="cal-linha" ${podeAgenda ? `onclick="irParaTela('Dashboard','Agenda','Calendário'); setTimeout(() => calAbrirEvento('${e.id}'), 50);"` : ''}>
+                        <strong>${calFormatarDataLonga(e.data)}</strong> · ${escapeHTML(e.hora || '-')} — ${escapeHTML(e.titulo || '')}
+                        <span style="color:var(--text-muted);"> · ${escapeHTML(e.lugar || 'sem lugar')}</span></div>`).join('')
+                    : `<div style="color:var(--text-muted);">Nenhum evento a partir de hoje.</div>`;
+                display.style.textAlign = 'left'; display.style.padding = '0';
+                display.innerHTML = `
+                    <div class="dash-grid">
+                        <div class="dash-card">
+                            <div class="dash-card-titulo">Eventos</div>
+                            <div class="dash-card-num">${calEventos().length}</div>
+                            <div class="dash-card-sub">Próximos: ${proximos.length}</div>
+                            ${podeAgenda ? `<button class="btn-salvar" type="button" onclick="irParaTela('Dashboard','Agenda','Calendário')">Abrir calendário</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="view-card" style="text-align:left; margin-top:18px;">
+                        <h3 style="margin-bottom:12px; color:var(--text-dark);">Próximos eventos</h3>
+                        ${lista}
+                    </div>`;
+            }
+        };
+
+        TELAS_ESPECIAIS['Calendário'] = {
+            dependeDe: ['Eventos Programados'],
+            render: calRender,
+            cadastro: function() { abrirFormEntidadeSimples(EVENTO_CFG, null); }
+        };
 
         // NOVO: Tabelas > Stocks > Controlo de stocks (leitura, sem cadastro próprio)
         TELAS_ESPECIAIS['Controlo de stocks'] = {
