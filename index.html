@@ -759,10 +759,10 @@
         <div class="modal-box">
             <div class="modal-header"><h2>Complete o seu perfil</h2></div>
             <form class="modal-body" onsubmit="guardarPerfil(event)">
-                <p style="color: var(--text-muted); margin-bottom: 18px;">Para começar, indique o seu nome e escolha uma foto.</p>
+                <p style="color: var(--text-muted); margin-bottom: 18px;">Para começar, indique o seu nome. A foto é opcional.</p>
                 <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 18px;">
                     <img id="perfil-preview" alt="" style="display: none; width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);">
-                    <label class="btn-cancelar" style="cursor: pointer;">Escolher foto
+                    <label class="btn-cancelar" style="cursor: pointer;">Escolher foto (opcional)
                         <input type="file" id="perfil-foto" accept="image/*" onchange="previsualizarFotoPerfil(this)" style="display: none;">
                     </label>
                 </div>
@@ -3060,10 +3060,9 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         }
         function mostrarOverlay(id) { const el = document.getElementById(id); el.style.display = 'flex'; setTimeout(() => el.classList.add('active'), 10); }
         function ocultarOverlay(id) { const el = document.getElementById(id); el.classList.remove('active'); setTimeout(() => { el.style.display = 'none'; }, 300); }
+        const FOTO_PADRAO = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#D1D5DB"/><circle cx="50" cy="38" r="18" fill="#FFFFFF"/><path d="M18 88c4-18 17-28 32-28s28 10 32 28z" fill="#FFFFFF"/></svg>');
         function avatarHTML(u, tam = 32) {
-            if (u.foto) return `<img src="${u.foto}" alt="" style="width:${tam}px;height:${tam}px;border-radius:50%;object-fit:cover;flex-shrink:0;">`;
-            const inicial = escapeHTML(((u.nome || u.email || '?').trim().charAt(0) || '?').toUpperCase());
-            return `<span style="width:${tam}px;height:${tam}px;border-radius:50%;background:var(--primary-tint);color:var(--ink);display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${inicial}</span>`;
+            return `<img src="${u.foto || FOTO_PADRAO}" alt="" style="width:${tam}px;height:${tam}px;border-radius:50%;object-fit:cover;flex-shrink:0;">`;
         }
 
         /* ---------- Perfil do utilizador logado (primeiro acesso: nome + foto) ---------- */
@@ -3088,7 +3087,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                     await setDoc(ref, { permissoes: todasPermissoesAtivas() }, { merge: true });
                 }
                 if (JSON.stringify(perfilAtual.permissoes) !== permsAntes) aplicarPermissoesMenu();
-                if (!perfilAtual.nome || !perfilAtual.foto) abrirCardPerfil(); else ocultarOverlay('card-perfil');
+                if (!perfilAtual.nome) abrirCardPerfil(); else ocultarOverlay('card-perfil');
             });
             listenersAtivos.push(unsub);
         }
@@ -3096,7 +3095,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             document.getElementById('perfil-nome').value = perfilAtual?.nome || '';
             if (!fotoPerfilTemp && perfilAtual?.foto) { fotoPerfilTemp = perfilAtual.foto; }
             const img = document.getElementById('perfil-preview');
-            if (fotoPerfilTemp) { img.src = fotoPerfilTemp; img.style.display = 'block'; }
+            img.src = fotoPerfilTemp || FOTO_PADRAO; img.style.display = 'block';
             mostrarOverlay('card-perfil');
         }
         function redimensionarImagem(file, tam) {
@@ -3125,10 +3124,12 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         window.guardarPerfil = async function(e) {
             e.preventDefault();
             const nome = document.getElementById('perfil-nome').value.trim();
-            if (!nome || !fotoPerfilTemp) { mostrarAlertaCustomizado('Indique o seu nome e escolha uma foto.', 'Atenção'); return; }
+            if (!nome) { mostrarAlertaCustomizado('Indique o seu nome.', 'Atenção'); return; }
             const btn = document.getElementById('btn-guardar-perfil'); btn.disabled = true; btn.innerText = 'A guardar...';
             try {
-                await updateDoc(doc(db, 'Utilizadores', perfilAtual.email), { nome, foto: fotoPerfilTemp });
+                const dados = { nome };
+                if (fotoPerfilTemp) dados.foto = fotoPerfilTemp;
+                await updateDoc(doc(db, 'Utilizadores', perfilAtual.email), dados);
             } catch (err) { mostrarAlertaCustomizado('Erro ao guardar o perfil.', 'Erro'); }
             finally { btn.disabled = false; btn.innerText = 'Guardar perfil'; }
         }
