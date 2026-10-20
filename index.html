@@ -1128,6 +1128,7 @@
 
         window.toggleDropdown = function(event) {
             event.stopPropagation(); const dropdown = document.getElementById('options-dropdown');
+            fecharTodosDetalhes();
             renderDropdownStructure(); dropdown.classList.toggle('active');
         }
 
@@ -1190,11 +1191,26 @@
             document.getElementById(`venda-${index}`).value = venda.toFixed(2);
         }
 
-        window.toggleLinhaDetalhes = function(id, event) {
-            if(event.target.closest('.action-buttons')) return;
-            const tr = document.getElementById(id);
-            if(tr) tr.classList.toggle('active');
+        function fecharTodosDetalhes() {
+            document.querySelectorAll('.details-row.active').forEach(r => r.classList.remove('active'));
         }
+        function fecharMenuHamburguer() {
+            const d = document.getElementById('options-dropdown'); if (d) d.classList.remove('active');
+        }
+        window.toggleLinhaDetalhes = function(id, event) {
+            if (event.target.closest('.action-buttons')) return;
+            const tr = document.getElementById(id);
+            if (!tr) return;
+            const abrir = !tr.classList.contains('active');
+            fecharTodosDetalhes();
+            fecharMenuHamburguer();
+            if (abrir) tr.classList.add('active');
+        }
+        // Regista se o clique começou dentro de uma linha (antes de a tabela ser redesenhada)
+        let cliqueDentroLinha = false;
+        document.addEventListener('pointerdown', (e) => {
+            cliqueDentroLinha = !!e.target.closest('.clickable-row, .details-row');
+        }, true);
 
         // Funções específicas do Workflow Artigos Fabricados
         window.mostrarPrecosBundle = function(artigoId) {
@@ -3779,7 +3795,9 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
 
         document.addEventListener('click', (event) => {
             const dropdown = document.getElementById('options-dropdown');
-            if (dropdown && dropdown.classList.contains('active') && !event.target.closest('.header-left')) { dropdown.classList.remove('active'); }
+            if (dropdown && dropdown.classList.contains('active') && !event.target.closest('#options-dropdown, .hamburger-btn')) { dropdown.classList.remove('active'); }
+            // Clicar fora de uma linha aberta (ou noutra linha) fecha-a
+            if (!cliqueDentroLinha) fecharTodosDetalhes();
             // Clicar fora fecha a janela (exceto o card de primeiro acesso, que é obrigatório)
             CLIQUE_FORA.forEach(id => { const overlay = document.getElementById(id); if (overlay && event.target === overlay && overlay.classList.contains('active')) fecharOverlayPorId(id); });
         });
