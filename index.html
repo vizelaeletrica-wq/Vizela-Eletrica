@@ -3780,8 +3780,42 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         document.addEventListener('click', (event) => {
             const dropdown = document.getElementById('options-dropdown');
             if (dropdown && dropdown.classList.contains('active') && !event.target.closest('.header-left')) { dropdown.classList.remove('active'); }
-            const clickFora = [ { overlayId: 'modal-cadastro', closeFunc: fecharModal }, { overlayId: 'modal-exclusao', closeFunc: fecharModalExclusao }, { overlayId: 'modal-alerta', closeFunc: fecharAlerta } ];
-            clickFora.forEach(m => { const overlay = document.getElementById(m.overlayId); if (overlay && event.target === overlay) { m.closeFunc(); } });
+            // Clicar fora fecha a janela (exceto o card de primeiro acesso, que é obrigatório)
+            CLIQUE_FORA.forEach(id => { const overlay = document.getElementById(id); if (overlay && event.target === overlay && overlay.classList.contains('active')) fecharOverlayPorId(id); });
+        });
+
+        /* ---- Janelas: só uma aberta de cada vez ---- */
+        const FECHAR_FUNCOES = {
+            'modal-cadastro': () => fecharModal(),
+            'modal-exclusao': () => fecharModalExclusao(),
+            'modal-perm': () => fecharEditorPerm(),
+            'modal-minuta': () => fecharMinuta(),
+            'modal-alerta': () => fecharAlerta(),
+            'modal-nome-conjunto': () => voltarBundle()
+        };
+        const CLIQUE_FORA = ['modal-cadastro', 'modal-exclusao', 'modal-alerta', 'modal-perm', 'modal-minuta', 'modal-nome-conjunto'];
+        // Ao abrir uma destas, as outras da lista fecham sozinhas
+        const ABRE_FECHA = ['modal-cadastro', 'modal-exclusao', 'modal-perm', 'modal-minuta'];
+        function fecharOverlayPorId(id) {
+            if (FECHAR_FUNCOES[id]) FECHAR_FUNCOES[id]();
+            else ocultarOverlay(id);
+        }
+        function fecharOutrasJanelas(idAberta) {
+            ABRE_FECHA.forEach(id => {
+                if (id === idAberta) return;
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) fecharOverlayPorId(id);
+            });
+        }
+        const observadorJanelas = new MutationObserver(mutacoes => {
+            mutacoes.forEach(m => {
+                const el = m.target;
+                const abriu = el.classList.contains('active') && !(m.oldValue || '').split(/\s+/).includes('active');
+                if (abriu && ABRE_FECHA.includes(el.id)) fecharOutrasJanelas(el.id);
+            });
+        });
+        document.querySelectorAll('.modal-overlay').forEach(el => {
+            observadorJanelas.observe(el, { attributes: true, attributeFilter: ['class'], attributeOldValue: true });
         });
 
         document.addEventListener('DOMContentLoaded', () => { renderDropdownStructure(); });
