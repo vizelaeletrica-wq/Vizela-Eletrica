@@ -1504,13 +1504,13 @@
                     <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
                     <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
                     <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel === 'custo' ? 'Tabela de Custo' : (precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)')}</label>${campoPreco}</div>
-                    <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+ Adicionar à Lista</button></div>
+                    <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" title="Adicionar à lista" aria-label="Adicionar à lista" onclick="adicionarItemDocumento('${containerId}','${movimento}')" style="width:42px;height:42px;min-width:42px;padding:0;border-radius:50%;font-size:1.5rem;line-height:1;">+</button></div>
                 </div>
                 ${extra.material ? `<div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:4px;">
                     <div class="form-group" style="flex:2; min-width:240px;"><label>Material</label><input type="text" id="${containerId}-material" class="form-control" maxlength="200" placeholder="Ex: Aço inox 304, 2mm" ${semSubmeterNoEnter}></div>
                     ${extra.imagem ? `<div class="form-group" style="flex:2; min-width:240px;"><label>Imagem do material (opcional)</label><input type="file" id="${containerId}-img" class="form-control" accept="image/*"></div>` : ''}
                 </div>` : ''}
-                <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">Escolha o artigo, a quantidade e o preço, depois clique em <strong>"+ Adicionar à Lista"</strong>. Só os artigos que aparecerem na lista abaixo entram no documento ao Guardar.</p>
+                <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">Escolha o artigo, a quantidade e o preço, depois clique no botão <strong>+</strong>. Só os artigos que aparecerem na lista abaixo entram no documento ao Guardar.</p>
                 <div id="${containerId}-lista"></div>
                 <div id="${containerId}-total" style="text-align:right; font-weight:800; font-size:1.05rem; margin-top:10px; color: var(--text-dark);"></div>
             `;
