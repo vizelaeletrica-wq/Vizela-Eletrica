@@ -631,6 +631,8 @@
             .cal-mes { min-width: 130px; font-size: .95rem; }
             .cal-mapa { height: 220px; }
         }
+        .header-data { flex: 1; text-align: center; padding: 0 16px; font-size: 1.05rem; font-weight: 600; color: var(--ink); }
+        @media (max-width: 768px) { .header-data { flex: none; text-align: left; padding: 0; font-size: .9rem; } }
         .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
         .cal-esquerda { min-width: 0; }
         .cal-lateral { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: sticky; top: 0; }
@@ -786,6 +788,7 @@
                         <span id="subview-title" class="subview-indicator">Painel</span>
                     </h1>
                 </div>
+                <div id="header-data" class="header-data" style="display:none;"></div>
                 <div class="header-right">
                     <button class="btn-cadastrar" onclick="acionarCadastro()">
                         <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar
@@ -1203,6 +1206,7 @@
 
         function updateContentView(categoria, subtitulo, aba) {
             document.getElementById('sub-category-title').innerText = subtitulo; document.getElementById('subview-title').innerText = aba;
+            document.getElementById('header-data').style.display = 'none'; // só o Calendário mostra a data no cabeçalho
             const display = document.getElementById('content-display');
             const btnCadastrar = document.querySelector('.btn-cadastrar');
 
@@ -3640,7 +3644,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                             <strong>${escapeHTML(e.hora || '-')}</strong> ${escapeHTML(e.titulo || '')}
                             <span style="color:var(--text-muted);"> · ${escapeHTML(e.lugar || 'sem lugar')}</span></div>`).join('')
                     : `<div style="color:var(--text-muted);">Sem eventos neste dia.</div>`;
-                return `<div class="cal-detalhe"><div class="cal-det-titulo" style="margin-bottom:10px;text-transform:capitalize;">${calFormatarDataLonga(CAL.dia)}</div>${linhas}</div>`;
+                return `<div class="cal-detalhe">${linhas}</div>`;
             }
             return `<div class="cal-dica">Clique num dia ou num evento para ver o horário, o lugar, o objetivo e o mapa.</div>`;
         }
@@ -3685,6 +3689,12 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             }
             const restantes = (7 - ((offset + totalDias) % 7)) % 7;
             for (let i = 0; i < restantes; i++) cells += `<div class="cal-cel vazia"></div>`;
+
+            // Data do dia selecionado (ou de hoje) no cabeçalho, entre o título e o botão Cadastrar
+            const dataCab = document.getElementById('header-data');
+            const dataLonga = calFormatarDataLonga(CAL.dia || hojeIso);
+            dataCab.innerText = dataLonga.charAt(0).toUpperCase() + dataLonga.slice(1);
+            dataCab.style.display = 'block';
 
             display.style.textAlign = 'left'; display.style.padding = '0';
             display.innerHTML = `
