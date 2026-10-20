@@ -597,7 +597,6 @@
         .sidebar-sair svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
         @media (min-width: 769px) { .btn-logout { display: none; } }
         @media (max-width: 768px) { .sidebar-perfil { display: none; } }
-        @media (max-width: 768px) {
         .cal-topo { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
         .cal-mes { font-weight: 700; font-size: 1.05rem; min-width: 190px; text-align: center; color: var(--ink); }
         .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
@@ -3693,7 +3692,6 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                             <div class="dash-card-titulo">Eventos</div>
                             <div class="dash-card-num">${calEventos().length}</div>
                             <div class="dash-card-sub">Próximos: ${proximos.length}</div>
-                            ${podeAgenda ? `<button class="btn-salvar" type="button" onclick="irParaTela('Dashboard','Agenda','Calendário')">Abrir calendário</button>` : ''}
                         </div>
                     </div>
                     <div class="view-card" style="text-align:left; margin-top:18px;">
