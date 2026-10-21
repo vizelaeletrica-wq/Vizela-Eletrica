@@ -2854,7 +2854,30 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         let minutaAtual = null;
 
         function sdExtensao(nomeFicheiro) { const m = (nomeFicheiro || '').toLowerCase().match(/\.([a-z0-9]+)$/); return m ? m[1] : ''; }
-        function sdPodeVisualizar(item) { return !!item.url && SD_PREVIEW.includes(sdExtensao(item.nomeFicheiro)); }
+        const SD_MIME = { pdf: 'application/pdf', jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', txt: 'text/plain', rtf: 'application/rtf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', odt: 'application/vnd.oasis.opendocument.text' };
+        const SD_LIMITE_BYTES = 700 * 1024; // base64 (+33%) tem de caber no limite de 1 MB de um documento do Firestore
+        const sdBlobCache = {};
+        function sdTemFicheiro(item) { return !!(item.base64 || item.url); }
+        // Ficheiros novos vêm do base64 guardado no Firestore; os antigos (Storage) continuam a funcionar pelo url
+        function sdFonte(item) {
+            if (!item.base64) return item.url || null;
+            const chave = item.id + ':' + item.base64.length;
+            if (!sdBlobCache[chave]) {
+                const bin = atob(item.base64), bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                sdBlobCache[chave] = URL.createObjectURL(new Blob([bytes], { type: item.tipo || SD_MIME[sdExtensao(item.nomeFicheiro)] || 'application/octet-stream' }));
+            }
+            return sdBlobCache[chave];
+        }
+        function sdLerBase64(file) {
+            return new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(String(r.result).split(',')[1] || '');
+                r.onerror = () => reject(r.error);
+                r.readAsDataURL(file);
+            });
+        }
+        function sdPodeVisualizar(item) { return sdTemFicheiro(item) && SD_PREVIEW.includes(sdExtensao(item.nomeFicheiro)); }
         function sdTituloDe(item) { return item.titulo || item.nome || item.nomeFicheiro || 'Sem título'; }
 
         // Pesquisa tolerante: normaliza acentos/maiúsculas, aceita partes de palavras e pequenos erros de escrita
@@ -2960,12 +2983,15 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             document.getElementById('minuta-titulo').innerText = sdTituloDe(item);
             const corpo = document.getElementById('minuta-corpo');
             if (sdPodeVisualizar(item)) {
-                corpo.innerHTML = `<iframe id="minuta-iframe" src="${item.url}" style="width:100%;height:100%;border:0;"></iframe>`;
+                corpo.innerHTML = `<iframe id="minuta-iframe" src="${sdFonte(item)}" style="width:100%;height:100%;border:0;"></iframe>`;
             } else {
                 corpo.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text-muted);">Este formato (${escapeHTML(sdExtensao(item.nomeFicheiro) || 'desconhecido')}) não pode ser mostrado aqui. Use "Abrir original" ou "Imprimir".</div>`;
             }
             const abrir = document.getElementById('minuta-abrir');
-            if (item.url) { abrir.href = item.url; abrir.style.display = ''; } else { abrir.style.display = 'none'; }
+            if (sdTemFicheiro(item)) {
+                abrir.href = sdFonte(item); abrir.style.display = '';
+                if (item.base64 && !sdPodeVisualizar(item)) abrir.download = item.nomeFicheiro || 'minuta'; else abrir.removeAttribute('download');
+            } else { abrir.style.display = 'none'; }
             mostrarOverlay('modal-minuta');
         }
         window.fecharMinuta = function() { ocultarOverlay('modal-minuta'); minutaAtual = null; document.getElementById('minuta-corpo').innerHTML = ''; }
@@ -2974,14 +3000,20 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             if (item) sdImprimir(item);
         }
         function sdImprimir(item) {
-            if (!item || !item.url) { mostrarAlertaCustomizado('Esta minuta não tem ficheiro anexado.', 'Atenção'); return; }
-            if (!sdPodeVisualizar(item)) { window.open(item.url, '_blank', 'noopener'); return; }
+            if (!item || !sdTemFicheiro(item)) { mostrarAlertaCustomizado('Esta minuta não tem ficheiro anexado.', 'Atenção'); return; }
+            const fonte = sdFonte(item);
+            if (!sdPodeVisualizar(item)) {
+                // Word e outros formatos: descarrega o ficheiro para abrir e imprimir na aplicação própria
+                const a = document.createElement('a'); a.href = fonte; a.download = item.nomeFicheiro || 'minuta';
+                document.body.appendChild(a); a.click(); a.remove();
+                return;
+            }
             const f = document.createElement('iframe');
-            f.style.display = 'none'; f.src = item.url;
+            f.style.display = 'none'; f.src = fonte;
             document.body.appendChild(f);
             f.onload = () => {
                 try { f.contentWindow.focus(); f.contentWindow.print(); }
-                catch (e) { window.open(item.url, '_blank', 'noopener'); }
+                catch (e) { window.open(fonte, '_blank', 'noopener'); }
                 setTimeout(() => f.remove(), 60000);
             };
         }
@@ -3022,14 +3054,20 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                         try {
                             if (!fileInput.files || !fileInput.files[0]) { mostrarAlertaCustomizado('Anexe o ficheiro da minuta.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return; }
                             const file = fileInput.files[0];
-                            const refFicheiro = storageRef(storage, `series-documentos/${Date.now()}_${file.name}`);
-                            await uploadBytes(refFicheiro, file);
-                            const url = await getDownloadURL(refFicheiro);
-                            await addDoc(collection(db, SD_COL), { titulo, nome: titulo, palavrasChave, url, nomeFicheiro: file.name, criadoEm: new Date().toISOString() });
+                            if (!titulo) { mostrarAlertaCustomizado('Indique o título da minuta.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return; }
+                            if (file.size > SD_LIMITE_BYTES) {
+                                mostrarAlertaCustomizado(`O ficheiro tem ${(file.size / 1024).toFixed(0)} KB e o limite é ${SD_LIMITE_BYTES / 1024} KB. Comprima o PDF/imagem e tente novamente.`, 'Ficheiro demasiado grande');
+                                btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return;
+                            }
+                            // Guardado em base64 diretamente no Firestore (não usa o Firebase Storage)
+                            const base64 = await sdLerBase64(file);
+                            const tipo = file.type || SD_MIME[sdExtensao(file.name)] || 'application/octet-stream';
+                            await addDoc(collection(db, SD_COL), { titulo, nome: titulo, palavrasChave, base64, tipo, nomeFicheiro: file.name, tamanho: file.size, criadoEm: new Date().toISOString() });
                             mostrarAlertaCustomizado('Minuta guardada com sucesso!', 'Sucesso');
                             fecharModal();
                         } catch (e) {
-                            mostrarAlertaCustomizado('Erro ao enviar ficheiro. Verifique se o Firebase Storage está ativado no projeto.', 'Erro');
+                            console.error(e);
+                            mostrarAlertaCustomizado('Erro ao guardar a minuta. Verifique as regras do Firestore para a coleção "Série de Documentos".', 'Erro');
                             btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar';
                         }
                     };
