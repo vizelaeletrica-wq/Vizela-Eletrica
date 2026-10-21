@@ -3024,17 +3024,20 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 dependeDe: [SD_COL],
                 render: function(display) {
                     const lista = dadosCadastrados[SD_COL] || [];
+                    const cab = document.getElementById('header-data');
                     if (!lista.length) {
+                        cab.style.display = 'none';
                         display.style.textAlign = 'center'; display.style.padding = '40px';
                         display.innerHTML = `<div style="color: var(--text-muted);">Nenhuma minuta guardada ainda. Clique em <strong>+ Cadastrar</strong> para anexar.</div>`;
                         return;
                     }
+                    // Barra de pesquisa no cabeçalho, entre o título e o botão Cadastrar (não recriada se já existir, para não perder o foco)
+                    if (!cab.querySelector('#sd-busca')) {
+                        cab.innerHTML = `<input type="search" id="sd-busca" class="form-control" value="${escapeHTML(sdBusca)}" oninput="sdPesquisar(this.value)" placeholder="Pesquisar minuta por título, palavras-chave ou ficheiro..." style="width:100%;max-width:440px;margin:0 auto;" autocomplete="off">`;
+                    }
+                    cab.style.display = 'block';
                     display.style.textAlign = 'left'; display.style.padding = '0';
-                    display.innerHTML = `
-                        <div style="margin-bottom:14px;">
-                            <input type="search" id="sd-busca" class="form-control" value="${escapeHTML(sdBusca)}" oninput="sdPesquisar(this.value)" placeholder="Pesquisar por título, palavras-chave ou nome do ficheiro..." style="max-width:560px;" autocomplete="off">
-                        </div>
-                        <div id="sd-lista"></div>`;
+                    display.innerHTML = `<div id="sd-lista"></div>`;
                     document.getElementById('sd-lista').innerHTML = sdLinhas(sdFiltrar(lista, sdBusca));
                 },
                 cadastro: function() {
