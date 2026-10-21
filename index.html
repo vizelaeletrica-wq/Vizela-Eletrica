@@ -633,6 +633,35 @@
         }
         .header-data { flex: 1; text-align: center; padding: 0 16px; font-size: 1.05rem; font-weight: 600; color: var(--ink); }
         @media (max-width: 768px) { .header-data { flex: none; text-align: left; padding: 0; font-size: .9rem; } }
+        /* Viaturas: estado por cor, filtro e notificações */
+        .vt-c-vermelho { --c: #dc2626; --t: #b42318; --bg: #fee4e2; }
+        .vt-c-amarelo { --c: #eab308; --t: #854d0e; --bg: #fef3c7; }
+        .vt-c-verde { --c: #16a34a; --t: #166534; --bg: #dcfce7; }
+        .vt-pto { width: 9px; height: 9px; border-radius: 50%; background: var(--c); display: inline-block; flex-shrink: 0; }
+        .vt-estado { display: inline-flex; align-items: center; gap: 7px; background: var(--bg); color: var(--t); border-radius: 999px; padding: 3px 11px; font-size: .78rem; font-weight: 700; white-space: nowrap; }
+        tr.vt-linha td:first-child { box-shadow: inset 4px 0 0 var(--c); }
+        .vt-barra { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .vt-barra input { flex: 1 1 180px; max-width: 280px; min-width: 150px; }
+        .vt-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        .vt-chip { border: 1px solid #d0d5dd; background: #fff; color: #344054; border-radius: 999px; padding: 6px 12px; font-size: .8rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-family: inherit; }
+        .vt-chip:hover { background: #f9fafb; }
+        .vt-chip.ativo { background: #101828; border-color: #101828; color: #fff; }
+        .notif-wrap { position: relative; flex: none; }
+        .notif-btn { position: relative; width: 40px; height: 40px; border-radius: 8px; background: #fff; border: 1px solid #d0d5dd; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #344054; }
+        .notif-btn:hover { background: #f9fafb; }
+        .notif-btn svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
+        .notif-badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #dc2626; color: #fff; font-size: .7rem; font-weight: 700; align-items: center; justify-content: center; border: 2px solid #fff; }
+        .notif-badge.amarelo { background: #eab308; color: #422006; }
+        .notif-painel { position: absolute; right: 0; top: calc(100% + 10px); width: min(360px, 92vw); background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 12px 32px rgba(16, 24, 40, .18); z-index: 60; overflow: hidden; text-align: left; }
+        .notif-topo { padding: 12px 16px; font-weight: 700; border-bottom: 1px solid var(--border); }
+        .notif-lista { max-height: 360px; overflow-y: auto; }
+        .notif-item { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--border); padding: 12px 16px; cursor: pointer; font-family: inherit; }
+        .notif-item:last-child { border-bottom: 0; }
+        .notif-item:hover { background: #f9fafb; }
+        .notif-item .vt-pto { margin-top: 5px; }
+        .notif-titulo { display: block; font-weight: 600; font-size: .9rem; }
+        .notif-sub { display: block; font-size: .8rem; color: var(--text-muted); margin-top: 2px; }
+        .notif-vazio { padding: 22px 16px; color: var(--text-muted); font-size: .9rem; text-align: center; }
         .cal-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
         .cal-esquerda { min-width: 0; }
         .cal-lateral { background: #fff; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: sticky; top: 0; }
@@ -790,6 +819,13 @@
                 </div>
                 <div id="header-data" class="header-data" style="display:none;"></div>
                 <div class="header-right">
+                    <div class="notif-wrap" id="notif-wrap" style="display:none;">
+                        <button class="notif-btn" type="button" onclick="toggleNotificacoes(event)" title="Notificações">
+                            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                            <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+                        </button>
+                        <div class="notif-painel" id="notif-painel" style="display:none;"></div>
+                    </div>
                     <button class="btn-cadastrar" onclick="acionarCadastro()">
                         <svg viewBox="0 0 24 24" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Cadastrar
                     </button>
@@ -989,7 +1025,7 @@
             'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns'], 'Stocks': ['Controlo de stocks'] },
             'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Recibo', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
-            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Métodos de pagamento', 'Métodos de Expedição', 'Viaturas'] }
+            'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Métodos de pagamento', 'Viaturas'] }
         };
 
         let categoriaAtiva = 'Dashboard';
@@ -1150,6 +1186,7 @@
                     dadosCadastrados[entidade] = [];
                     snapshot.forEach((doc) => { dadosCadastrados[entidade].push({ id: doc.id, ...doc.data() }); });
                     rerenderTelaEspecialSeNecessario(entidade);
+                    if (entidade === 'Viaturas') atualizarNotificacoes();
                 }, (error) => { console.error(`Permissões negadas para ${entidade}. Verifique as regras.`); });
                 listenersAtivos.push(unsub);
             });
@@ -3234,6 +3271,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 }
                 if (JSON.stringify(perfilAtual.permissoes) !== permsAntes) aplicarPermissoesMenu();
                 atualizarSidebarPerfil();
+                atualizarNotificacoes();
                 if (!perfilAtual.nome && !document.getElementById('card-perfil').classList.contains('active')) abrirCardPerfil();
             });
             listenersAtivos.push(unsub);
@@ -3597,6 +3635,118 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 { key: 'dataImposto', label: 'Data do Imposto', render: item => alertaData(item.dataImposto) }
             ]
         });
+
+        /* ---- Viaturas: estado por cor (data de revisão), ordem por urgência, filtro/pesquisa no cabeçalho e notificações ---- */
+        const VT_LIMITE_VERMELHO = 2;  // faltam 2 dias ou menos (ou já vencida) = vermelho
+        const VT_LIMITE_AMARELO = 7;   // faltam 7 dias ou menos = amarelo; acima disso = verde
+        let vtFiltro = 'todos', vtBusca = '';
+        function vtDias(iso) {
+            if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+            const [a, m, d] = iso.split('-').map(Number);
+            const h = new Date();
+            return Math.round((new Date(a, m - 1, d) - new Date(h.getFullYear(), h.getMonth(), h.getDate())) / 86400000);
+        }
+        function vtEstado(item) {
+            const dias = vtDias(item.dataRevisao);
+            if (dias === null) return { dias: null, cor: 'verde', rotulo: 'Sem data' };
+            const cor = dias <= VT_LIMITE_VERMELHO ? 'vermelho' : (dias <= VT_LIMITE_AMARELO ? 'amarelo' : 'verde');
+            let rotulo;
+            if (dias < 0) rotulo = `Vencida há ${-dias} ${-dias === 1 ? 'dia' : 'dias'}`;
+            else if (dias === 0) rotulo = 'Revisão hoje';
+            else rotulo = dias === 1 ? 'Falta 1 dia' : `Faltam ${dias} dias`;
+            return { dias, cor, rotulo };
+        }
+        // Mais urgentes primeiro (vencidas e hoje no topo); recalculado sempre que a tela é desenhada
+        function vtOrdenadas(lista) {
+            return lista.map(item => ({ item, e: vtEstado(item) }))
+                .sort((a, b) => (a.e.dias ?? 1e9) - (b.e.dias ?? 1e9) || String(a.item.viatura || '').localeCompare(String(b.item.viatura || '')));
+        }
+        // Pesquisa tolerante (reutiliza a normalização da Série de Documentos): acentos, partes de palavras e pequenos erros
+        function vtCorresponde(item, e, consulta) {
+            const termos = sdNormalizar(consulta).split(' ').filter(Boolean);
+            if (!termos.length) return true;
+            const texto = sdNormalizar([item.viatura, formatDataPt(item.dataRevisao), formatDataPt(item.dataImposto), item.imposto, e.cor, e.rotulo, e.cor === 'vermelho' ? 'urgente' : ''].join(' '));
+            const compacto = sdNormalizar(item.viatura).replace(/ /g, ''); // "AB-12-CD" também é encontrado por "ab12cd"
+            const palavras = (texto + ' ' + compacto).split(' ').filter(Boolean);
+            return termos.every(t => {
+                if (texto.includes(t) || compacto.includes(t)) return true;
+                const tol = t.length >= 6 ? 2 : (t.length >= 4 ? 1 : 0);
+                return tol > 0 && palavras.some(w => sdDistancia(w.slice(0, t.length), t) <= tol);
+            });
+        }
+        function vtAtualizarLista() {
+            const todas = vtOrdenadas(dadosCadastrados['Viaturas'] || []);
+            const cont = { todos: todas.length, vermelho: 0, amarelo: 0, verde: 0 };
+            todas.forEach(x => { cont[x.e.cor]++; });
+            const chips = document.getElementById('vt-chips');
+            if (chips) chips.innerHTML = [['todos', 'Todas'], ['vermelho', 'Vermelho'], ['amarelo', 'Amarelo'], ['verde', 'Verde']].map(([k, l]) =>
+                `<button type="button" class="vt-chip ${vtFiltro === k ? 'ativo' : ''}" onclick="vtFiltrar('${k}')">${k === 'todos' ? '' : `<span class="vt-pto vt-c-${k}"></span>`}${l} <span>${cont[k]}</span></button>`).join('');
+            const alvo = document.getElementById('vt-lista');
+            if (!alvo) return;
+            const visiveis = todas.filter(x => (vtFiltro === 'todos' || x.e.cor === vtFiltro) && vtCorresponde(x.item, x.e, vtBusca));
+            if (!visiveis.length) { alvo.innerHTML = `<div style="padding:30px;text-align:center;color:var(--text-muted);">Nenhuma viatura encontrada com este filtro.</div>`; return; }
+            let html = `<table class="elegant-table"><thead><tr><th>Estado</th><th>Viatura</th><th>Data de Revisão</th><th>Imposto (€)</th><th>Data do Imposto</th><th style="width:100px;">Ações</th></tr></thead><tbody>`;
+            visiveis.forEach(({ item, e }) => {
+                html += `<tr class="vt-linha vt-c-${e.cor}">
+                    <td><span class="vt-estado vt-c-${e.cor}"><span class="vt-pto"></span>${e.rotulo}</span></td>
+                    <td>${escapeHTML(item.viatura || '')}</td>
+                    <td>${formatDataPt(item.dataRevisao) || '-'}</td>
+                    <td>${formatMoeda(item.imposto)}</td>
+                    <td>${alertaData(item.dataImposto)}</td>
+                    <td><div class="action-buttons">${botaoEditarNovo('Viaturas', item.id)}${botaoExcluirNovo('Viaturas', item.id)}</div></td></tr>`;
+            });
+            alvo.innerHTML = html + `</tbody></table>`;
+        }
+        window.vtPesquisar = function(v) { vtBusca = v; vtAtualizarLista(); }
+        window.vtFiltrar = function(k) { vtFiltro = k; vtAtualizarLista(); }
+        TELAS_ESPECIAIS['Viaturas'].render = function(display) {
+            const cab = document.getElementById('header-data');
+            if (!(dadosCadastrados['Viaturas'] || []).length) {
+                cab.style.display = 'none';
+                display.style.textAlign = 'center'; display.style.padding = '40px';
+                display.innerHTML = `<div style="color: var(--text-muted);">Nenhum registo encontrado. Clique em <strong>+ Cadastrar</strong> para adicionar.</div>`;
+                return;
+            }
+            // Pesquisa + filtro de cor no cabeçalho, ao lado do botão Cadastrar (a barra não é recriada para não perder o foco)
+            if (!cab.querySelector('#vt-busca')) {
+                cab.innerHTML = `<div class="vt-barra"><input type="search" id="vt-busca" class="form-control" value="${escapeHTML(vtBusca)}" oninput="vtPesquisar(this.value)" placeholder="Pesquisar viatura, data, estado..." autocomplete="off"><div class="vt-chips" id="vt-chips"></div></div>`;
+            }
+            cab.style.display = 'block';
+            display.style.textAlign = 'left'; display.style.padding = '0';
+            display.innerHTML = `<div id="vt-lista"></div>`;
+            vtAtualizarLista();
+        };
+
+        /* ---- Notificações (sino no cabeçalho): revisões vencidas, de hoje ou a 7 dias ou menos ---- */
+        function atualizarNotificacoes() {
+            const wrap = document.getElementById('notif-wrap');
+            if (!wrap) return;
+            if (!perfilAtual || !temPermissao('Configurações', 'Outras Configurações', 'Viaturas')) { wrap.style.display = 'none'; return; }
+            wrap.style.display = '';
+            const alertas = vtOrdenadas(dadosCadastrados['Viaturas'] || []).filter(x => x.e.cor !== 'verde');
+            const badge = document.getElementById('notif-badge');
+            badge.style.display = alertas.length ? 'flex' : 'none';
+            badge.innerText = alertas.length;
+            badge.classList.toggle('amarelo', !alertas.some(x => x.e.cor === 'vermelho'));
+            document.getElementById('notif-painel').innerHTML = `<div class="notif-topo">Alertas de revisão</div><div class="notif-lista">${
+                alertas.length ? alertas.map(({ item, e }) => `<button type="button" class="notif-item" onclick="abrirViaturasDaNotificacao()">
+                    <span class="vt-pto vt-c-${e.cor}"></span>
+                    <span><span class="notif-titulo">Revisão — ${escapeHTML(item.viatura || '')}</span><span class="notif-sub">${e.rotulo} · ${formatDataPt(item.dataRevisao)}</span></span></button>`).join('')
+                : `<div class="notif-vazio">Sem alertas de revisão.</div>`}</div>`;
+        }
+        function fecharNotificacoes() { const p = document.getElementById('notif-painel'); if (p) p.style.display = 'none'; }
+        window.toggleNotificacoes = function(ev) { ev.stopPropagation(); const p = document.getElementById('notif-painel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
+        window.abrirViaturasDaNotificacao = function() { fecharNotificacoes(); irParaTela('Configurações', 'Outras Configurações', 'Viaturas'); }
+        document.addEventListener('click', e => { if (!e.target.closest('#notif-wrap')) fecharNotificacoes(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharNotificacoes(); });
+        // Passagem do tempo: ao virar o dia (ou ao voltar à aba) a tabela reordena e os alertas atualizam sozinhos
+        let notifDiaAtual = hojeISO();
+        function notifTick() {
+            if (hojeISO() !== notifDiaAtual) { notifDiaAtual = hojeISO(); rerenderTelaEspecialSeNecessario('Viaturas'); }
+            atualizarNotificacoes();
+        }
+        setInterval(notifTick, 60000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) notifTick(); });
         /* ================================================================
            DASHBOARD > Painel e Agenda > Calendário (eventos programados)
            ================================================================ */
