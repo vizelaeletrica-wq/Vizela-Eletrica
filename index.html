@@ -944,11 +944,15 @@
     <div class="modal-overlay" id="modal-nome-conjunto" style="z-index: 1000;">
         <div class="modal-box" style="max-width: 400px;">
             <div class="modal-header">
-                <h2>Nome do Conjunto</h2>
+                <h2>Código e Descrição do Conjunto</h2>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label for="nome-conjunto-input">Nome (Pacote/Conjunto)</label>
+                    <label for="codigo-conjunto-input">Código</label>
+                    <input type="text" id="codigo-conjunto-input" class="form-control" placeholder="Ex: KIT-001">
+                </div>
+                <div class="form-group">
+                    <label for="nome-conjunto-input">Descrição</label>
                     <input type="text" id="nome-conjunto-input" class="form-control" placeholder="Ex: Kit Cobre Básico">
                 </div>
             </div>
@@ -1022,7 +1026,7 @@
 
         const sistemaModulos = {
             'Dashboard': { 'Início': ['Painel'], 'Agenda': ['Calendário'] },
-            'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados', 'Armazéns'], 'Stocks': ['Controlo de stocks'] },
+            'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados'], 'Stocks': ['Controlo de stocks'] },
             'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Recibo', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
             'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Métodos de pagamento', 'Viaturas'] }
@@ -1036,7 +1040,7 @@
 
         // Variaveis Temporárias para o Fluxo do "Artigos Fabricados"
         let artigosBundleTemp = [];
-        let nomeConjuntoSendoEditado = '';
+        let nomeConjuntoSendoEditado = ''; window._codConjEdit = '';
 
         /* ================================================================
            FUNCIONALIDADES ADICIONADAS (NOVO)
@@ -1174,7 +1178,8 @@
                     dadosCadastrados[entidade] = [];
                     snapshot.forEach((doc) => { dadosCadastrados[entidade].push({ id: doc.id, ...doc.data() }); });
                     const abaAtual = document.getElementById('subview-title').innerText;
-                    if (abaAtual === entidade || (abaAtual === 'Armazéns' && entidade === 'Artigos')) { renderTabela(abaAtual); }
+                    if (abaAtual === entidade) { renderTabela(abaAtual); }
+                    if (entidade === 'Artigos') atualizarNotificacoes();
                     rerenderTelaEspecialSeNecessario(entidade);
                 }, (error) => { console.error(`Permissões negadas para ${entidade}. Verifique as regras.`); });
                 listenersAtivos.push(unsub);
@@ -1187,6 +1192,7 @@
                     snapshot.forEach((doc) => { dadosCadastrados[entidade].push({ id: doc.id, ...doc.data() }); });
                     rerenderTelaEspecialSeNecessario(entidade);
                     if (entidade === 'Viaturas') atualizarNotificacoes();
+                    if (entidade === 'NotasCreditoVenda' || entidade === 'NotasCreditoFornecedor') { const ab = document.getElementById('subview-title').innerText; if (ab === 'Clientes' || ab === 'Fornecedores') renderTabela(ab); }
                 }, (error) => { console.error(`Permissões negadas para ${entidade}. Verifique as regras.`); });
                 listenersAtivos.push(unsub);
             });
@@ -1283,7 +1289,9 @@
         window.calcularPrecoFinal = function(index) {
             const custo = parseFloat(document.getElementById(`custo-${index}`).value) || 0;
             const margem = parseFloat(document.getElementById(`margem-${index}`).value) || 0;
-            const venda = custo + (custo * (margem / 100));
+            const ivaEl = document.getElementById(`iva-${index}`);
+            const iva = ivaEl ? (parseFloat(ivaEl.value) || 0) : 0;
+            const venda = (custo + (custo * (margem / 100))) * (1 + iva / 100);
             document.getElementById(`venda-${index}`).value = venda.toFixed(2);
         }
 
@@ -1370,6 +1378,7 @@
         window.avancarBundle = function() {
             if (artigosBundleTemp.length === 0) { mostrarAlertaCustomizado("Adicione pelo menos um artigo ao conjunto antes de avançar.", "Atenção"); return; }
             document.getElementById('nome-conjunto-input').value = nomeConjuntoSendoEditado || '';
+            document.getElementById('codigo-conjunto-input').value = window._codConjEdit || '';
             const modal = document.getElementById('modal-nome-conjunto');
             modal.style.display = 'flex'; setTimeout(() => { modal.classList.add('active'); }, 10);
         }
@@ -1381,14 +1390,16 @@
 
         window.salvarBundleFinal = async function() {
             const nome = document.getElementById('nome-conjunto-input').value.trim();
-            if(!nome) { mostrarAlertaCustomizado("Digite um nome para salvar o conjunto.", "Atenção"); return; }
+            const codigoConj = document.getElementById('codigo-conjunto-input').value.trim();
+            if(!codigoConj) { mostrarAlertaCustomizado("Digite o código do conjunto.", "Atenção"); return; }
+            if(!nome) { mostrarAlertaCustomizado("Digite a descrição do conjunto.", "Atenção"); return; }
 
             const btnSalvar = document.getElementById('btn-salvar-bundle-final');
             btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
 
             let custoTotal = artigosBundleTemp.reduce((sum, item) => sum + item.custo, 0);
 
-            const dados = { nome: nome, artigos: artigosBundleTemp, custoTotal: custoTotal, atualizadoEm: new Date().toISOString() };
+            const dados = { codigo: codigoConj, descricao: nome, nome: nome, artigos: artigosBundleTemp, custoTotal: custoTotal, atualizadoEm: new Date().toISOString() };
 
             try {
                 if (idSendoEditado) {
@@ -1406,12 +1417,12 @@
 
         function renderTabela(aba) {
             const display = document.getElementById('content-display');
-            const listaDados = aba === 'Armazéns' ? dadosCadastrados['Artigos'] : dadosCadastrados[aba];
+            const listaDados = dadosCadastrados[aba];
 
             if (!listaDados || listaDados.length === 0) {
                 display.style.textAlign = 'center'; display.style.padding = '40px';
                 let textoRegisto = `Nenhum registo de ${aba.toLowerCase()} encontrado`;
-                display.innerHTML = `<div style="color: var(--text-muted);">${textoRegisto}. ${aba !== 'Armazéns' ? 'Clique no botão <strong>+ Cadastrar</strong> no cabeçalho para adicionar dados.' : ''}</div>`;
+                display.innerHTML = `<div style="color: var(--text-muted);">${textoRegisto}. Clique no botão <strong>+ Cadastrar</strong> no cabeçalho para adicionar dados.</div>`;
             } else {
                 display.style.textAlign = 'left'; display.style.padding = '0';
                 let tableHTML = `<table class="elegant-table">`;
@@ -1424,7 +1435,7 @@
                         tableHTML += `<tr>
                             <td>${escapeHTML(item.nome || '')}</td><td>${escapeHTML(item.morada || '')}</td><td>${escapeHTML(item.codigoPostal || '')}</td><td>${escapeHTML(item.telefone || '')}</td><td>${escapeHTML(item.nif || '')}</td>
                             ${temTabelaPreco ? `<td>${item.tabelaPreco ? 'Preço ' + item.tabelaPreco : '-'}</td>` : ''}
-                            ${campoCredito ? `<td>${formatMoeda(item[campoCredito] || 0)}</td>` : ''}
+                            ${campoCredito ? `<td>${formatMoeda(creditoDaEntidade(aba, item.id))}</td>` : ''}
                             <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
                         </tr>`;
                     });
@@ -1437,27 +1448,30 @@
                         </tr>`;
                     });
                 } else if (aba === 'Artigos') {
-                    tableHTML += `<thead><tr><th>Código</th><th>Categoria</th><th>Armazém</th><th>Stock</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
-                    listaDados.forEach(item => {
+                    tableHTML += `<thead><tr><th>Código</th><th>Descrição</th><th>Categoria</th><th>Stock</th><th>Stock mín.</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
+                    const filtrados = filtrarPorTexto(listaDados, filtroArtigos);
+                    if (filtrados.length === 0) tableHTML += `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">Nenhum artigo encontrado.</td></tr>`;
+                    filtrados.forEach(item => {
                         let precosHtml = '';
                         if(item.precos && item.precos.length > 0) {
-                            precosHtml = `<table class="inner-table"><tr><th>Tabela</th><th>Custo (€)</th><th>Margem (%)</th><th>Preço Venda (€)</th></tr>`;
+                            precosHtml = `<table class="inner-table"><tr><th>Tabela</th><th>Custo (€)</th><th>Margem (%)</th><th>IVA (%)</th><th>Preço Venda c/ IVA (€)</th></tr>`;
                             item.precos.forEach((p, idx) => {
-                                let final = p.custo + (p.custo * (p.margem / 100));
-                                precosHtml += `<tr><td>Preço ${idx+1}</td><td>${p.custo.toFixed(2)}</td><td>${p.margem.toFixed(2)}</td><td>${final.toFixed(2)}</td></tr>`;
+                                const iva = p.iva != null ? p.iva : 0;
+                                let final = (p.custo + (p.custo * (p.margem / 100))) * (1 + iva / 100);
+                                precosHtml += `<tr><td>Preço ${idx+1}</td><td>${p.custo.toFixed(2)}</td><td>${p.margem.toFixed(2)}</td><td>${Number(iva).toFixed(2)}</td><td>${final.toFixed(2)}</td></tr>`;
                             });
                             precosHtml += `</table>`;
                         }
 
                         tableHTML += `
                         <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-${item.id}', event)">
-                            <td>${escapeHTML(item.codigo || '')}</td><td>${escapeHTML(item.categoria || '')}</td><td>${escapeHTML(item.armazem || '')}</td><td>${item.stock != null ? item.stock : 0}</td>
+                            <td>${escapeHTML(item.codigo || '')}</td><td>${escapeHTML(item.descricao || '')}</td><td>${escapeHTML(item.categoria || '')}</td><td>${item.stock != null ? item.stock : 0}</td><td>${item.stockMinimo != null && item.stockMinimo !== '' ? item.stockMinimo : '-'}</td>
                             <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="event.stopPropagation(); abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="event.stopPropagation(); prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
                         </tr>
-                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="5" style="padding: 10px 20px;">${precosHtml}</td></tr>`;
+                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="6" style="padding: 10px 20px;">${precosHtml}</td></tr>`;
                     });
                 } else if (aba === 'Artigos Fabricados') {
-                    tableHTML += `<thead><tr><th>Nome do Conjunto</th><th>Custo Total (€)</th><th>Qtd. Artigos</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
+                    tableHTML += `<thead><tr><th>Código</th><th>Descrição</th><th>Custo Total (€)</th><th>Qtd. Artigos</th><th style="width: 100px;">Ações</th></tr></thead><tbody>`;
                     listaDados.forEach(item => {
                         let artigosHtml = '';
                         if(item.artigos && item.artigos.length > 0) {
@@ -1470,52 +1484,51 @@
 
                         tableHTML += `
                         <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-${item.id}', event)">
-                            <td>${escapeHTML(item.nome || '')}</td>
+                            <td>${escapeHTML(item.codigo || '')}</td><td>${escapeHTML(item.descricao || item.nome || '')}</td>
                             <td>${(item.custoTotal || 0).toFixed(2)}</td>
                             <td>${item.artigos ? item.artigos.length : 0}</td>
                             <td><div class="action-buttons"><button class="btn-action btn-edit" onclick="event.stopPropagation(); abrirEdicao('${item.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg></button><button class="btn-action btn-delete" onclick="event.stopPropagation(); prepararExclusao('${item.id}')"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button></div></td>
                         </tr>
-                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="4" style="padding: 10px 20px;">${artigosHtml}</td></tr>`;
+                        <tr id="detalhes-${item.id}" class="details-row"><td colspan="5" style="padding: 10px 20px;">${artigosHtml}</td></tr>`;
                     });
-                } else if (aba === 'Armazéns') {
-                    // Lógica para agrupar e exibir os artigos por Armazém dinamicamente
-                    const artigosMap = {};
-                    listaDados.forEach(a => {
-                        const arm = a.armazem && a.armazem.trim() !== '' ? a.armazem : 'Sem Armazém Definido';
-                        if(!artigosMap[arm]) artigosMap[arm] = [];
-                        artigosMap[arm].push(a);
-                    });
-
-                    const armazensNomes = Object.keys(artigosMap).sort();
-
-                    if (armazensNomes.length === 0) {
-                        display.style.textAlign = 'center'; display.style.padding = '40px';
-                        display.innerHTML = `<div style="color: var(--text-muted);">Nenhum artigo registado para ser listado nos armazéns.</div>`;
-                        return; // Sai cedo se não houver artigos
-                    }
-
-                    tableHTML += `<thead><tr><th>Nome do Armazém</th><th>Qtd. de Artigos Registados</th></tr></thead><tbody>`;
-
-                    armazensNomes.forEach((armName, index) => {
-                        const itens = artigosMap[armName];
-                        let artigosHtml = `<table class="inner-table"><tr><th>Código do Artigo</th><th>Categoria</th></tr>`;
-                        itens.forEach(a => {
-                            artigosHtml += `<tr><td>${escapeHTML(a.codigo || '')}</td><td>${escapeHTML(a.categoria || '')}</td></tr>`;
-                        });
-                        artigosHtml += `</table>`;
-
-                        tableHTML += `
-                        <tr class="clickable-row" onclick="toggleLinhaDetalhes('detalhes-arm-${index}', event)">
-                            <td style="font-weight: 600;">${escapeHTML(armName)}</td>
-                            <td>${itens.length}</td>
-                        </tr>
-                        <tr id="detalhes-arm-${index}" class="details-row"><td colspan="2" style="padding: 10px 20px;">${artigosHtml}</td></tr>`;
-                    });
+                
                 }
 
                 tableHTML += `</tbody></table>`;
-                display.innerHTML = tableHTML;
+                display.innerHTML = (aba === 'Artigos' ? barraPesquisa('pesq-artigos', filtroArtigos, 'pesquisarArtigos') : '') + tableHTML;
             }
+        }
+
+        // O crédito passa a ser CALCULADO a partir das Notas de Crédito que existem. Assim, ao eliminar as notas, o crédito desaparece.
+        // ----- Stock por armazém: artigo.stockArm = { 'Armazém 1': 10, ... }; artigo.stock = total -----
+        function stockArmazens(a) { if (a.stockArm) return a.stockArm; if (a.armazem && a.stock) return { [a.armazem]: a.stock }; return {}; }
+        function stockArmazem(a, nome) { return Number(stockArmazens(a)[nome]) || 0; }
+        function opcoesArmazemHtml(artigo, atual) {
+            let h = '<option value="">Armazém...</option>';
+            (dadosCadastrados['Armazéns'] || []).forEach(ar => { h += `<option value="${escapeHTML(ar.nome)}" ${atual === ar.nome ? 'selected' : ''}>${escapeHTML(ar.nome)}${artigo ? ' (stock: ' + stockArmazem(artigo, ar.nome) + ')' : ''}</option>`; });
+            return h;
+        }
+        window.atualizarArmazensSelect = function(selId, artigoId) {
+            const sel = document.getElementById(selId); if (!sel) return;
+            const art = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
+            sel.innerHTML = opcoesArmazemHtml(art, sel.value);
+        }
+        function textoArtigo(a) { return `${a.codigo}${a.descricao ? ' - ' + a.descricao : ' - ' + (a.categoria || '')}`; }
+        let filtroArtigos = '', filtroStocks = '';
+        function filtrarPorTexto(lista, termo) {
+            const t = (termo || '').trim().toLowerCase(); if (!t) return lista;
+            return lista.filter(a => (a.codigo || '').toLowerCase().includes(t) || (a.descricao || '').toLowerCase().includes(t));
+        }
+        function barraPesquisa(id, valor, handler) {
+            return `<div style="padding:12px 16px; border-bottom:1px solid var(--border);"><input type="search" id="${id}" class="form-control" placeholder="Pesquisar por código ou descrição..." value="${escapeHTML(valor)}" oninput="${handler}(this.value)" style="max-width:380px;"></div>`;
+        }
+        function manterFoco(id) { const e = document.getElementById(id); if (e) { e.focus(); e.setSelectionRange(e.value.length, e.value.length); } }
+        window.pesquisarArtigos = function(v) { filtroArtigos = v; renderTabela('Artigos'); manterFoco('pesq-artigos'); }
+        window.pesquisarStocks = function(v) { filtroStocks = v; TELAS_ESPECIAIS['Controlo de stocks'].render(document.getElementById('content-display')); manterFoco('pesq-stocks'); }
+
+        function creditoDaEntidade(aba, entidadeId) {
+            const col = aba === 'Clientes' ? 'NotasCreditoVenda' : 'NotasCreditoFornecedor';
+            return (dadosCadastrados[col] || []).filter(n => n.entidadeId === entidadeId).reduce((t, n) => t + (Number(n.valor) || 0), 0);
         }
 
         function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
@@ -1587,7 +1600,7 @@
             // NOVO: cada artigo tem um único armazém e um único stock (deixou de existir a escolha fixa A/B) —
             // o armazém aparece só como informação, junto do artigo.
             let opcoes = `<option value="">Selecione um artigo...</option>`;
-            dadosCadastrados['Artigos'].forEach(a => { opcoes += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)} (Armazém: ${escapeHTML(a.armazem || '-')}, Stock: ${a.stock != null ? a.stock : 0})</option>`; });
+            dadosCadastrados['Artigos'].forEach(a => { opcoes += `<option value="${a.id}">${escapeHTML(textoArtigo(a))} (Stock total: ${a.stock != null ? a.stock : 0})</option>`; });
             // NOVO: em documentos de venda o preço não é digitado — escolhe-se uma das 5 tabelas de preço já cadastradas no artigo.
             // NOVO: impede que pressionar Enter num destes campos submeta o formulário do documento sem querer
             // (isso disparava "Guardar" antes de o artigo ter sido efetivamente adicionado à lista) — Enter agora só adiciona à lista.
@@ -1599,6 +1612,7 @@
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
                     <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
                     <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
+                    <div class="form-group" style="flex:1; min-width:150px;"><label>Armazém</label><select id="${containerId}-armazem" class="form-control" ${semSubmeterNoEnter}>${opcoesArmazemHtml(null, '')}</select></div>
                     <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel === 'custo' ? 'Tabela de Custo' : (precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)')}</label>${campoPreco}</div>
                     <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" title="Adicionar à lista" aria-label="Adicionar à lista" onclick="adicionarItemDocumento('${containerId}','${movimento}')" style="width:42px;height:42px;min-width:42px;padding:0;border-radius:50%;font-size:1.5rem;line-height:1;">+</button></div>
                 </div>
@@ -1612,6 +1626,7 @@
             `;
         }
         window.sugerirPrecoItemDocumento = function(containerId, precoSelecionavel) {
+            atualizarArmazensSelect(`${containerId}-armazem`, document.getElementById(`${containerId}-artigo`).value);
             const campoPreco = document.getElementById(`${containerId}-preco`);
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === document.getElementById(`${containerId}-artigo`).value);
             const clienteSelect = document.getElementById('doc-cliente');
@@ -1673,12 +1688,15 @@
             if (!artigoId || qtd <= 0) { mostrarAlertaCustomizado('Selecione um artigo e uma quantidade válida.', 'Atenção'); return; }
             if (document.getElementById(`${containerId}-preco`).tagName === 'SELECT' && preco <= 0) { mostrarAlertaCustomizado('Este artigo não tem preço definido. Defina os preços no cadastro do artigo.', 'Atenção'); return; }
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
+            const armSel = document.getElementById(`${containerId}-armazem`);
+            const armEscolhido = armSel ? armSel.value : '';
+            if ((movimento === 'saida' || movimento === 'entrada') && !armEscolhido) { mostrarAlertaCustomizado('Selecione o armazém.', 'Atenção'); return; }
             if (movimento === 'saida') {
-                const disponivel = artigo.stock || 0;
-                const jaNoCarrinho = itensDocumentoTemp.filter(i => i.artigoId === artigoId).reduce((s, i) => s + i.quantidade, 0);
-                if (qtd + jaNoCarrinho > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no Armazém ${artigo.armazem || '-'}. Disponível: ${disponivel}.`, 'Atenção'); return; }
+                const disponivel = stockArmazem(artigo, armEscolhido);
+                const jaNoCarrinho = itensDocumentoTemp.filter(i => i.artigoId === artigoId && i.armazem === armEscolhido).reduce((s, i) => s + i.quantidade, 0);
+                if (qtd + jaNoCarrinho > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no ${armEscolhido}. Disponível: ${disponivel}.`, 'Atenção'); return; }
             }
-            const novoItem = { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: artigo.armazem || '', quantidade: qtd, precoUnit: preco, subtotal: qtd * preco };
+            const novoItem = { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: armEscolhido, quantidade: qtd, precoUnit: preco, subtotal: qtd * preco };
             const campoMaterial = document.getElementById(`${containerId}-material`);
             if (campoMaterial) {
                 const material = campoMaterial.value.trim();
@@ -1720,7 +1738,21 @@
         async function aplicarMovimentoStock(itens, movimento) {
             const sinal = movimento === 'saida' ? -1 : 1;
             for (const it of itens) {
-                await updateDoc(doc(db, 'Artigos', it.artigoId), { stock: increment(sinal * it.quantidade) });
+                const art = (dadosCadastrados['Artigos'] || []).find(a => a.id === it.artigoId);
+                const mapa = art ? { ...stockArmazens(art) } : {};
+                let arm = it.armazem;
+                if (!arm) { // documentos sem armazém escolhido (ex.: pro forma): saída = armazém com mais stock; entrada = primeiro armazém
+                    const nomes = Object.keys(mapa).sort((x, y) => mapa[y] - mapa[x]);
+                    const todos = (dadosCadastrados['Armazéns'] || []).map(a => a.nome);
+                    arm = sinal < 0 ? nomes[0] : (todos[0] || nomes[0]);
+                }
+                const delta = sinal * it.quantidade;
+                const upd = { stock: increment(delta) };
+                if (arm) {
+                    if (art && !art.stockArm) { mapa[arm] = (mapa[arm] || 0) + delta; upd.stockArm = mapa; art.stockArm = mapa; }
+                    else upd[`stockArm.${arm}`] = increment(delta);
+                }
+                await updateDoc(doc(db, 'Artigos', it.artigoId), upd);
             }
         }
         function materialCelulaHtml(it) {
@@ -2348,9 +2380,7 @@ tbody tr:nth-child(even){background:#fafafa}
                                 itens: itensDevolvidos, valor, data: hojeISO(), criadoEm: new Date().toISOString()
                             });
                             await aplicarMovimentoStock(itensDevolvidos, cfg.movimentoStock);
-                            if (cfg.creditoCollection && devolucaoContextoTemp.entidadeId) {
-                                await updateDoc(doc(db, cfg.creditoCollection, devolucaoContextoTemp.entidadeId), { [cfg.creditoCampo]: increment(valor) });
-                            }
+                            // (crédito calculado a partir das notas; ver creditoDaEntidade)
                             mostrarAlertaCustomizado(`${cfg.singular} registada com sucesso. ${cfg.mensagemCredito.replace('{valor}', formatMoeda(valor))}`, 'Sucesso');
                             fecharModal();
                         } catch (e) { mostrarAlertaCustomizado('Erro ao registar devolução.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = `Guardar ${cfg.singular}`; }
@@ -2493,6 +2523,7 @@ tbody tr:nth-child(even){background:#fafafa}
         }
         function valorQuebra(item) { return custoUnitQuebra(item) * (Number(item.quantidade) || 0); }
         window.atualizarCustoQuebra = function() {
+            atualizarArmazensSelect('nq-armazem', document.getElementById('nq-artigo').value);
             const sel = document.getElementById('nq-custo');
             const art = dadosCadastrados['Artigos'].find(a => a.id === document.getElementById('nq-artigo').value);
             if (!art) { sel.innerHTML = '<option value="0">Selecione o artigo primeiro...</option>'; return; }
@@ -2521,9 +2552,10 @@ tbody tr:nth-child(even){background:#fafafa}
             },
             cadastro: function() {
                 let opcoesArtigos = `<option value="">Selecione um artigo...</option>`;
-                dadosCadastrados['Artigos'].forEach(a => { opcoesArtigos += `<option value="${a.id}">${escapeHTML(a.codigo)} - ${escapeHTML(a.categoria)} (Armazém: ${escapeHTML(a.armazem || '-')}, Stock: ${a.stock != null ? a.stock : 0})</option>`; });
+                dadosCadastrados['Artigos'].forEach(a => { opcoesArtigos += `<option value="${a.id}">${escapeHTML(textoArtigo(a))} (Stock total: ${a.stock != null ? a.stock : 0})</option>`; });
                 document.getElementById('dynamic-fields').innerHTML = `
                     <div class="form-group"><label for="nq-artigo">Artigo</label><select id="nq-artigo" class="form-control" required onchange="atualizarCustoQuebra()">${opcoesArtigos}</select></div>
+                    <div class="form-group"><label for="nq-armazem">Armazém</label><select id="nq-armazem" class="form-control" required>${opcoesArmazemHtml(null, '')}</select></div>
                     <div class="form-group"><label for="nq-qtd">Quantidade</label><input type="number" id="nq-qtd" class="form-control" min="1" step="1" value="1" required></div>
                     <div class="form-group"><label for="nq-custo">Custo unitário (valor perdido por unidade)</label><select id="nq-custo" class="form-control"><option value="0">Selecione o artigo primeiro...</option></select></div>
                     <div class="form-group"><label for="nq-motivo">Motivo</label><select id="nq-motivo" class="form-control"><option value="Queimou">Queimou</option><option value="Quebrou">Quebrou</option><option value="Desperdício">Desperdício</option></select></div>
@@ -2536,13 +2568,14 @@ tbody tr:nth-child(even){background:#fafafa}
                     const artigoId = document.getElementById('nq-artigo').value;
                     const quantidade = parseInt(document.getElementById('nq-qtd').value) || 0;
                     const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
-                    const disponivel = artigo?.stock || 0;
-                    if (!artigoId || quantidade <= 0) { mostrarAlertaCustomizado('Selecione o artigo e uma quantidade válida.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return; }
-                    if (quantidade > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no Armazém ${artigo.armazem || '-'}. Disponível: ${disponivel}.`, 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return; }
+                    const armQ = document.getElementById('nq-armazem').value;
+                    const disponivel = artigo ? stockArmazem(artigo, armQ) : 0;
+                    if (!artigoId || !armQ || quantidade <= 0) { mostrarAlertaCustomizado('Selecione o artigo e uma quantidade válida.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return; }
+                    if (quantidade > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no ${armQ}. Disponível: ${disponivel}.`, 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; return; }
                     const custoUnit = parseFloat(document.getElementById('nq-custo').value) || 0;
                     try {
-                        await addDoc(collection(db, 'Nota de Quebra'), { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: artigo.armazem || '', quantidade, motivo: document.getElementById('nq-motivo').value, custoUnit, valorPerdido: custoUnit * quantidade, data: hojeISO(), criadoEm: new Date().toISOString() });
-                        await updateDoc(doc(db, 'Artigos', artigoId), { stock: increment(-quantidade) });
+                        await addDoc(collection(db, 'Nota de Quebra'), { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: armQ, quantidade, motivo: document.getElementById('nq-motivo').value, custoUnit, valorPerdido: custoUnit * quantidade, data: hojeISO(), criadoEm: new Date().toISOString() });
+                        await aplicarMovimentoStock([{ artigoId, armazem: armQ, quantidade }], 'saida');
                         mostrarAlertaCustomizado('Nota de quebra registada e stock atualizado!', 'Sucesso');
                         fecharModal();
                     } catch (e) { mostrarAlertaCustomizado('Erro ao registar.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = 'Guardar'; }
@@ -2558,7 +2591,7 @@ tbody tr:nth-child(even){background:#fafafa}
                 let html = `
                     <div class="view-card" style="text-align:left; margin-bottom: 20px;">
                         <h3 style="margin-bottom:10px; color: var(--text-dark);">Importar stock antigo (Excel/CSV)</h3>
-                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">O ficheiro deve ser .csv com as colunas: <strong>codigo,quantidade</strong>. O stock é somado ao armazém já definido em cada artigo. Ideal para lançar de uma vez o stock que já existia antes do sistema.</p>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 14px;">O ficheiro deve ser .csv com as colunas: <strong>codigo,quantidade,armazem</strong>. O stock é somado ao armazém indicado (se a coluna for omitida, usa o primeiro armazém registado). Ideal para lançar de uma vez o stock que já existia antes do sistema.</p>
                         <input type="file" id="input-csv-entrada" accept=".csv" class="form-control" style="max-width:400px;">
                         <button class="btn-salvar" style="margin-top:12px;" onclick="processarEntradaInventario()">Importar Ficheiro</button>
                         <div id="resultado-entrada-inventario" style="margin-top:14px; font-size:0.9rem;"></div>
@@ -2580,12 +2613,12 @@ tbody tr:nth-child(even){background:#fafafa}
                 const linhas = e.target.result.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
                 let atualizados = 0, naoEncontrados = [];
                 for (const linha of linhas) {
-                    const [codigo, quantidadeStr] = linha.split(',').map(v => (v || '').trim());
+                    const [codigo, quantidadeStr, armCsv] = linha.split(',').map(v => (v || '').trim());
                     if (!codigo || codigo.toLowerCase() === 'codigo') continue;
                     const artigo = dadosCadastrados['Artigos'].find(a => a.codigo === codigo);
                     const qtd = parseInt(quantidadeStr) || 0;
                     if (!artigo || qtd <= 0) { naoEncontrados.push(codigo); continue; }
-                    await updateDoc(doc(db, 'Artigos', artigo.id), { stock: increment(qtd) });
+                    await aplicarMovimentoStock([{ artigoId: artigo.id, armazem: (dadosCadastrados['Armazéns'] || []).some(a => a.nome === armCsv) ? armCsv : '', quantidade: qtd }], 'entrada');
                     atualizados++;
                 }
                 await addDoc(collection(db, 'MovimentosInventario'), { tipo: 'entrada', totalLinhas: atualizados, origem: input.files[0].name, data: hojeISO(), criadoEm: new Date().toISOString() });
@@ -3721,19 +3754,27 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         function atualizarNotificacoes() {
             const wrap = document.getElementById('notif-wrap');
             if (!wrap) return;
-            if (!perfilAtual || !temPermissao('Configurações', 'Outras Configurações', 'Viaturas')) { wrap.style.display = 'none'; return; }
+            const vtOk = perfilAtual && temPermissao('Configurações', 'Outras Configurações', 'Viaturas');
+            const stOk = perfilAtual && temPermissao('Tabelas', 'Stocks', 'Controlo de stocks');
+            if (!vtOk && !stOk) { wrap.style.display = 'none'; return; }
             wrap.style.display = '';
-            const alertas = vtOrdenadas(dadosCadastrados['Viaturas'] || []).filter(x => x.e.cor !== 'verde');
+            const alertas = vtOk ? vtOrdenadas(dadosCadastrados['Viaturas'] || []).filter(x => x.e.cor !== 'verde') : [];
+            const baixos = stOk ? (dadosCadastrados['Artigos'] || []).filter(a => a.stockMinimo != null && a.stockMinimo !== '' && Number(a.stockMinimo) > 0 && (a.stock || 0) <= Number(a.stockMinimo)) : [];
+            const total = alertas.length + baixos.length;
             const badge = document.getElementById('notif-badge');
-            badge.style.display = alertas.length ? 'flex' : 'none';
-            badge.innerText = alertas.length;
-            badge.classList.toggle('amarelo', !alertas.some(x => x.e.cor === 'vermelho'));
-            document.getElementById('notif-painel').innerHTML = `<div class="notif-topo">Alertas de revisão</div><div class="notif-lista">${
-                alertas.length ? alertas.map(({ item, e }) => `<button type="button" class="notif-item" onclick="abrirViaturasDaNotificacao()">
+            badge.style.display = total ? 'flex' : 'none';
+            badge.innerText = total;
+            badge.classList.toggle('amarelo', baixos.length === 0 && !alertas.some(x => x.e.cor === 'vermelho'));
+            const htmlVt = alertas.map(({ item, e }) => `<button type="button" class="notif-item" onclick="abrirViaturasDaNotificacao()">
                     <span class="vt-pto vt-c-${e.cor}"></span>
-                    <span><span class="notif-titulo">Revisão — ${escapeHTML(item.viatura || '')}</span><span class="notif-sub">${e.rotulo} · ${formatDataPt(item.dataRevisao)}</span></span></button>`).join('')
-                : `<div class="notif-vazio">Sem alertas de revisão.</div>`}</div>`;
+                    <span><span class="notif-titulo">Revisão — ${escapeHTML(item.viatura || '')}</span><span class="notif-sub">${e.rotulo} · ${formatDataPt(item.dataRevisao)}</span></span></button>`).join('');
+            const htmlSt = baixos.map(a => `<button type="button" class="notif-item" onclick="abrirStocksDaNotificacao()">
+                    <span class="vt-pto vt-c-vermelho"></span>
+                    <span><span class="notif-titulo">Stock baixo — ${escapeHTML(a.codigo || '')}</span><span class="notif-sub">${escapeHTML(a.descricao || a.categoria || '')} · Stock ${a.stock || 0} (mín. ${a.stockMinimo})</span></span></button>`).join('');
+            document.getElementById('notif-painel').innerHTML = `<div class="notif-topo">Notificações</div><div class="notif-lista">${total ? htmlSt + htmlVt : `<div class="notif-vazio">Sem notificações.</div>`}</div>`;
         }
+        window.abrirStocksDaNotificacao = function() { fecharNotificacoes(); irParaTela('Tabelas', 'Stocks', 'Controlo de stocks'); }
+
         function fecharNotificacoes() { const p = document.getElementById('notif-painel'); if (p) p.style.display = 'none'; }
         window.toggleNotificacoes = function(ev) { ev.stopPropagation(); const p = document.getElementById('notif-painel'); p.style.display = p.style.display === 'none' ? 'block' : 'none'; }
         window.abrirViaturasDaNotificacao = function() { fecharNotificacoes(); irParaTela('Configurações', 'Outras Configurações', 'Viaturas'); }
@@ -3950,21 +3991,38 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
 
         // NOVO: Tabelas > Stocks > Controlo de stocks (leitura, sem cadastro próprio)
         TELAS_ESPECIAIS['Controlo de stocks'] = {
-            dependeDe: ['Artigos'],
+            dependeDe: ['Artigos', 'Armazéns'],
             render: function(display) {
-                const artigos = dadosCadastrados['Artigos'];
-                if (!artigos || artigos.length === 0) {
-                    display.style.textAlign = 'center'; display.style.padding = '40px';
-                    display.innerHTML = `<div style="color: var(--text-muted);">Nenhum artigo cadastrado ainda.</div>`;
-                    return;
-                }
+                const armazens = dadosCadastrados['Armazéns'] || [];
+                const artigos = dadosCadastrados['Artigos'] || [];
+                const nomes = armazens.map(a => a.nome);
+                artigos.forEach(a => Object.keys(stockArmazens(a)).forEach(n => { if (!nomes.includes(n)) nomes.push(n); }));
+                const chips = `<div style="padding:12px 16px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; border-bottom:1px solid var(--border);"><strong style="font-size:0.85rem;">Armazéns:</strong>${armazens.length ? armazens.map(a => `<span class="badge badge-info" style="display:inline-flex; gap:6px; align-items:center;">${escapeHTML(a.nome)} <a href="#" onclick="event.preventDefault(); prepararExclusaoEspecial('Armazéns','${a.id}')" title="Eliminar armazém" style="text-decoration:none; color:inherit;">×</a></span>`).join('') : '<span style="color:var(--text-muted); font-size:0.85rem;">Nenhum armazém. Clique em + Cadastrar para criar.</span>'}</div>`;
                 display.style.textAlign = 'left'; display.style.padding = '0';
-                let html = `<table class="elegant-table"><thead><tr><th>Código</th><th>Produto (Categoria)</th><th>Armazém</th><th>Qtd.</th></tr></thead><tbody>`;
-                artigos.forEach(a => {
-                    html += `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.categoria)}</td><td>${escapeHTML(a.armazem || '-')}</td><td style="font-weight:700;">${a.stock != null ? a.stock : 0}</td></tr>`;
+                if (artigos.length === 0) { display.innerHTML = chips + `<div style="color: var(--text-muted); text-align:center; padding:40px;">Nenhum artigo cadastrado ainda.</div>`; return; }
+                const lista = filtrarPorTexto(artigos, filtroStocks);
+                let html = chips + barraPesquisa('pesq-stocks', filtroStocks, 'pesquisarStocks') + `<table class="elegant-table"><thead><tr><th>Código</th><th>Descrição</th>${nomes.map(n => `<th>${escapeHTML(n)}</th>`).join('')}<th>Total</th><th>Stock mín.</th></tr></thead><tbody>`;
+                if (lista.length === 0) html += `<tr><td colspan="${nomes.length + 4}" style="text-align:center; color:var(--text-muted); padding:20px;">Nenhum artigo encontrado.</td></tr>`;
+                lista.forEach(a => {
+                    const baixo = a.stockMinimo != null && a.stockMinimo !== '' && Number(a.stockMinimo) > 0 && (a.stock || 0) <= Number(a.stockMinimo);
+                    html += `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.descricao || a.categoria || '')}</td>${nomes.map(n => `<td>${stockArmazem(a, n)}</td>`).join('')}<td style="font-weight:700; ${baixo ? 'color:var(--danger);' : ''}">${a.stock != null ? a.stock : 0}</td><td>${a.stockMinimo != null && a.stockMinimo !== '' ? a.stockMinimo : '-'}${baixo ? ' <span class="badge badge-danger">Baixo</span>' : ''}</td></tr>`;
                 });
                 html += `</tbody></table>`;
                 display.innerHTML = html;
+                if (document.activeElement && document.activeElement.id === 'pesq-stocks') manterFoco('pesq-stocks');
+            },
+            cadastro: function() {
+                document.getElementById('dynamic-fields').innerHTML = `<div class="form-group"><label for="armazem-nome">Nome do armazém</label><input type="text" id="armazem-nome" class="form-control" placeholder="Ex: Armazém 1" required></div>`;
+                document.getElementById('modal-titulo').innerText = 'Novo Armazém';
+                document.getElementById('btn-guardar-texto').innerText = 'Guardar Armazém';
+                abrirModal('Armazém');
+                salvarEspecialAtual = async function() {
+                    const nome = document.getElementById('armazem-nome').value.trim().replace(/[.~*\/\[\]]/g, '');
+                    if (!nome) { mostrarAlertaCustomizado('Indique o nome do armazém (sem os caracteres . / ~ * [ ]).', 'Atenção'); return; }
+                    if ((dadosCadastrados['Armazéns'] || []).some(a => a.nome.toLowerCase() === nome.toLowerCase())) { mostrarAlertaCustomizado('Já existe um armazém com esse nome.', 'Atenção'); return; }
+                    try { await addDoc(collection(db, 'Armazéns'), { nome, criadoEm: new Date().toISOString() }); mostrarAlertaCustomizado('Armazém criado com sucesso!', 'Sucesso'); fecharModal(); }
+                    catch (e) { mostrarAlertaCustomizado('Erro ao criar armazém.', 'Erro'); }
+                };
             }
         };
 
@@ -4005,26 +4063,15 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                     let selected = (item && item.categoria === cat.material) ? 'selected' : '';
                     opcoesCategoria += `<option value="${cat.material}" ${selected}>${cat.material}</option>`;
                 });
-                // NOVO: Armazém passou a ser escolhido de uma lista de armazéns já criados (com opção de criar um novo aqui mesmo)
-                let opcoesArmazemArtigo = `<option value="">Selecione um armazém...</option>`;
-                dadosCadastrados['Armazéns'].forEach(arm => {
-                    let selected = (item && item.armazem === arm.nome) ? 'selected' : '';
-                    opcoesArmazemArtigo += `<option value="${escapeHTML(arm.nome)}" ${selected}>${escapeHTML(arm.nome)}</option>`;
-                });
-                opcoesArmazemArtigo += `<option value="__novo__">+ Criar novo armazém...</option>`;
-
+                
                 html = `
                     <div style="display: flex; gap: 12px; margin-bottom: 8px;">
                         <div class="form-group" style="flex: 1;"><label for="codigo">Código</label><input type="text" id="codigo" class="form-control" placeholder="Ex: ART-001" value="${item ? item.codigo : ''}" required></div>
                         <div class="form-group" style="flex: 1;"><label for="categoria-select">Categoria</label><select id="categoria-select" class="form-control" required>${opcoesCategoria}</select></div>
                     </div>
                     <div style="display: flex; gap: 12px; margin-bottom: 8px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="armazem-select">Armazém</label>
-                            <select id="armazem-select" class="form-control" required onchange="document.getElementById('armazem-novo-nome').style.display = this.value === '__novo__' ? 'block' : 'none';">${opcoesArmazemArtigo}</select>
-                            <input type="text" id="armazem-novo-nome" class="form-control" placeholder="Nome do novo armazém" style="display:none; margin-top:8px;">
-                        </div>
-                        <div class="form-group" style="flex: 1;"><label for="stock-input">Stock neste Armazém</label><input type="number" id="stock-input" class="form-control" min="0" step="1" value="${item && item.stock != null ? item.stock : 0}"></div>
+                        <div class="form-group" style="flex: 2;"><label for="descricao-artigo">Descrição</label><input type="text" id="descricao-artigo" class="form-control" placeholder="Descrição do artigo" value="${item && item.descricao ? escapeHTML(item.descricao) : ''}" required></div>
+                        <div class="form-group" style="flex: 1;"><label for="stock-minimo">Quantidade mínima em stock</label><input type="number" id="stock-minimo" class="form-control" min="0" step="1" placeholder="Ex: 5" value="${item && item.stockMinimo != null ? item.stockMinimo : ''}"></div>
                     </div>
                     <h3 style="font-size: 0.95rem; margin: 10px 0; color: var(--primary);">Definição de Preços</h3>
                 `;
@@ -4032,18 +4079,20 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 for(let i=1; i<=5; i++) {
                     let pCusto = item && item.precos && item.precos[i-1] ? item.precos[i-1].custo : '';
                     let pMargem = item && item.precos && item.precos[i-1] ? item.precos[i-1].margem : '';
+                    let pIva = item && item.precos && item.precos[i-1] && item.precos[i-1].iva != null ? item.precos[i-1].iva : 23;
                     html += `
                         <div style="display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-end; padding-bottom: 12px; border-bottom: 1px dashed var(--border);">
                             <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Custo ${i} (€)</label><input type="number" id="custo-${i}" class="form-control" step="0.01" value="${pCusto}" oninput="calcularPrecoFinal(${i})"></div>
                             <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Margem ${i} (%)</label><input type="number" id="margem-${i}" class="form-control" step="0.01" value="${pMargem}" oninput="calcularPrecoFinal(${i})"></div>
-                            <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Venda ${i} (€)</label><input type="text" id="venda-${i}" class="form-control" readonly style="background-color: #f3f4f6; color: #374151;"></div>
+                            <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">IVA ${i} (%)</label><input type="number" id="iva-${i}" class="form-control" step="0.01" min="0" value="${pIva}" oninput="calcularPrecoFinal(${i})"></div>
+                            <div class="form-group" style="margin-bottom: 0; flex: 1;"><label style="font-size: 0.75rem;">Venda c/ IVA ${i} (€)</label><input type="text" id="venda-${i}" class="form-control" readonly style="background-color: #f3f4f6; color: #374151;"></div>
                         </div>
                     `;
                 }
             } else if (abaAtual === 'Artigos Fabricados') {
-                let opcoesArtigos = `<option value="">Buscar pelo Código ou Categoria...</option>`;
+                let opcoesArtigos = `<option value="">Buscar pelo Código ou Descrição...</option>`;
                 dadosCadastrados['Artigos'].forEach(art => {
-                    opcoesArtigos += `<option value="${art.id}">${art.codigo} - ${art.categoria}</option>`;
+                    opcoesArtigos += `<option value="${art.id}">${escapeHTML(textoArtigo(art))}</option>`;
                 });
 
                 html = `
@@ -4066,7 +4115,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         window.acionarCadastro = function() {
             idSendoEditado = null;
             artigosBundleTemp = [];
-            nomeConjuntoSendoEditado = '';
+            nomeConjuntoSendoEditado = ''; window._codConjEdit = '';
 
             const abaAtual = document.getElementById('subview-title').innerText;
 
@@ -4099,7 +4148,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             idSendoEditado = id;
             if (abaAtual === 'Artigos Fabricados') {
                 artigosBundleTemp = [...item.artigos];
-                nomeConjuntoSendoEditado = item.nome;
+                nomeConjuntoSendoEditado = item.descricao || item.nome; window._codConjEdit = item.codigo || '';
             }
 
             gerarCamposFormulario(abaAtual, item);
@@ -4158,19 +4207,13 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             } else if (abaAtual === 'Categorias') {
                 dadosSubmetidos = { material: document.getElementById('material').value };
             } else if (abaAtual === 'Artigos') {
-                // NOVO: Armazém é escolhido de uma lista já criada; se for um nome novo, cria-se primeiro o registo em "Armazéns".
-                let nomeArmazemEscolhido = document.getElementById('armazem-select').value;
-                if (!nomeArmazemEscolhido) { mostrarAlertaCustomizado('Selecione (ou crie) um armazém.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = idSendoEditado ? 'Atualizar Artigo' : 'Guardar Artigo'; return; }
-                if (nomeArmazemEscolhido === '__novo__') {
-                    nomeArmazemEscolhido = document.getElementById('armazem-novo-nome').value.trim();
-                    if (!nomeArmazemEscolhido) { mostrarAlertaCustomizado('Digite o nome do novo armazém.', 'Atenção'); btnSalvar.disabled = false; btnSalvar.innerText = idSendoEditado ? 'Atualizar Artigo' : 'Guardar Artigo'; return; }
-                    const jaExiste = dadosCadastrados['Armazéns'].find(a => a.nome.toLowerCase() === nomeArmazemEscolhido.toLowerCase());
-                    if (!jaExiste) { await addDoc(collection(db, 'Armazéns'), { nome: nomeArmazemEscolhido, criadoEm: new Date().toISOString() }); }
-                }
-                dadosSubmetidos = { codigo: document.getElementById('codigo').value, categoria: document.getElementById('categoria-select').value, armazem: nomeArmazemEscolhido, precos: [] };
-                dadosSubmetidos.stock = parseInt(document.getElementById('stock-input').value) || 0;
+                dadosSubmetidos = { codigo: document.getElementById('codigo').value, descricao: document.getElementById('descricao-artigo').value.trim(), categoria: document.getElementById('categoria-select').value, precos: [] };
+                const sm = document.getElementById('stock-minimo').value;
+                dadosSubmetidos.stockMinimo = sm === '' ? null : (parseInt(sm) || 0);
+                // Stock e armazém NÃO são definidos aqui: entram nas faturas de fornecedor. Artigos novos começam a 0.
+                if (!idSendoEditado) { dadosSubmetidos.stock = 0; dadosSubmetidos.stockArm = {}; }
                 for(let i=1; i<=5; i++) {
-                    dadosSubmetidos.precos.push({ custo: parseFloat(document.getElementById(`custo-${i}`).value) || 0, margem: parseFloat(document.getElementById(`margem-${i}`).value) || 0 });
+                    dadosSubmetidos.precos.push({ custo: parseFloat(document.getElementById(`custo-${i}`).value) || 0, margem: parseFloat(document.getElementById(`margem-${i}`).value) || 0, iva: parseFloat(document.getElementById(`iva-${i}`).value) || 0 });
                 }
             }
             dadosSubmetidos.atualizadoEm = new Date().toISOString();
@@ -4201,7 +4244,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
                 document.getElementById('dynamic-fields').innerHTML = '';
                 idSendoEditado = null;
                 artigosBundleTemp = [];
-                nomeConjuntoSendoEditado = '';
+                nomeConjuntoSendoEditado = ''; window._codConjEdit = '';
                 document.getElementById('btn-guardar-texto').disabled = false;
                 salvarEspecialAtual = null; // NOVO
                 document.getElementById('btn-guardar-texto').style.display = 'flex'; // NOVO: garante que volta ao normal após uma tela nova
