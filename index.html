@@ -1817,16 +1817,61 @@
             const cfg = DOCUMENTOS_REGISTRY[chave], d = (dadosCadastrados[cfg.collection] || []).find(x => x.id === id); if (!d) return;
             const ent = (dadosCadastrados[cfg.entidadeCollection || 'Clientes'] || []).find(x => x.id === (d[cfg.campoEntidadeId || 'clienteId'])) || {};
             const emp = (typeof dadosEmpresa !== 'undefined' && dadosEmpresa) || {};
-            const linhas = (d.itens || []).map(i => `<tr><td>${escapeHTML(i.codigo)}</td><td>${escapeHTML(i.descricao || i.categoria || '')}</td><td class="r">${i.quantidade}</td><td class="r">${formatMoeda(i.precoUnit)}</td><td class="r">${formatMoeda(i.subtotal)}</td></tr>`).join('');
-            const w = window.open('', '_blank'); if (!w) { mostrarAlertaCustomizado('Permita pop-ups para imprimir.', 'Atenção'); return; }
-            w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(d.numero)}</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#111}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left}.r{text-align:right}h1{margin:0}.tot{text-align:right;margin-top:14px;font-size:1.1rem}</style></head><body>
-                <h1>${escapeHTML(emp.nome || emp.empresa || '')}</h1><p>${escapeHTML(emp.morada || '')} ${emp.nif ? '· NIF ' + escapeHTML(emp.nif) : ''}</p><hr>
-                <h2>${escapeHTML(cfg.singular)} ${escapeHTML(d.numero)}${d.status === 'Anulada' ? ' (ANULADA)' : ''}</h2><p>Data: ${formatDataPt(d.data)}${d.pagamento ? ' · Pagamento: ' + escapeHTML(d.pagamento) : ''}</p>
-                <p><strong>${escapeHTML(d.clienteNome || d.fornecedorNome || d.entidadeNome || '')}</strong><br>${escapeHTML(ent.morada || '')} ${escapeHTML(ent.codigoPostal || '')}<br>${ent.nif ? 'NIF ' + escapeHTML(ent.nif) : ''}</p>
-                <table><tr><th>Código</th><th>Descrição</th><th class="r">Qtd</th><th class="r">Preço unit.</th><th class="r">Total</th></tr>${linhas}</table>
-                ${d.desconto ? `<div class="tot">Subtotal: ${formatMoeda(d.subtotal)} · Desconto: ${d.desconto}%</div>` : ''}<div class="tot"><strong>Total: ${formatMoeda(d.total)}</strong></div>
-                <script>window.onload=function(){window.print()}<\/script></body></html>`);
-            w.document.close();
+            const desc = Number(d.desconto) || 0;
+            const linhas = (d.itens || []).map(i => `<tr><td>${escapeHTML(i.codigo || '')}</td><td>${escapeHTML(i.descricao || i.categoria || '')}</td><td class="r">${Number(i.quantidade).toFixed(4).replace('.', ',')}</td><td>un</td><td class="r">${formatMoeda(i.precoUnit)}</td><td class="r">${desc ? desc.toLocaleString('pt-PT') + '%' : ''}</td><td class="r">${formatMoeda(i.subtotal * (1 - desc / 100))}</td></tr>`).join('');
+            const nomeEnt = d.clienteNome || d.fornecedorNome || d.entidadeNome || 'Consumidor Final';
+            const htmlDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(d.numero)}</title><style>
+                body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:28px;background:#fff}
+                .topo{display:flex;justify-content:space-between;gap:30px}.emp{flex:1;padding-top:40px;line-height:1.5}
+                .doc{width:330px}.lb{font-weight:700;border-top:1px solid #111;padding-top:3px;margin-bottom:2px}
+                .grid{display:flex;gap:10px}.grid>div{flex:1}.sm{font-size:10px;color:#444}.cli{margin-top:34px}
+                .pg{text-align:right;margin-top:40px}table{width:100%;border-collapse:collapse;margin-top:4px}
+                th{text-align:left;font-weight:700;border-bottom:1px solid #111;padding:3px 4px}td{padding:4px}.r{text-align:right}th.r{text-align:right}
+                .tot{margin-top:24px;margin-left:auto;width:260px;border-top:1px solid #111;padding-top:6px}.tot div{display:flex;justify-content:space-between;padding:2px 0}
+                </style></head><body>
+                <div class="topo">
+                    <div class="emp"><strong style="font-size:15px">${escapeHTML(emp.nome || emp.empresa || '')}</strong><br>${escapeHTML(emp.morada || '')}${emp.codigoPostal ? '<br>' + escapeHTML(emp.codigoPostal) : ''}${emp.email ? '<br>Email: ' + escapeHTML(emp.email) : ''}${emp.nif ? '<br>NIF ' + escapeHTML(emp.nif) : ''}</div>
+                    <div class="doc">
+                        <div class="lb">${escapeHTML(cfg.singular)}</div><div style="font-size:14px">${escapeHTML(d.numero)}</div><div style="font-weight:700;margin-bottom:8px">${d.status === 'Anulada' ? 'ANULADA' : 'Original'}</div>
+                        <div class="grid"><div><div class="lb">Data</div>${escapeHTML(d.data || '')}</div><div><div class="lb">Moeda</div>EUR</div></div>
+                        <div class="lb" style="margin-top:8px">Data de Vencimento</div>${escapeHTML(d.vencimento || d.data || '')}
+                        ${d.pagamento ? `<div class="lb" style="margin-top:8px">Pagamento</div>${escapeHTML(d.pagamento)}` : ''}
+                    </div>
+                </div>
+                <div class="doc cli" style="margin-left:auto">
+                    <div class="lb">${cfg.entidadeLabel || 'Cliente'}</div><div style="margin-bottom:8px">${escapeHTML(nomeEnt)}</div>
+                    <div class="grid"><div><div class="lb">Morada</div>${escapeHTML([ent.morada, ent.codigoPostal].filter(Boolean).join(', ') || 'Portugal')}</div><div style="flex:0 0 90px"><div class="lb">NIF</div>${escapeHTML(ent.nif || '---------')}</div></div>
+                </div>
+                <div class="pg">Página 1 / 1</div>
+                <table><thead><tr><th>Código</th><th>Descrição</th><th class="r">Qtd.</th><th>Uni.</th><th class="r">Preço uni.</th><th class="r">% Desc.</th><th class="r">Valor</th></tr></thead><tbody>${linhas}</tbody></table>
+                <div class="tot">${desc ? `<div><span>Subtotal</span><span>${formatMoeda(d.subtotal)}</span></div><div><span>Desconto (${desc.toLocaleString('pt-PT')}%)</span><span>- ${formatMoeda(d.subtotal - d.total)}</span></div>` : ''}<div style="font-weight:700;font-size:14px"><span>Total</span><span>${formatMoeda(d.total)}</span></div></div>
+                </body></html>`;
+            abrirPreVisualizacao(htmlDoc, d.numero);
+        }
+        // Pré-visualização antes de imprimir / descarregar PDF
+        window.abrirPreVisualizacao = function(htmlDoc, nomeFicheiro) {
+            fecharPreVisualizacao();
+            const ov = document.createElement('div'); ov.id = 'previa-doc';
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(17,24,39,.7);z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px;';
+            ov.innerHTML = `<div style="background:#fff;border-radius:12px;width:min(900px,100%);height:min(92vh,1100px);display:flex;flex-direction:column;overflow:hidden;">
+                <div style="display:flex;gap:10px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);"><strong style="flex:1;">Pré-visualização — ${escapeHTML(nomeFicheiro)}</strong>
+                    <button class="btn-salvar" type="button" onclick="imprimirPrevia()">Imprimir</button>
+                    <button class="btn-salvar" type="button" id="btn-pdf-previa" onclick="baixarPdfPrevia('${String(nomeFicheiro).replace(/[^\w.-]+/g, '_')}')">Descarregar PDF</button>
+                    <button class="btn-cancelar" type="button" onclick="fecharPreVisualizacao()">Fechar</button></div>
+                <iframe id="previa-frame" style="flex:1;border:0;background:#e5e7eb;"></iframe></div>`;
+            document.body.appendChild(ov);
+            document.getElementById('previa-frame').srcdoc = htmlDoc;
+        }
+        window.fecharPreVisualizacao = function() { const o = document.getElementById('previa-doc'); if (o) o.remove(); }
+        window.imprimirPrevia = function() { const f = document.getElementById('previa-frame'); f.contentWindow.focus(); f.contentWindow.print(); }
+        window.baixarPdfPrevia = function(nome) {
+            const f = document.getElementById('previa-frame'), btn = document.getElementById('btn-pdf-previa');
+            const gerar = () => window.html2pdf().set({ margin: 8, filename: nome + '.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } }).from(f.contentDocument.body).save().then(() => { btn.disabled = false; btn.innerText = 'Descarregar PDF'; });
+            btn.disabled = true; btn.innerText = 'A gerar...';
+            if (window.html2pdf) { gerar(); return; }
+            const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            sc.onload = gerar; sc.onerror = () => { btn.disabled = false; btn.innerText = 'Descarregar PDF'; mostrarAlertaCustomizado('Não foi possível gerar o PDF. Use "Imprimir" e escolha "Guardar como PDF".', 'Atenção'); };
+            document.head.appendChild(sc);
         }
 
         /* ----- Registo genérico de documentos com itens (Faturas, Guias, Notas...) ----- */
