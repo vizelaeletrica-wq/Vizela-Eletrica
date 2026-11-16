@@ -1027,7 +1027,7 @@
         const sistemaModulos = {
             'Dashboard': { 'Início': ['Painel'], 'Agenda': ['Calendário'] },
             'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados'], 'Stocks': ['Controlo de stocks'] },
-            'Documentos': { 'Venda': ['Faturas', 'Faturas Simplificada', 'Faturas-Recibo', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Faturas Recibo', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
+            'Documentos': { 'Venda': ['Faturas', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
             'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Métodos de pagamento', 'Viaturas'] }
         };
@@ -1550,7 +1550,7 @@
             return `${formatDataPt(dataISO)}${badge}`;
         }
         function badgeStatus(status) {
-            const mapa = { 'Pago': 'badge-success', 'Concluído': 'badge-success', 'Pendente': 'badge-warning', 'Em Aberto': 'badge-warning', 'Cancelado': 'badge-danger', 'Convertido': 'badge-info', 'Ativa': 'badge-success', 'Cancelada': 'badge-danger', 'Concluída': 'badge-success', 'Atrasada': 'badge-danger' };
+            const mapa = { 'Pago': 'badge-success', 'Concluído': 'badge-success', 'Pendente': 'badge-warning', 'Anulada': 'badge-danger', 'Em Aberto': 'badge-warning', 'Cancelado': 'badge-danger', 'Convertido': 'badge-info', 'Ativa': 'badge-success', 'Cancelada': 'badge-danger', 'Concluída': 'badge-success', 'Atrasada': 'badge-danger' };
             return `<span class="badge ${mapa[status] || 'badge-muted'}">${escapeHTML(status || '-')}</span>`;
         }
         async function proximoNumeroDocumento(colecaoNome, prefixo) {
@@ -1593,7 +1593,7 @@
             if (!artigo.precos || artigo.precos.length === 0) return 0;
             const idx = cliente && cliente.tabelaPreco ? cliente.tabelaPreco - 1 : 0;
             const p = artigo.precos[idx] || artigo.precos[0];
-            return p.custo + (p.custo * (p.margem / 100));
+            return (p.custo + (p.custo * (p.margem / 100))) * (1 + (p.iva != null ? p.iva : 0) / 100);
         }
         function renderSeletorArtigoDocumento(containerId, movimento, precoSelecionavel, extra) {
             extra = extra || {};
@@ -1610,10 +1610,12 @@
                 : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0" ${semSubmeterNoEnter}>`;
             return `
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
+                    <div class="form-group" style="flex:1; min-width:110px;"><label>Código</label><input type="text" id="${containerId}-codigo" class="form-control" placeholder="Código" oninput="codigoParaArtigo('${containerId}', this.value, '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}></div>
+                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo (descrição)</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
                     <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
                     <div class="form-group" style="flex:1; min-width:150px;"><label>Armazém</label><select id="${containerId}-armazem" class="form-control" ${semSubmeterNoEnter}>${opcoesArmazemHtml(null, '')}</select></div>
                     <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel === 'custo' ? 'Tabela de Custo' : (precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)')}</label>${campoPreco}</div>
+                    <div class="form-group" style="flex:1; min-width:100px;"><label>Preço unit. (editável)</label><input type="number" id="${containerId}-precoed" class="form-control" min="0" step="0.01" ${semSubmeterNoEnter}></div>
                     <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" title="Adicionar à lista" aria-label="Adicionar à lista" onclick="adicionarItemDocumento('${containerId}','${movimento}')" style="width:42px;height:42px;min-width:42px;padding:0;border-radius:50%;font-size:1.5rem;line-height:1;">+</button></div>
                 </div>
                 ${extra.material ? `<div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:4px;">
@@ -1646,7 +1648,7 @@
                 const indiceSugerido = (!modoCusto && cliente && cliente.tabelaPreco) ? cliente.tabelaPreco - 1 : 0;
                 let opts = '';
                 artigo.precos.forEach((p, idx) => {
-                    const valor = modoCusto ? p.custo : p.custo + (p.custo * (p.margem / 100));
+                    const valor = modoCusto ? p.custo : (p.custo + (p.custo * (p.margem / 100))) * (1 + (p.iva != null ? p.iva : 0) / 100);
                     opts += `<option value="${valor.toFixed(2)}" ${idx === indiceSugerido ? 'selected' : ''}>${modoCusto ? 'Custo' : 'Preço'} ${idx + 1} — ${formatMoeda(valor)}</option>`;
                 });
                 campoPreco.innerHTML = opts;
@@ -1681,10 +1683,18 @@
             const w = window.open('', '_blank');
             if (w) { w.document.write('<title>Imagem do material</title><body style="margin:0;background:#222;display:flex;justify-content:center;align-items:center;min-height:100vh;"><img src="' + src + '" style="max-width:100%;max-height:100vh;"></body>'); w.document.close(); }
         }
+        const _sugBase = window.sugerirPrecoItemDocumento;
+        window.sugerirPrecoItemDocumento = function(c, p) { _sugBase(c, p); const sel = document.getElementById(`${c}-preco`), ed = document.getElementById(`${c}-precoed`); if (ed) ed.value = sel ? (parseFloat(sel.value) || '') : ''; };
+        window.codigoParaArtigo = function(c, cod, p) {
+            const a = dadosCadastrados['Artigos'].find(x => (x.codigo || '').toLowerCase() === cod.trim().toLowerCase());
+            document.getElementById(`${c}-artigo`).value = a ? a.id : '';
+            sugerirPrecoItemDocumento(c, p);
+        }
         window.adicionarItemDocumento = async function(containerId, movimento) {
             const artigoId = document.getElementById(`${containerId}-artigo`).value;
             const qtd = parseInt(document.getElementById(`${containerId}-qtd`).value) || 0;
-            const preco = parseFloat(document.getElementById(`${containerId}-preco`).value) || 0;
+            const _pe = document.getElementById(`${containerId}-precoed`);
+            const preco = parseFloat(_pe && _pe.value !== '' ? _pe.value : document.getElementById(`${containerId}-preco`).value) || 0;
             if (!artigoId || qtd <= 0) { mostrarAlertaCustomizado('Selecione um artigo e uma quantidade válida.', 'Atenção'); return; }
             if (document.getElementById(`${containerId}-preco`).tagName === 'SELECT' && preco <= 0) { mostrarAlertaCustomizado('Este artigo não tem preço definido. Defina os preços no cadastro do artigo.', 'Atenção'); return; }
             const artigo = dadosCadastrados['Artigos'].find(a => a.id === artigoId);
@@ -1712,6 +1722,7 @@
             itensDocumentoTemp.push(novoItem);
             document.getElementById(`${containerId}-qtd`).value = 1;
             document.getElementById(`${containerId}-artigo`).value = '';
+            { const cd = document.getElementById(`${containerId}-codigo`), pe = document.getElementById(`${containerId}-precoed`); if (cd) cd.value = ''; if (pe) pe.value = ''; }
             const campoPrecoReset = document.getElementById(`${containerId}-preco`);
             if (campoPrecoReset.tagName === 'SELECT') { campoPrecoReset.innerHTML = '<option value="0">Selecione o artigo primeiro...</option>'; } else { campoPrecoReset.value = 0; }
             renderListaItensDocumento(containerId);
@@ -1769,6 +1780,55 @@
             return html;
         }
 
+        // ----- Faturas e documentos similares: pesquisa, filtro, anular, imprimir -----
+        const filtroDocs = {};
+        function filtrarDocs(chave, lista) {
+            const f = filtroDocs[chave] || { t: '', s: '' }, t = f.t.trim().toLowerCase();
+            return lista.filter(d => (!f.s || d.status === f.s) && (!t || [d.numero, d.clienteNome, d.fornecedorNome, d.entidadeNome, d.status].join(' ').toLowerCase().includes(t)));
+        }
+        function barraDocs(chave) {
+            const f = filtroDocs[chave] || { t: '', s: '' };
+            return `<div style="padding:12px 16px; display:flex; gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--border);"><input type="search" id="pesq-docs" class="form-control" placeholder="Pesquisar por número ou nome..." value="${escapeHTML(f.t)}" oninput="filtrarDocsUI('${chave}', this.value, null)" style="max-width:320px;"><select class="form-control" style="max-width:200px;" onchange="filtrarDocsUI('${chave}', null, this.value)">${['', 'Pendente', 'Pago', 'Anulada'].map(v => `<option value="${v}" ${f.s === v ? 'selected' : ''}>${v ? (v === 'Pendente' ? 'Só pendentes' : v === 'Pago' ? 'Só pagos' : 'Só anuladas') : 'Todos os estados'}</option>`).join('')}</select></div>`;
+        }
+        window.filtrarDocsUI = function(chave, t, s) {
+            const f = filtroDocs[chave] = filtroDocs[chave] || { t: '', s: '' };
+            if (t !== null) f.t = t; if (s !== null) f.s = s;
+            TELAS_ESPECIAIS[chave].render(document.getElementById('content-display'));
+        }
+        window.mostrarDadosEntidade = function(colecao, id) {
+            const e = (dadosCadastrados[colecao] || []).find(x => x.id === id), box = document.getElementById('doc-cliente-info');
+            if (box) box.innerHTML = e ? `${escapeHTML(e.morada || '')} · ${escapeHTML(e.codigoPostal || '')} · NIF ${escapeHTML(e.nif || '-')} · Tel. ${escapeHTML(e.telefone || '-')}` : '';
+        }
+        function botoesDoc(chave, item) {
+            const ic = (p) => `<svg viewBox="0 0 24 24"><path d="${p}"></path></svg>`;
+            return `<button class="btn-action btn-edit" onclick="event.stopPropagation(); imprimirDocumento('${chave}','${item.id}')" title="Ver / Imprimir / PDF">${ic('M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z')}</button>`
+                + (item.status !== 'Anulada' ? `<button class="btn-action btn-delete" onclick="event.stopPropagation(); anularDocumento('${chave}','${item.id}')" title="Anular">${ic('M18 6L6 18M6 6l12 12')}</button>` : '');
+        }
+        window.anularDocumento = async function(chave, id) {
+            const cfg = DOCUMENTOS_REGISTRY[chave], d = (dadosCadastrados[cfg.collection] || []).find(x => x.id === id);
+            if (!d || !confirm(`Anular ${d.numero}? ${cfg.movimentoStock !== 'nenhum' ? 'O stock será reposto/revertido.' : ''}`)) return;
+            try {
+                await updateDoc(doc(db, cfg.collection, id), { status: 'Anulada', anuladaEm: new Date().toISOString() });
+                if (cfg.movimentoStock !== 'nenhum') await aplicarMovimentoStock(d.itens || [], cfg.movimentoStock === 'saida' ? 'entrada' : 'saida');
+                mostrarAlertaCustomizado('Documento anulado.', 'Sucesso');
+            } catch (e) { mostrarAlertaCustomizado('Erro ao anular.', 'Erro'); }
+        }
+        window.imprimirDocumento = function(chave, id) {
+            const cfg = DOCUMENTOS_REGISTRY[chave], d = (dadosCadastrados[cfg.collection] || []).find(x => x.id === id); if (!d) return;
+            const ent = (dadosCadastrados[cfg.entidadeCollection || 'Clientes'] || []).find(x => x.id === (d[cfg.campoEntidadeId || 'clienteId'])) || {};
+            const emp = (typeof dadosEmpresa !== 'undefined' && dadosEmpresa) || {};
+            const linhas = (d.itens || []).map(i => `<tr><td>${escapeHTML(i.codigo)}</td><td>${escapeHTML(i.descricao || i.categoria || '')}</td><td class="r">${i.quantidade}</td><td class="r">${formatMoeda(i.precoUnit)}</td><td class="r">${formatMoeda(i.subtotal)}</td></tr>`).join('');
+            const w = window.open('', '_blank'); if (!w) { mostrarAlertaCustomizado('Permita pop-ups para imprimir.', 'Atenção'); return; }
+            w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(d.numero)}</title><style>body{font-family:Arial,sans-serif;margin:30px;color:#111}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border-bottom:1px solid #ccc;padding:6px;text-align:left}.r{text-align:right}h1{margin:0}.tot{text-align:right;margin-top:14px;font-size:1.1rem}</style></head><body>
+                <h1>${escapeHTML(emp.nome || emp.empresa || '')}</h1><p>${escapeHTML(emp.morada || '')} ${emp.nif ? '· NIF ' + escapeHTML(emp.nif) : ''}</p><hr>
+                <h2>${escapeHTML(cfg.singular)} ${escapeHTML(d.numero)}${d.status === 'Anulada' ? ' (ANULADA)' : ''}</h2><p>Data: ${formatDataPt(d.data)}${d.pagamento ? ' · Pagamento: ' + escapeHTML(d.pagamento) : ''}</p>
+                <p><strong>${escapeHTML(d.clienteNome || d.fornecedorNome || d.entidadeNome || '')}</strong><br>${escapeHTML(ent.morada || '')} ${escapeHTML(ent.codigoPostal || '')}<br>${ent.nif ? 'NIF ' + escapeHTML(ent.nif) : ''}</p>
+                <table><tr><th>Código</th><th>Descrição</th><th class="r">Qtd</th><th class="r">Preço unit.</th><th class="r">Total</th></tr>${linhas}</table>
+                ${d.desconto ? `<div class="tot">Subtotal: ${formatMoeda(d.subtotal)} · Desconto: ${d.desconto}%</div>` : ''}<div class="tot"><strong>Total: ${formatMoeda(d.total)}</strong></div>
+                <script>window.onload=function(){window.print()}<\/script></body></html>`);
+            w.document.close();
+        }
+
         /* ----- Registo genérico de documentos com itens (Faturas, Guias, Notas...) ----- */
         const DOCUMENTOS_REGISTRY = {};
         function registrarDocumentoComItens(chave, cfg) {
@@ -1777,8 +1837,9 @@
             TELAS_ESPECIAIS[chave] = {
                 dependeDe: [cfg.collection, cfg.entidadeCollection || 'Clientes', 'Artigos'],
                 render: function(display) {
-                    const lista = dadosCadastrados[cfg.collection] || [];
-                    if (lista.length === 0) {
+                    const listaTodas = dadosCadastrados[cfg.collection] || [];
+                    const lista = filtrarDocs(chave, listaTodas);
+                    if (listaTodas.length === 0) {
                         display.style.textAlign = 'center'; display.style.padding = '40px';
                         display.innerHTML = `<div style="color: var(--text-muted);">Nenhum(a) registo encontrado ainda. Clique em <strong>+ Cadastrar</strong> para criar.</div>`;
                         return;
@@ -1788,19 +1849,25 @@
                     [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
                         html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)">
                             <td>${escapeHTML(item.numero)}</td>${cfg.exigeCliente ? `<td>${escapeHTML(item[campoNome] || '-')}</td>` : ''}<td>${formatDataPt(item.data)}</td><td>${formatMoeda(item.total)}</td><td>${badgeStatus(item.status)}</td>
-                            <td><div class="action-buttons">${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (dar baixa)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.orcamentoFn ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.orcamentoFn}('${item.id}')" title="Gerar Orçamento"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
+                            <td><div class="action-buttons">${botoesDoc(chave, item)}${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (dar baixa)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.orcamentoFn ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.orcamentoFn}('${item.id}')" title="Gerar Orçamento"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
                         </tr>
                         <tr id="det-${item.id}" class="details-row"><td colspan="${cfg.exigeCliente ? 6 : 5}" style="padding:10px 20px;">${detalheItensHtml(item)}</td></tr>`;
                     });
                     html += `</tbody></table>`;
-                    display.innerHTML = html;
+                    display.innerHTML = barraDocs(chave) + html;
+                    if (document.activeElement && document.activeElement.id === 'pesq-docs') manterFoco('pesq-docs');
                 },
                 cadastro: function() {
                     itensDocumentoTemp = [];
                     const opcoesCliente = cfg.exigeCliente ? opcoesSelectNovo(dadosCadastrados[cfg.entidadeCollection || 'Clientes'].map(c => ({ value: c.id, label: cfg.entidadeNomeFn ? cfg.entidadeNomeFn(c) : c.nome })), '', `Selecione ${cfg.entidadeLabel || 'o cliente'}...`) : '';
                     document.getElementById('dynamic-fields').innerHTML = `
-                        ${cfg.exigeCliente ? `<div class="form-group"><label>${cfg.entidadeLabel || 'Cliente'}</label><select id="doc-cliente" class="form-control" required>${opcoesCliente}</select></div>` : ''}
+                        ${cfg.exigeCliente ? `<div class="form-group"><label>${cfg.entidadeLabel || 'Cliente'}</label><select id="doc-cliente" class="form-control" required onchange="mostrarDadosEntidade('${cfg.entidadeCollection || 'Clientes'}', this.value)">${opcoesCliente}</select><div id="doc-cliente-info" style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;"></div></div>` : ''}
                         <div class="form-group"><label>Data</label><input type="date" id="doc-data" class="form-control" value="${hojeISO()}"></div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            ${cfg.campoEntidadeId ? '' : `<div class="form-group" style="flex:1; min-width:160px;"><label>Vendedor (não aparece na impressão)</label><select id="doc-vendedor" class="form-control">${opcoesSelectNovo((dadosCadastrados['Vendedores'] || []).map(v => ({ value: v.id, label: v.nome })), '', 'Selecione o vendedor...')}</select></div>`}
+                            <div class="form-group" style="flex:1; min-width:120px;"><label>Desconto (%)</label><input type="number" id="doc-desconto" class="form-control" min="0" max="100" step="0.01" value="0"></div>
+                            <div class="form-group" style="flex:1; min-width:150px;"><label>Modo de pagamento</label><select id="doc-pagamento" class="form-control"><option value="">-</option><option>Numerário</option><option>Multibanco</option><option>Transferência</option><option>Cheque</option><option>MB Way</option></select></div>
+                        </div>
                         <h3 style="font-size:0.95rem; margin: 14px 0 8px; color: var(--primary);">Artigos</h3>
                         ${renderSeletorArtigoDocumento('doc', cfg.movimentoStock, cfg.precoSelecionavel, { material: cfg.material, imagem: cfg.materialImagem })}
                     `;
@@ -1819,9 +1886,13 @@
                             entidadeNome = itemEntidade ? (cfg.entidadeNomeFn ? cfg.entidadeNomeFn(itemEntidade) : itemEntidade.nome) : '';
                         }
                         const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
-                        const total = itensDocumentoTemp.reduce((s, i) => s + i.subtotal, 0);
+                        const subtotalDoc = itensDocumentoTemp.reduce((s, i) => s + i.subtotal, 0);
+                        const descontoDoc = Math.min(100, Math.max(0, parseFloat(document.getElementById('doc-desconto').value) || 0));
+                        const total = subtotalDoc * (1 - descontoDoc / 100);
+                        const vendSel = document.getElementById('doc-vendedor');
+                        const vend = vendSel ? (dadosCadastrados['Vendedores'] || []).find(v => v.id === vendSel.value) : null;
                         const numero = await proximoNumeroDocumento(cfg.collection, cfg.prefixo);
-                        const dados = { numero, data: document.getElementById('doc-data').value || hojeISO(), itens: itensDocumentoTemp, total, status: cfg.statusInicial, criadoEm: new Date().toISOString() };
+                        const dados = { subtotal: subtotalDoc, desconto: descontoDoc, pagamento: document.getElementById('doc-pagamento').value, vendedorId: vend ? vend.id : null, vendedorNome: vend ? vend.nome : '', numero, data: document.getElementById('doc-data').value || hojeISO(), itens: itensDocumentoTemp, total, status: cfg.statusInicial, criadoEm: new Date().toISOString() };
                         if (cfg.exigeCliente) { dados[campoId] = entidadeId; dados[campoNome] = entidadeNome; }
                         try {
                             await addDoc(collection(db, cfg.collection), dados);
