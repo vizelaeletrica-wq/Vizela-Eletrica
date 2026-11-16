@@ -1606,7 +1606,7 @@
             // (isso disparava "Guardar" antes de o artigo ter sido efetivamente adicionado à lista) — Enter agora só adiciona à lista.
             const semSubmeterNoEnter = `onkeydown="if(event.key==='Enter'){event.preventDefault(); adicionarItemDocumento('${containerId}','${movimento}');}"`;
             const campoPreco = precoSelecionavel
-                ? `<select id="${containerId}-preco" class="form-control" ${semSubmeterNoEnter}><option value="0">Selecione o artigo primeiro...</option></select>`
+                ? `<select id="${containerId}-preco" class="form-control" onchange="{ const pe = document.getElementById('${containerId}-precoed'); if (pe) pe.value = (parseFloat(this.value) || ''); }" ${semSubmeterNoEnter}><option value="0">Selecione o artigo primeiro...</option></select>`
                 : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0" ${semSubmeterNoEnter}>`;
             return `
                 <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
