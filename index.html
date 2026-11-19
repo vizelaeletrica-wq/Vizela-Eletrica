@@ -924,9 +924,14 @@
         <div class="modal-box">
             <div class="modal-header">
                 <h2 id="modal-titulo">Novo Registo</h2>
-                <button class="btn-close" onclick="fecharModal()" title="Fechar">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <div class="modal-tools">
+                    <button type="button" class="zoom-btn" id="zoom-menos" onclick="zoomModalCadastro(-1)" title="Diminuir">A−</button>
+                    <button type="button" class="zoom-btn" id="zoom-pct" onclick="zoomModalCadastro(0)" title="Voltar ao ajuste automático">100%</button>
+                    <button type="button" class="zoom-btn" id="zoom-mais" onclick="zoomModalCadastro(1)" title="Aumentar">A+</button>
+                    <button class="btn-close" onclick="fecharModal()" title="Fechar" style="margin-left:6px;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                </div>
             </div>
             <div class="modal-body">
                 <form id="form-cadastro" onsubmit="salvarDadosDb(event)">
@@ -3283,7 +3288,17 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
 .acoes{max-width:1100px;margin:0 auto 16px;display:flex;justify-content:flex-end}
 .acoes button{background:#F5A623;border:none;color:#111827;font-weight:700;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.95rem}
 @media print{body{background:#fff;padding:0}.page{box-shadow:none;max-width:none;padding:0;border-radius:0}.acoes{display:none}}
-</style></head><body>
+        /* ===== Cadastros: tela única, sem barras de rolagem, com zoom proporcional ===== */
+        #modal-cadastro { overflow: hidden; }
+        #modal-cadastro .modal-box { flex: none; width: var(--mw, 500px) !important; max-width: none !important; max-height: none !important; overflow: hidden !important; transform-origin: center center; transform: scale(calc(var(--mz, 1) * 0.95)); }
+        #modal-cadastro.active .modal-box { transform: scale(var(--mz, 1)); }
+        #modal-cadastro .modal-body { max-height: none !important; overflow: visible !important; }
+        .modal-tools { display: flex; align-items: center; gap: 4px; }
+        .zoom-btn { min-width: 30px; height: 28px; padding: 0 8px; border: 1px solid var(--border-strong, #d0d5dd); background: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: var(--text-dark); cursor: pointer; line-height: 1; }
+        .zoom-btn:hover:not(:disabled) { background: #f4f5f7; border-color: var(--primary); }
+        .zoom-btn:disabled { opacity: .35; cursor: default; }
+        #zoom-pct { min-width: 46px; font-weight: 600; }
+    </style></head><body>
 <div class="acoes"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
 <div class="page">
  <div class="top">
@@ -4719,10 +4734,47 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
         window.abrirModal = function(abaAtual) {
             const modal = document.getElementById('modal-cadastro');
             const box = modal.querySelector('.modal-box');
-            if(abaAtual === 'Artigos' || abaAtual === 'Artigos Fabricados') { box.style.maxWidth = '650px'; } else { box.style.maxWidth = '500px'; }
+            let larg = parseInt(abaAtual, 10);
+            if (abaAtual === 'Artigos' || abaAtual === 'Artigos Fabricados') larg = 650;
+            if (!larg) larg = 500;
+            if (larg >= 700) larg = 820; // formulários de documentos: mais largos = menos altos
+            box.style.setProperty('--mw', larg + 'px');
 
             modal.style.display = 'flex';
-            setTimeout(() => { modal.classList.add('active'); }, 10);
+            ajustarModalCadastro();
+            setTimeout(() => { modal.classList.add('active'); ajustarModalCadastro(); }, 10);
+            if (!window._roModal && window.ResizeObserver) {
+                window._roModal = new ResizeObserver(() => ajustarModalCadastro());
+                window._roModal.observe(document.getElementById('form-cadastro'));
+                window.addEventListener('resize', ajustarModalCadastro);
+            }
+        }
+
+        // Ajuste automático: o cadastro cabe sempre inteiro no ecrã (sem rolagem); o utilizador pode ainda reduzir/aumentar até esse limite
+        window._zoomModal = 1;
+        try { const z = parseFloat(localStorage.getItem('zoomModalCadastro')); if (z >= 0.5 && z <= 2) window._zoomModal = z; } catch (e) {}
+        window.ajustarModalCadastro = function() {
+            const modal = document.getElementById('modal-cadastro');
+            if (!modal || modal.style.display !== 'flex') return;
+            const box = modal.querySelector('.modal-box');
+            const cs = getComputedStyle(modal);
+            const aw = modal.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight) - 16;
+            const ah = modal.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - 16;
+            const w = box.offsetWidth, h = box.offsetHeight; // medidas sem transformação
+            if (!w || !h) return;
+            const maxFit = Math.min(aw / w, ah / h);
+            const base = Math.min(1, maxFit);
+            const final = Math.max(0.3, Math.min(base * window._zoomModal, maxFit));
+            box.style.setProperty('--mz', final.toFixed(3));
+            const pct = document.getElementById('zoom-pct'); if (pct) pct.innerText = Math.round(final * 100) + '%';
+            const mais = document.getElementById('zoom-mais'), menos = document.getElementById('zoom-menos');
+            if (mais) mais.disabled = final >= maxFit - 0.005;
+            if (menos) menos.disabled = final <= 0.31;
+        }
+        window.zoomModalCadastro = function(dir) {
+            window._zoomModal = dir === 0 ? 1 : Math.max(0.3, Math.min(2, window._zoomModal * (dir > 0 ? 1.1 : 1 / 1.1)));
+            try { localStorage.setItem('zoomModalCadastro', String(window._zoomModal)); } catch (e) {}
+            ajustarModalCadastro();
         }
 
         window.fecharModal = function() {
