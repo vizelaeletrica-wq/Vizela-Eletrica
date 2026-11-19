@@ -1749,7 +1749,12 @@
             });
             html += `</table>`;
             lista.innerHTML = html;
-            totalDiv.innerText = `Total: ${formatMoeda(total)}`;
+            const campoDesc = containerId === 'doc' ? document.getElementById('doc-desconto') : null;
+            const descPct = campoDesc ? Math.min(100, Math.max(0, parseFloat(campoDesc.value) || 0)) : 0;
+            if (descPct > 0) {
+                const valorDesc = total * descPct / 100;
+                totalDiv.innerHTML = `<div style="font-weight:400;color:var(--text-muted);font-size:.9rem;">Subtotal: ${formatMoeda(total)}</div><div style="font-weight:400;color:var(--primary);font-size:.9rem;">Desconto (${descPct.toLocaleString('pt-PT')}%): - ${formatMoeda(valorDesc)}</div><div>Total com desconto: ${formatMoeda(total - valorDesc)}</div>`;
+            } else totalDiv.innerText = `Total: ${formatMoeda(total)}`;
         }
         async function aplicarMovimentoStock(itens, movimento) {
             const sinal = movimento === 'saida' ? -1 : 1;
@@ -1783,6 +1788,11 @@
             let html = `<table class="inner-table"><tr><th>Artigo</th><th>Armazém</th>${temMat ? '<th>Material</th>' : ''}<th>Qtd</th><th>Preço Unit.</th><th>Subtotal</th></tr>`;
             item.itens.forEach(i => { html += `<tr><td>${escapeHTML(i.codigo)} - ${escapeHTML(i.categoria)}</td><td>${i.armazem || '-'}</td>${temMat ? `<td>${materialCelulaHtml(i)}</td>` : ''}<td>${i.quantidade}</td><td>${formatMoeda(i.precoUnit)}</td><td>${formatMoeda(i.subtotal)}</td></tr>`; });
             html += `</table>`;
+            const descD = Number(item.desconto) || 0;
+            if (descD > 0) {
+                const subD = Number(item.subtotal) || item.itens.reduce((s, i) => s + (Number(i.subtotal) || 0), 0);
+                html += `<div style="text-align:right;margin-top:8px;font-size:.85rem;line-height:1.6;"><div style="color:var(--text-muted);">Subtotal: ${formatMoeda(subD)}</div><div style="color:var(--primary);">Desconto (${descD.toLocaleString('pt-PT')}%): - ${formatMoeda(subD - (Number(item.total) || 0))}</div><div style="font-weight:700;">Total: ${formatMoeda(item.total)}</div></div>`;
+            }
             return html;
         }
 
@@ -2035,13 +2045,13 @@
                         return;
                     }
                     display.style.textAlign = 'left'; display.style.padding = '0';
-                    let html = `<table class="elegant-table"><thead><tr><th>Número</th>${cfg.exigeCliente ? `<th>${cfg.entidadeLabel || 'Cliente'}</th>` : ''}<th>Data</th><th>Total</th><th>Status</th><th style="width:140px;">Ações</th></tr></thead><tbody>`;
+                    let html = `<table class="elegant-table"><thead><tr><th>Número</th>${cfg.exigeCliente ? `<th>${cfg.entidadeLabel || 'Cliente'}</th>` : ''}<th>Data</th><th>Desconto</th><th>Total</th><th>Status</th><th style="width:140px;">Ações</th></tr></thead><tbody>`;
                     [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
                         html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)">
-                            <td>${escapeHTML(item.numero)}</td>${cfg.exigeCliente ? `<td>${escapeHTML(item[campoNome] || '-')}</td>` : ''}<td>${formatDataPt(item.data)}</td><td>${formatMoeda(item.total)}</td><td>${badgeStatus(item.status)}${item.status === 'Pendente' && Number(item.valorPago) > 0 ? `<div style="font-size:.75rem;color:var(--text-muted);">Pago ${formatMoeda(item.valorPago)} · Em dívida ${formatMoeda((Number(item.total) || 0) - Number(item.valorPago))}</div>` : ''}</td>
+                            <td>${escapeHTML(item.numero)}</td>${cfg.exigeCliente ? `<td>${escapeHTML(item[campoNome] || '-')}</td>` : ''}<td>${formatDataPt(item.data)}</td><td>${Number(item.desconto) > 0 ? `<span style="color:var(--primary);font-weight:600;">${Number(item.desconto).toLocaleString('pt-PT')}%</span>` : '<span style="color:var(--text-muted);">—</span>'}</td><td>${formatMoeda(item.total)}</td><td>${badgeStatus(item.status)}${item.status === 'Pendente' && Number(item.valorPago) > 0 ? `<div style="font-size:.75rem;color:var(--text-muted);">Pago ${formatMoeda(item.valorPago)} · Em dívida ${formatMoeda((Number(item.total) || 0) - Number(item.valorPago))}</div>` : ''}</td>
                             <td><div class="action-buttons">${botoesDoc(chave, item)}${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (pagar o que falta)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); registarPagamentoParcial('${cfg.collection}','${item.id}')" title="Pagamento parcial (anexo da fatura)"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></button>` : ''}${cfg.orcamentoFn ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.orcamentoFn}('${item.id}')" title="Gerar Orçamento"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
                         </tr>
-                        <tr id="det-${item.id}" class="details-row"><td colspan="${cfg.exigeCliente ? 6 : 5}" style="padding:10px 20px;">${detalheItensHtml(item)}${anexoPagamentosHtml(item)}</td></tr>`;
+                        <tr id="det-${item.id}" class="details-row"><td colspan="${cfg.exigeCliente ? 7 : 6}" style="padding:10px 20px;">${detalheItensHtml(item)}${anexoPagamentosHtml(item)}</td></tr>`;
                     });
                     html += `</tbody></table>`;
                     display.innerHTML = barraDocs(chave, null, cfg.ligarArtigos ? `<button type="button" class="btn-cancelar" onclick="irParaTela('Tabelas','Artigos','Artigos')" title="Ver a página Artigos para alterar preços">Abrir Artigos (alterar preços)</button>` : '') + html;
@@ -2055,7 +2065,7 @@
                         <div class="form-group"><label>Data</label><input type="date" id="doc-data" class="form-control" value="${hojeISO()}"></div>
                         <div style="display:flex; gap:10px; flex-wrap:wrap;">
                             ${cfg.campoEntidadeId ? '' : `<div class="form-group" style="flex:1; min-width:160px;"><label>Vendedor (não aparece na impressão)</label><select id="doc-vendedor" class="form-control">${opcoesSelectNovo((dadosCadastrados['Vendedores'] || []).map(v => ({ value: v.id, label: v.nome })), '', 'Selecione o vendedor...')}</select></div>`}
-                            <div class="form-group" style="flex:1; min-width:120px;"><label>Desconto (%)</label><input type="number" id="doc-desconto" class="form-control" min="0" max="100" step="0.01" value="0"></div>
+                            <div class="form-group" style="flex:1; min-width:120px;"><label>Desconto (%)</label><input type="number" id="doc-desconto" class="form-control" min="0" max="100" step="0.01" value="0" oninput="renderListaItensDocumento('doc')"></div>
                             <div class="form-group" style="flex:1; min-width:150px;"><label>Modo de pagamento</label><select id="doc-pagamento" class="form-control"><option value="">-</option><option>Numerário</option><option>Multibanco</option><option>Transferência</option><option>Cheque</option><option>MB Way</option></select></div>
                         </div>
                         <h3 style="font-size:0.95rem; margin: 14px 0 8px; color: var(--primary);">Artigos</h3>
