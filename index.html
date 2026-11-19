@@ -784,6 +784,9 @@
                 <button class="menu-btn" onclick="selectCategory('Documentos', this)">
                     <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg> Documentos
                 </button>
+                <button class="menu-btn" onclick="selectCategory('Orçamentos', this)">
+                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M9 15l2 2 4-4"></path></svg> Orçamentos
+                </button>
                 <button class="menu-btn" onclick="selectCategory('Consultas', this)">
                     <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Consultas
                 </button>
@@ -1027,7 +1030,8 @@
         const sistemaModulos = {
             'Dashboard': { 'Início': ['Painel'], 'Agenda': ['Calendário'] },
             'Tabelas': { 'Entidades': ['Clientes', 'Fornecedores', 'Vendedores'], 'Artigos': ['Categorias', 'Artigos', 'Artigos Fabricados'], 'Stocks': ['Controlo de stocks'] },
-            'Documentos': { 'Venda': ['Faturas', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Orçamentos', 'Folha de Obra', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
+            'Documentos': { 'Venda': ['Faturas', 'Faturas pro forma'], 'Transporte': ['Guia de Remessa'], 'Outros Documentos': ['Folha de Obra', 'Horas de Serviço', 'Avenças'], 'Liquidações': ['Recibos', 'Notas de Crédito', 'Devoluções Pagamento'], 'Fornecedores': ['Notas de Encomenda', 'Faturas', 'Notas de Crédito', 'Notas de Devolução', 'Recibos', 'Pedidos de Garantia'], 'Stocks': ['Nota de Quebra', 'Entrada de Inventário', 'Saída de inventário'] },
+            'Orçamentos': { 'Orçamentos': ['Orçamentos'] },
             'Consultas': { 'Vendas': ['Extrato de Vendas', 'Análise de Vendas', 'Margens de Lucro', 'Mapas de IVA', 'Listagem de Pendentes', 'Histórico de Clientes', 'Listagem de Documentos'], 'Impostos': ['Mapa de encontro do IVA', 'Mapa de Retenções'], 'Compras': ['Extrato de Compras', 'Análise de Compras', 'Mapas IVA', 'Listagem de Pendentes', 'Histórico de Fornecedores', 'Listagem de Documentos'], 'Vendedores': ['Listagem de Pendentes', 'Histórico de Vendedores'] },
             'Configurações': { 'Empresa e Utilizadores': ['Empresa', 'Subscrição', 'Grupos e Permissões de Utilizadores', 'Utilizadores'], 'Séries e templates': ['Série de Documentos', 'Templates de Identificação'], 'Referências Multibanco': ['Consultar'], 'Outras Configurações': ['Dados Bancários', 'Métodos de pagamento', 'Viaturas'] }
         };
@@ -1058,7 +1062,8 @@
             'NotasCreditoFornecedor', 'NotasDevolucaoFornecedor', 'RecibosFornecedor', 'Pedidos de Garantia',
             'Nota de Quebra', 'MovimentosInventario',
             'Grupos e Permissões de Utilizadores', 'Utilizadores', 'Série de Documentos', 'Templates de Identificação',
-            'Dados Bancários', 'Métodos de pagamento', 'Viaturas', 'Eventos Programados'
+            'Dados Bancários', 'Métodos de pagamento', 'Viaturas', 'Eventos Programados',
+            'Horas de Serviço', 'Motivos de Quebra'
         ];
         NOVAS_COLECOES.forEach(c => { dadosCadastrados[c] = []; });
 
@@ -1528,7 +1533,7 @@
 
         function creditoDaEntidade(aba, entidadeId) {
             const col = aba === 'Clientes' ? 'NotasCreditoVenda' : 'NotasCreditoFornecedor';
-            return (dadosCadastrados[col] || []).filter(n => n.entidadeId === entidadeId).reduce((t, n) => t + (Number(n.valor) || 0), 0);
+            return (dadosCadastrados[col] || []).filter(n => n.entidadeId === entidadeId && n.status !== 'Anulada').reduce((t, n) => t + (Number(n.valor) || 0), 0);
         }
 
         function escapeHTML(str) { return String(str).replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)); }
@@ -1706,7 +1711,7 @@
                 const jaNoCarrinho = itensDocumentoTemp.filter(i => i.artigoId === artigoId && i.armazem === armEscolhido).reduce((s, i) => s + i.quantidade, 0);
                 if (qtd + jaNoCarrinho > disponivel) { mostrarAlertaCustomizado(`Stock insuficiente no ${armEscolhido}. Disponível: ${disponivel}.`, 'Atenção'); return; }
             }
-            const novoItem = { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, armazem: armEscolhido, quantidade: qtd, precoUnit: preco, subtotal: qtd * preco };
+            const novoItem = { artigoId, codigo: artigo.codigo, categoria: artigo.categoria, descricao: artigo.descricao || '', armazem: armEscolhido, quantidade: qtd, precoUnit: preco, subtotal: qtd * preco };
             const campoMaterial = document.getElementById(`${containerId}-material`);
             if (campoMaterial) {
                 const material = campoMaterial.value.trim();
@@ -1749,6 +1754,7 @@
         async function aplicarMovimentoStock(itens, movimento) {
             const sinal = movimento === 'saida' ? -1 : 1;
             for (const it of itens) {
+                if (!it.artigoId) continue; // linhas sem artigo (ex.: mão de obra) não mexem no stock
                 const art = (dadosCadastrados['Artigos'] || []).find(a => a.id === it.artigoId);
                 const mapa = art ? { ...stockArmazens(art) } : {};
                 let arm = it.armazem;
@@ -1786,9 +1792,17 @@
             const f = filtroDocs[chave] || { t: '', s: '' }, t = f.t.trim().toLowerCase();
             return lista.filter(d => (!f.s || d.status === f.s) && (!t || [d.numero, d.clienteNome, d.fornecedorNome, d.entidadeNome, d.status].join(' ').toLowerCase().includes(t)));
         }
-        function barraDocs(chave) {
+        function barraDocs(chave, opcoesEstado, extra) {
             const f = filtroDocs[chave] || { t: '', s: '' };
-            return `<div style="padding:12px 16px; display:flex; gap:10px; flex-wrap:wrap; border-bottom:1px solid var(--border);"><input type="search" id="pesq-docs" class="form-control" placeholder="Pesquisar por número ou nome..." value="${escapeHTML(f.t)}" oninput="filtrarDocsUI('${chave}', this.value, null)" style="max-width:320px;"><select class="form-control" style="max-width:200px;" onchange="filtrarDocsUI('${chave}', null, this.value)">${['', 'Pendente', 'Pago', 'Anulada'].map(v => `<option value="${v}" ${f.s === v ? 'selected' : ''}>${v ? (v === 'Pendente' ? 'Só pendentes' : v === 'Pago' ? 'Só pagos' : 'Só anuladas') : 'Todos os estados'}</option>`).join('')}</select></div>`;
+            const ops = opcoesEstado || ['', 'Pendente', 'Pago', 'Anulada'];
+            const cfgB = DOCUMENTOS_REGISTRY[chave] || {};
+            let pend = '';
+            if (cfgB.reciboFn) {
+                const lp = (dadosCadastrados[cfgB.collection] || []).filter(d => d.status === 'Pendente');
+                const emDivida = lp.reduce((t, d) => t + (Number(d.total) || 0) - (Number(d.valorPago) || 0), 0);
+                pend = `<button type="button" class="${f.s === 'Pendente' ? 'btn-salvar' : 'btn-cancelar'}" onclick="filtrarDocsUI('${chave}', null, '${f.s === 'Pendente' ? '' : 'Pendente'}')">Pendentes (${lp.length}) · ${formatMoeda(emDivida)} em dívida</button>`;
+            }
+            return `<div style="padding:12px 16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-bottom:1px solid var(--border);"><input type="search" id="pesq-docs" class="form-control" placeholder="Pesquisar por número ou nome..." value="${escapeHTML(f.t)}" oninput="filtrarDocsUI('${chave}', this.value, null)" style="max-width:320px;"><select class="form-control" style="max-width:200px;" onchange="filtrarDocsUI('${chave}', null, this.value)">${ops.map(v => `<option value="${v}" ${f.s === v ? 'selected' : ''}>${v ? (v === 'Pendente' ? 'Só pendentes' : v === 'Pago' ? 'Só pagos' : 'Só anuladas') : 'Todos os estados'}</option>`).join('')}</select>${pend}${extra || ''}</div>`;
         }
         window.filtrarDocsUI = function(chave, t, s) {
             const f = filtroDocs[chave] = filtroDocs[chave] || { t: '', s: '' };
@@ -1796,7 +1810,8 @@
             TELAS_ESPECIAIS[chave].render(document.getElementById('content-display'));
         }
         window.mostrarDadosEntidade = function(colecao, id) {
-            const e = (dadosCadastrados[colecao] || []).find(x => x.id === id), box = document.getElementById('doc-cliente-info');
+            let e = (dadosCadastrados[colecao] || []).find(x => x.id === id); const box = document.getElementById('doc-cliente-info');
+            if (e && colecao === 'Fichas de Serviço' && e.clienteId) e = (dadosCadastrados['Clientes'] || []).find(c => c.id === e.clienteId) || e;
             if (box) box.innerHTML = e ? `${escapeHTML(e.morada || '')} · ${escapeHTML(e.codigoPostal || '')} · NIF ${escapeHTML(e.nif || '-')} · Tel. ${escapeHTML(e.telefone || '-')}` : '';
         }
         function botoesDoc(chave, item) {
@@ -1809,18 +1824,23 @@
             if (!d || !confirm(`Anular ${d.numero}? ${cfg.movimentoStock !== 'nenhum' ? 'O stock será reposto/revertido.' : ''}`)) return;
             try {
                 await updateDoc(doc(db, cfg.collection, id), { status: 'Anulada', anuladaEm: new Date().toISOString() });
-                if (cfg.movimentoStock !== 'nenhum') await aplicarMovimentoStock(d.itens || [], cfg.movimentoStock === 'saida' ? 'entrada' : 'saida');
+                if (cfg.movimentoStock !== 'nenhum' && !d.semMovimentoStock) await aplicarMovimentoStock(d.itens || [], cfg.movimentoStock === 'saida' ? 'entrada' : 'saida');
                 mostrarAlertaCustomizado('Documento anulado.', 'Sucesso');
             } catch (e) { mostrarAlertaCustomizado('Erro ao anular.', 'Erro'); }
         }
         window.imprimirDocumento = function(chave, id) {
             const cfg = DOCUMENTOS_REGISTRY[chave], d = (dadosCadastrados[cfg.collection] || []).find(x => x.id === id); if (!d) return;
-            const ent = (dadosCadastrados[cfg.entidadeCollection || 'Clientes'] || []).find(x => x.id === (d[cfg.campoEntidadeId || 'clienteId'])) || {};
+            let ent = (dadosCadastrados[cfg.entidadeCollection || 'Clientes'] || []).find(x => x.id === (d[cfg.campoEntidadeId || 'clienteId'])) || {};
+            if (cfg.entidadeCollection === 'Fichas de Serviço' && ent.clienteId) ent = (dadosCadastrados['Clientes'] || []).find(c => c.id === ent.clienteId) || ent;
             const emp = (typeof dadosEmpresa !== 'undefined' && dadosEmpresa) || {};
             const desc = Number(d.desconto) || 0;
-            const linhas = (d.itens || []).map(i => `<tr><td>${escapeHTML(i.codigo || '')}</td><td>${escapeHTML(i.descricao || i.categoria || '')}</td><td class="r">${Number(i.quantidade).toFixed(4).replace('.', ',')}</td><td>un</td><td class="r">${formatMoeda(i.precoUnit)}</td><td class="r">${desc ? desc.toLocaleString('pt-PT') + '%' : ''}</td><td class="r">${formatMoeda(i.subtotal * (1 - desc / 100))}</td></tr>`).join('');
+            const totalDoc = d.total != null ? Number(d.total) : (Number(d.valor) || 0), subtotalDoc = d.subtotal != null ? Number(d.subtotal) : totalDoc;
+            const mkLinhas = (modo) => (d.itens || []).map(i => { const art = (dadosCadastrados['Artigos'] || []).find(a => a.id === i.artigoId); return `<tr><td>${escapeHTML(i.codigo || '')}</td><td>${escapeHTML(i.descricao || (art && art.descricao) || i.categoria || '')}</td>${modo === 'tudo' ? `<td class="r">${Number(i.quantidade).toFixed(4).replace('.', ',')}</td><td>un</td><td class="r">${formatMoeda(i.precoUnit)}</td>` : (modo === 'semqtd' ? `<td class="r">${formatMoeda(i.precoUnit)}</td>` : '')}<td class="r">${desc ? desc.toLocaleString('pt-PT') + '%' : ''}</td><td class="r">${formatMoeda(i.subtotal * (1 - desc / 100))}</td></tr>`; }).join('');
+            const mkCab = (modo) => `<th>Código</th><th>Descrição</th>${modo === 'tudo' ? '<th class="r">Qtd.</th><th>Uni.</th><th class="r">Preço uni.</th>' : (modo === 'semqtd' ? '<th class="r">Preço uni.</th>' : '')}<th class="r">% Desc.</th><th class="r">Valor</th>`;
+            const pagsDoc = d.pagamentos || [];
+            const anexoHtml = pagsDoc.length ? `<div style="margin-top:28px;border-top:1px solid #111;padding-top:6px"><div style="font-weight:700;margin-bottom:4px">Anexo — Pagamentos</div><table><thead><tr><th>Data</th><th>Modo de pagamento</th><th>Recibo</th><th class="r">Valor</th></tr></thead><tbody>${pagsDoc.map(p => `<tr><td>${escapeHTML(formatDataPt(p.data))}</td><td>${escapeHTML(p.modo || '-')}</td><td>${escapeHTML(p.recibo || '-')}</td><td class="r">${formatMoeda(p.valor)}</td></tr>`).join('')}</tbody></table><div class="tot"><div><span>Total pago</span><span>${formatMoeda(d.valorPago)}</span></div><div style="font-weight:700"><span>Em dívida</span><span>${formatMoeda(totalDoc - (Number(d.valorPago) || 0))}</span></div></div></div>` : '';
             const nomeEnt = d.clienteNome || d.fornecedorNome || d.entidadeNome || 'Consumidor Final';
-            const htmlDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(d.numero)}</title><style>
+            const mkHtml = (modo) => { const linhas = mkLinhas(modo); return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(d.numero)}</title><style>
                 body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:28px;background:#fff}
                 .topo{display:flex;justify-content:space-between;gap:30px}.emp{flex:1;padding-top:40px;line-height:1.5}
                 .doc{width:330px}.lb{font-weight:700;border-top:1px solid #111;padding-top:3px;margin-bottom:2px}
@@ -1835,7 +1855,7 @@
                         <div class="lb">${escapeHTML(cfg.singular)}</div><div style="font-size:14px">${escapeHTML(d.numero)}</div><div style="font-weight:700;margin-bottom:8px">${d.status === 'Anulada' ? 'ANULADA' : 'Original'}</div>
                         <div class="grid"><div><div class="lb">Data</div>${escapeHTML(d.data || '')}</div><div><div class="lb">Moeda</div>EUR</div></div>
                         <div class="lb" style="margin-top:8px">Data de Vencimento</div>${escapeHTML(d.vencimento || d.data || '')}
-                        ${d.pagamento ? `<div class="lb" style="margin-top:8px">Pagamento</div>${escapeHTML(d.pagamento)}` : ''}
+                        ${d.pagamento ? `<div class="lb" style="margin-top:8px">Pagamento</div>${escapeHTML(d.pagamento)}` : ''}${d.origemNumero ? `<div class="lb" style="margin-top:8px">Documento de origem</div>${escapeHTML(d.origemNumero)}` : ''}
                     </div>
                 </div>
                 <div class="doc cli" style="margin-left:auto">
@@ -1843,10 +1863,16 @@
                     <div class="grid"><div><div class="lb">Morada</div>${escapeHTML([ent.morada, ent.codigoPostal].filter(Boolean).join(', ') || 'Portugal')}</div><div style="flex:0 0 90px"><div class="lb">NIF</div>${escapeHTML(ent.nif || '---------')}</div></div>
                 </div>
                 <div class="pg">Página 1 / 1</div>
-                <table><thead><tr><th>Código</th><th>Descrição</th><th class="r">Qtd.</th><th>Uni.</th><th class="r">Preço uni.</th><th class="r">% Desc.</th><th class="r">Valor</th></tr></thead><tbody>${linhas}</tbody></table>
-                <div class="tot">${desc ? `<div><span>Subtotal</span><span>${formatMoeda(d.subtotal)}</span></div><div><span>Desconto (${desc.toLocaleString('pt-PT')}%)</span><span>- ${formatMoeda(d.subtotal - d.total)}</span></div>` : ''}<div style="font-weight:700;font-size:14px"><span>Total</span><span>${formatMoeda(d.total)}</span></div></div>
-                </body></html>`;
-            abrirPreVisualizacao(htmlDoc, d.numero);
+                <table><thead><tr>${mkCab(modo)}</tr></thead><tbody>${linhas}</tbody></table>
+                <div class="tot">${desc ? `<div><span>Subtotal</span><span>${formatMoeda(subtotalDoc)}</span></div><div><span>Desconto (${desc.toLocaleString('pt-PT')}%)</span><span>- ${formatMoeda(subtotalDoc - totalDoc)}</span></div>` : ''}<div style="font-weight:700;font-size:14px"><span>Total</span><span>${formatMoeda(totalDoc)}</span></div></div>
+                ${anexoHtml}
+                </body></html>`; };
+            if (cfg.collection === 'Faturas pro forma') {
+                window._previaGerar = mkHtml;
+                abrirPreVisualizacao(mkHtml('tudo'), d.numero);
+                const tit = document.querySelector('#previa-doc strong');
+                if (tit) tit.insertAdjacentHTML('afterend', `<select id="previa-modo" class="form-control" style="max-width:300px;" title="O que mostrar na impressão / PDF" onchange="document.getElementById('previa-frame').srcdoc = window._previaGerar(this.value)"><option value="tudo">Tudo</option><option value="total">Apenas valor total (sem quantidades nem preço unitário)</option><option value="semqtd">Retirar quantidades</option></select>`);
+            } else { abrirPreVisualizacao(mkHtml('tudo'), d.numero); }
         }
         // Pré-visualização antes de imprimir / descarregar PDF
         window.abrirPreVisualizacao = function(htmlDoc, nomeFicheiro) {
@@ -1874,6 +1900,92 @@
             document.head.appendChild(sc);
         }
 
+        /* ----- Pagamentos parciais (anexo da fatura) ----- */
+        function anexoPagamentosHtml(item) {
+            if (!item.pagamentos || !item.pagamentos.length) return '';
+            let h = `<div style="margin-top:12px;"><strong style="font-size:.85rem;">Anexo — Pagamentos</strong><table class="inner-table" style="margin-top:6px;"><tr><th>Data</th><th>Modo</th><th>Recibo</th><th>Valor</th></tr>`;
+            item.pagamentos.forEach(p => { h += `<tr><td>${formatDataPt(p.data)}</td><td>${escapeHTML(p.modo || '-')}</td><td>${escapeHTML(p.recibo || '-')}</td><td>${formatMoeda(p.valor)}</td></tr>`; });
+            return h + `</table><div style="font-size:.85rem;margin-top:6px;">Total pago: <strong>${formatMoeda(item.valorPago)}</strong> · Em dívida: <strong>${formatMoeda((Number(item.total) || 0) - (Number(item.valorPago) || 0))}</strong></div></div>`;
+        }
+        function cfgReciboDe(colecao) {
+            return colecao === 'FaturasFornecedor' ? ['RecibosFornecedor', 'RF', 'fornecedorId', 'fornecedorNome'] : ['RecibosVenda', 'REC', 'clienteId', 'clienteNome'];
+        }
+        // Regista um pagamento (total ou parcial), emite o recibo correspondente e dá baixa quando fica tudo pago
+        async function registarPagamentoDoc(colecaoOrigem, fatura, valor, data, modo, nota) {
+            const [colRec, pref, campoId, campoNome] = cfgReciboDe(colecaoOrigem);
+            const numero = await proximoNumeroDocumento(colRec, pref);
+            const pagamentos = [...(fatura.pagamentos || []), { valor, data, modo: modo || '', nota: nota || '', recibo: numero }];
+            const valorPago = Math.round(((Number(fatura.valorPago) || 0) + valor) * 100) / 100;
+            const quitada = valorPago >= (Number(fatura.total) || 0) - 0.005;
+            await addDoc(collection(db, colRec), {
+                numero, faturaId: fatura.id, faturaNumero: fatura.numero, colecaoOrigem,
+                [campoId]: fatura[campoId] || null, [campoNome]: fatura[campoNome] || '',
+                total: valor, modoPagamento: modo || '', parcial: !quitada, data, criadoEm: new Date().toISOString()
+            });
+            const upd = { pagamentos, valorPago };
+            if (quitada) upd.status = 'Pago';
+            await updateDoc(doc(db, colecaoOrigem, fatura.id), upd);
+            return quitada;
+        }
+        window.registarPagamentoParcial = function(colecao, id) {
+            const f = (dadosCadastrados[colecao] || []).find(x => x.id === id); if (!f) return;
+            const restante = Math.max(0, (Number(f.total) || 0) - (Number(f.valorPago) || 0));
+            document.getElementById('dynamic-fields').innerHTML = `
+                <p style="font-size:0.9rem; margin-bottom:12px;">${escapeHTML(f.numero)} — Total <strong>${formatMoeda(f.total)}</strong> · Já pago ${formatMoeda(f.valorPago || 0)} · <strong>Em dívida ${formatMoeda(restante)}</strong></p>
+                <div class="form-group"><label>Valor desta prestação (€)</label><input type="number" id="pp-valor" class="form-control" min="0.01" max="${restante.toFixed(2)}" step="0.01" value="${restante.toFixed(2)}"></div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1; min-width:140px;"><label>Data</label><input type="date" id="pp-data" class="form-control" value="${hojeISO()}"></div>
+                    <div class="form-group" style="flex:1; min-width:140px;"><label>Modo de pagamento</label><select id="pp-modo" class="form-control">${['Numerário', 'Multibanco', 'Transferência', 'Cheque', 'MB Way'].map(m => `<option ${f.pagamento === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
+                </div>
+                <div class="form-group"><label>Nota (opcional)</label><input type="text" id="pp-nota" class="form-control" placeholder="Ex: 1.ª prestação"></div>
+                ${anexoPagamentosHtml(f)}`;
+            document.getElementById('modal-titulo').innerText = 'Registar pagamento (parcial)';
+            document.getElementById('btn-guardar-texto').innerText = 'Registar pagamento';
+            abrirModal('600px');
+            salvarEspecialAtual = async function() {
+                const valor = Math.round((parseFloat(document.getElementById('pp-valor').value) || 0) * 100) / 100;
+                if (valor <= 0 || valor > restante + 0.005) { mostrarAlertaCustomizado(`Indique um valor entre 0,01 € e ${formatMoeda(restante)}.`, 'Atenção'); return; }
+                const btn = document.getElementById('btn-guardar-texto'); btn.disabled = true; btn.innerText = 'A guardar...';
+                try {
+                    const quitada = await registarPagamentoDoc(colecao, f, valor, document.getElementById('pp-data').value || hojeISO(), document.getElementById('pp-modo').value, document.getElementById('pp-nota').value.trim());
+                    fecharModal();
+                    mostrarAlertaCustomizado(quitada ? 'Pagamento registado. Documento totalmente pago!' : 'Pagamento registado e recibo emitido. O documento continua pendente pelo valor em dívida.', 'Sucesso');
+                } catch (e) { mostrarAlertaCustomizado('Erro ao registar pagamento.', 'Erro'); btn.disabled = false; btn.innerText = 'Registar pagamento'; }
+            };
+        }
+
+        /* ----- Criar artigo inexistente a partir da fatura de fornecedor ----- */
+        function painelCriarArtigoHtml() {
+            const ent = `onkeydown="if(event.key==='Enter'){event.preventDefault(); criarArtigoRapido();}"`;
+            return `<div style="margin:6px 0 10px;"><button type="button" class="btn-cancelar" onclick="const p=document.getElementById('qa-painel'); p.style.display = p.style.display === 'none' ? 'block' : 'none';">+ Criar artigo inexistente</button>
+                <div id="qa-painel" style="display:none; margin-top:10px; padding:12px; border:1px dashed var(--border); border-radius:10px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+                        <div class="form-group" style="flex:1; min-width:110px;"><label>Código</label><input type="text" id="qa-codigo" class="form-control" ${ent}></div>
+                        <div class="form-group" style="flex:2; min-width:200px;"><label>Descrição</label><input type="text" id="qa-desc" class="form-control" ${ent}></div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label>Custo (€)</label><input type="number" id="qa-custo" class="form-control" min="0" step="0.01" value="0" ${ent}></div>
+                        <div class="form-group" style="flex:1; min-width:100px;"><label>Margem (%)</label><input type="number" id="qa-margem" class="form-control" min="0" step="0.01" value="0" ${ent}></div>
+                        <div class="form-group"><button type="button" class="btn-salvar" onclick="criarArtigoRapido()">Criar e selecionar</button></div>
+                    </div>
+                    <p style="margin:4px 0 0; font-size:0.78rem; color:var(--text-muted);">O artigo é criado com stock 0 (o stock entra ao guardar esta fatura). Os restantes preços podem ser ajustados depois na página Artigos.</p>
+                </div></div>`;
+        }
+        window.criarArtigoRapido = async function() {
+            const cod = document.getElementById('qa-codigo').value.trim(), desc = document.getElementById('qa-desc').value.trim();
+            const custo = parseFloat(document.getElementById('qa-custo').value) || 0, margem = parseFloat(document.getElementById('qa-margem').value) || 0;
+            if (!cod || !desc) { mostrarAlertaCustomizado('Indique o código e a descrição do novo artigo.', 'Atenção'); return; }
+            if ((dadosCadastrados['Artigos'] || []).some(a => (a.codigo || '').toLowerCase() === cod.toLowerCase())) { mostrarAlertaCustomizado('Já existe um artigo com este código. Escreva o código no campo "Código" da fatura para o selecionar.', 'Atenção'); return; }
+            const novo = { codigo: cod, descricao: desc, categoria: '', precos: [1, 2, 3, 4, 5].map(() => ({ custo, margem, iva: 0 })), stock: 0, stockArm: {}, stockMinimo: null, criadoEm: new Date().toISOString(), atualizadoEm: new Date().toISOString() };
+            try {
+                const ref = await addDoc(collection(db, 'Artigos'), novo);
+                if (!dadosCadastrados['Artigos'].some(a => a.id === ref.id)) dadosCadastrados['Artigos'].push({ id: ref.id, ...novo });
+                const sel = document.getElementById('doc-artigo');
+                if (sel) { sel.insertAdjacentHTML('beforeend', `<option value="${ref.id}">${escapeHTML(textoArtigo(novo))} (Stock total: 0)</option>`); sel.value = ref.id; }
+                const cd = document.getElementById('doc-codigo'); if (cd) cd.value = cod;
+                sugerirPrecoItemDocumento('doc', 'custo');
+                ['qa-codigo', 'qa-desc'].forEach(i => { document.getElementById(i).value = ''; }); document.getElementById('qa-painel').style.display = 'none';
+            } catch (e) { mostrarAlertaCustomizado('Erro ao criar o artigo.', 'Erro'); }
+        }
+
         /* ----- Registo genérico de documentos com itens (Faturas, Guias, Notas...) ----- */
         const DOCUMENTOS_REGISTRY = {};
         function registrarDocumentoComItens(chave, cfg) {
@@ -1893,13 +2005,13 @@
                     let html = `<table class="elegant-table"><thead><tr><th>Número</th>${cfg.exigeCliente ? `<th>${cfg.entidadeLabel || 'Cliente'}</th>` : ''}<th>Data</th><th>Total</th><th>Status</th><th style="width:140px;">Ações</th></tr></thead><tbody>`;
                     [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
                         html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)">
-                            <td>${escapeHTML(item.numero)}</td>${cfg.exigeCliente ? `<td>${escapeHTML(item[campoNome] || '-')}</td>` : ''}<td>${formatDataPt(item.data)}</td><td>${formatMoeda(item.total)}</td><td>${badgeStatus(item.status)}</td>
-                            <td><div class="action-buttons">${botoesDoc(chave, item)}${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (dar baixa)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.orcamentoFn ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.orcamentoFn}('${item.id}')" title="Gerar Orçamento"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
+                            <td>${escapeHTML(item.numero)}</td>${cfg.exigeCliente ? `<td>${escapeHTML(item[campoNome] || '-')}</td>` : ''}<td>${formatDataPt(item.data)}</td><td>${formatMoeda(item.total)}</td><td>${badgeStatus(item.status)}${item.status === 'Pendente' && Number(item.valorPago) > 0 ? `<div style="font-size:.75rem;color:var(--text-muted);">Pago ${formatMoeda(item.valorPago)} · Em dívida ${formatMoeda((Number(item.total) || 0) - Number(item.valorPago))}</div>` : ''}</td>
+                            <td><div class="action-buttons">${botoesDoc(chave, item)}${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.reciboFn}('${cfg.collection}','${item.id}')" title="Emitir Recibo (pagar o que falta)"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${cfg.reciboFn && item.status === 'Pendente' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); registarPagamentoParcial('${cfg.collection}','${item.id}')" title="Pagamento parcial (anexo da fatura)"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg></button>` : ''}${cfg.orcamentoFn ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.orcamentoFn}('${item.id}')" title="Gerar Orçamento"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></button>` : ''}${cfg.converterFn && item.status === 'Em Aberto' ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); ${cfg.converterFn}('${item.id}')" title="Converter em Fatura"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>` : ''}${botaoExcluirNovo(cfg.collection, item.id)}</div></td>
                         </tr>
-                        <tr id="det-${item.id}" class="details-row"><td colspan="${cfg.exigeCliente ? 6 : 5}" style="padding:10px 20px;">${detalheItensHtml(item)}</td></tr>`;
+                        <tr id="det-${item.id}" class="details-row"><td colspan="${cfg.exigeCliente ? 6 : 5}" style="padding:10px 20px;">${detalheItensHtml(item)}${anexoPagamentosHtml(item)}</td></tr>`;
                     });
                     html += `</tbody></table>`;
-                    display.innerHTML = barraDocs(chave) + html;
+                    display.innerHTML = barraDocs(chave, null, cfg.ligarArtigos ? `<button type="button" class="btn-cancelar" onclick="irParaTela('Tabelas','Artigos','Artigos')" title="Ver a página Artigos para alterar preços">Abrir Artigos (alterar preços)</button>` : '') + html;
                     if (document.activeElement && document.activeElement.id === 'pesq-docs') manterFoco('pesq-docs');
                 },
                 cadastro: function() {
@@ -1914,6 +2026,7 @@
                             <div class="form-group" style="flex:1; min-width:150px;"><label>Modo de pagamento</label><select id="doc-pagamento" class="form-control"><option value="">-</option><option>Numerário</option><option>Multibanco</option><option>Transferência</option><option>Cheque</option><option>MB Way</option></select></div>
                         </div>
                         <h3 style="font-size:0.95rem; margin: 14px 0 8px; color: var(--primary);">Artigos</h3>
+                        ${cfg.criarArtigo ? painelCriarArtigoHtml() : ''}
                         ${renderSeletorArtigoDocumento('doc', cfg.movimentoStock, cfg.precoSelecionavel, { material: cfg.material, imagem: cfg.materialImagem })}
                     `;
                     document.getElementById('modal-titulo').innerText = `Novo(a) ${cfg.singular}`;
@@ -1944,6 +2057,7 @@
                             if (cfg.movimentoStock !== 'nenhum') { await aplicarMovimentoStock(itensDocumentoTemp, cfg.movimentoStock); }
                             mostrarAlertaCustomizado(`${cfg.singular} guardado(a) com sucesso!`, 'Sucesso');
                             fecharModal();
+                            if (cfg.ligarArtigos) setTimeout(() => { if (confirm('Quer abrir agora a página Artigos para rever / alterar os preços dos artigos desta fatura?')) irParaTela('Tabelas', 'Artigos', 'Artigos'); }, 500);
                         } catch (e) { mostrarAlertaCustomizado('Erro ao guardar documento.', 'Erro'); btnSalvar.disabled = false; btnSalvar.innerText = `Guardar ${cfg.singular}`; }
                     };
                 }
@@ -1954,14 +2068,9 @@
         async function emitirRecibo(colecaoOrigem, faturaId, colecaoRecibo, prefixo, campoId, campoNome) {
             const fatura = dadosCadastrados[colecaoOrigem].find(f => f.id === faturaId);
             if (!fatura) return;
+            const restante = Math.max(0, Math.round(((Number(fatura.total) || 0) - (Number(fatura.valorPago) || 0)) * 100) / 100);
             try {
-                const numero = await proximoNumeroDocumento(colecaoRecibo, prefixo);
-                await addDoc(collection(db, colecaoRecibo), {
-                    numero, faturaId, faturaNumero: fatura.numero, colecaoOrigem,
-                    [campoId]: fatura[campoId] || null, [campoNome]: fatura[campoNome] || '',
-                    total: fatura.total, data: hojeISO(), criadoEm: new Date().toISOString()
-                });
-                await updateDoc(doc(db, colecaoOrigem, faturaId), { status: 'Pago' });
+                await registarPagamentoDoc(colecaoOrigem, fatura, restante, hojeISO(), fatura.pagamento || '', '');
                 mostrarAlertaCustomizado('Recibo emitido e documento marcado como pago!', 'Sucesso');
             } catch (e) { mostrarAlertaCustomizado('Erro ao emitir recibo.', 'Erro'); }
         }
@@ -1973,26 +2082,147 @@
         registrarDocumentoComItens('Faturas-Recibo', { collection: 'FaturasRecibo', singular: 'Fatura-Recibo', prefixo: 'FR', exigeCliente: true, movimentoStock: 'saida', statusInicial: 'Pago', precoSelecionavel: true });
 
         /* ---- Documentos > Outros Documentos > Folha de Obra (1 cliente = 1 obra, sempre separadas) ---- */
+        let filtroObras = { t: '', s: '' };
+        const arred2 = v => Math.round((Number(v) || 0) * 100) / 100;
+        // Tudo o que é lançado numa Guia de Remessa / Nota de Crédito (da guia) / Horas de Serviço cai automaticamente na obra certa
+        function guiasDaObra(obraId) { return (dadosCadastrados['GuiaRemessa'] || []).filter(g => g.clienteId === obraId && g.status !== 'Anulada'); }
+        function notasCreditoDaObra(obraId) {
+            const ids = guiasDaObra(obraId).map(g => g.id);
+            return (dadosCadastrados['NotasCreditoVenda'] || []).filter(n => n.status !== 'Anulada' && (n.obraId === obraId || (n.origemColecao === 'GuiaRemessa' && ids.includes(n.origemId))));
+        }
+        function horasDaObra(obraId) { return (dadosCadastrados['Horas de Serviço'] || []).filter(h => h.obraId === obraId); }
+        function resumoObra(obra) {
+            const guias = guiasDaObra(obra.id), ncs = notasCreditoDaObra(obra.id), horas = horasDaObra(obra.id);
+            const linhas = [];
+            guias.forEach(g => {
+                const fator = 1 - (Number(g.desconto) || 0) / 100;
+                (g.itens || []).forEach(it => {
+                    const pu = arred2((Number(it.precoUnit) || 0) * fator), q = Number(it.quantidade) || 0;
+                    const ex = linhas.find(l => l.artigoId === it.artigoId && l.precoUnit === pu);
+                    if (ex) ex.quantidade += q; else linhas.push({ artigoId: it.artigoId, codigo: it.codigo, categoria: it.categoria, descricao: it.descricao || '', quantidade: q, precoUnit: pu });
+                });
+            });
+            ncs.forEach(n => (n.itens || []).forEach(it => {
+                let resta = Number(it.quantidade) || 0;
+                linhas.filter(l => l.artigoId === it.artigoId).forEach(l => { const t = Math.min(l.quantidade, resta); l.quantidade -= t; resta -= t; });
+            }));
+            const material = linhas.filter(l => l.quantidade > 0).map(l => ({ ...l, subtotal: arred2(l.quantidade * l.precoUnit) }));
+            const totalMaterial = arred2(material.reduce((t, l) => t + l.subtotal, 0));
+            const totalGuias = arred2(guias.reduce((t, g) => t + (Number(g.total) || 0), 0));
+            const totalNC = arred2(ncs.reduce((t, n) => t + (Number(n.valor) || 0), 0));
+            const totalHoras = horas.reduce((t, h) => t + (Number(h.horas) || 0), 0);
+            const valorHoras = arred2(horas.reduce((t, h) => t + (Number(h.horas) || 0) * (Number(h.precoHora) || 0), 0));
+            return { guias, ncs, horas, material, totalMaterial, totalGuias, totalNC, totalHoras, valorHoras, total: arred2(totalMaterial + valorHoras) };
+        }
+        window.filtrarObrasUI = function(t, st) {
+            if (t !== null) filtroObras.t = t; if (st !== null) filtroObras.s = st;
+            TELAS_ESPECIAIS['Folha de Obra'].render(document.getElementById('content-display'));
+            if (t !== null) manterFoco('pesq-obras');
+        }
+        function detalheObraHtml(obra) {
+            const r = resumoObra(obra);
+            const tab = (tit, cab, linhas) => `<div style="margin-bottom:12px;"><strong style="font-size:.85rem;">${tit}</strong>${linhas.length ? `<table class="inner-table" style="margin-top:6px;"><tr>${cab.map(c => `<th>${c}</th>`).join('')}</tr>${linhas.join('')}</table>` : `<div style="color:var(--text-muted);font-size:.85rem;">Nada associado.</div>`}</div>`;
+            return `${tab('Guias de Remessa', ['Número', 'Data', 'Total'], r.guias.map(g => `<tr><td>${escapeHTML(g.numero)}</td><td>${formatDataPt(g.data)}</td><td>${formatMoeda(g.total)}</td></tr>`))}
+                ${tab('Notas de Crédito (deduzidas)', ['Número', 'Data', 'Valor'], r.ncs.map(n => `<tr><td>${escapeHTML(n.numero)}</td><td>${formatDataPt(n.data)}</td><td>- ${formatMoeda(n.valor)}</td></tr>`))}
+                ${tab('Horas de Serviço', ['Data', 'Descrição', 'Horas', 'Preço/h', 'Valor'], r.horas.map(h => `<tr><td>${formatDataPt(h.data)}</td><td>${escapeHTML(h.descricao || '-')}</td><td>${Number(h.horas) || 0}</td><td>${formatMoeda(h.precoHora)}</td><td>${formatMoeda((Number(h.horas) || 0) * (Number(h.precoHora) || 0))}</td></tr>`))}
+                <div style="text-align:right;font-size:.9rem;line-height:1.7;">Material (guias): ${formatMoeda(r.totalGuias)}<br>Notas de crédito: - ${formatMoeda(r.totalNC)}<br>Mão de obra (${r.totalHoras} h): ${formatMoeda(r.valorHoras)}<br><strong style="font-size:1.05rem;">Total da obra: ${formatMoeda(r.total)}</strong>${obra.faturaNumero ? `<br><span style="color:var(--text-muted);">Faturada em ${escapeHTML(obra.faturaNumero)}</span>` : ''}</div>`;
+        }
         TELAS_ESPECIAIS['Folha de Obra'] = {
-            dependeDe: ['Fichas de Serviço'],
+            dependeDe: ['Fichas de Serviço', 'GuiaRemessa', 'NotasCreditoVenda', 'Horas de Serviço', 'Faturas'],
             render: function(display) {
-                const lista = dadosCadastrados['Fichas de Serviço'];
-                if (!lista || lista.length === 0) {
+                const todas = dadosCadastrados['Fichas de Serviço'];
+                if (!todas || todas.length === 0) {
                     display.style.textAlign = 'center'; display.style.padding = '40px';
                     display.innerHTML = `<div style="color: var(--text-muted);">Nenhuma folha de obra criada. Clique em <strong>+ Cadastrar</strong> para adicionar.</div>`;
                     return;
                 }
                 display.style.textAlign = 'left'; display.style.padding = '0';
-                let html = `<table class="elegant-table"><thead><tr><th>Cliente</th><th>Obra / Descrição</th><th>Data Início</th><th>Status</th><th style="width:100px;">Ações</th></tr></thead><tbody>`;
+                const t = filtroObras.t.trim().toLowerCase();
+                const lista = todas.filter(o => (!filtroObras.s || (filtroObras.s === 'Concluído' ? o.status === 'Concluído' : o.status !== 'Concluído')) && (!t || [o.clienteNome, o.descricao, o.status].join(' ').toLowerCase().includes(t)));
+                const nConc = todas.filter(o => o.status === 'Concluído').length, nAb = todas.length - nConc;
+                const chip = (v, txt, n) => `<button type="button" class="${filtroObras.s === v ? 'btn-salvar' : 'btn-cancelar'}" onclick="filtrarObrasUI(null, '${filtroObras.s === v ? '' : v}')">${txt} (${n})</button>`;
+                const barra = `<div style="padding:12px 16px; display:flex; gap:10px; flex-wrap:wrap; align-items:center; border-bottom:1px solid var(--border);"><input type="search" id="pesq-obras" class="form-control" placeholder="Pesquisar por cliente ou obra..." value="${escapeHTML(filtroObras.t)}" oninput="filtrarObrasUI(this.value, null)" style="max-width:320px;">${chip('Em Aberto', 'Em aberto', nAb)}${chip('Concluído', 'Concluídas', nConc)}</div>`;
+                let html = barra + `<table class="elegant-table"><thead><tr><th>Cliente</th><th>Obra / Descrição</th><th>Data Início</th><th>Total atual</th><th>Status</th><th style="width:130px;">Ações</th></tr></thead><tbody>`;
+                if (lista.length === 0) html += `<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px;">Nenhuma obra encontrada.</td></tr>`;
                 [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
-                    html += `<tr><td>${escapeHTML(item.clienteNome)}</td><td>${escapeHTML(item.descricao)}</td><td>${formatDataPt(item.dataInicio)}</td><td>${badgeStatus(item.status)}</td>
-                        <td><div class="action-buttons">${botaoEditarNovo('Fichas de Serviço', item.id)}${botaoExcluirNovo('Fichas de Serviço', item.id)}</div></td></tr>`;
+                    const r = resumoObra(item), aberta = item.status !== 'Concluído';
+                    html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)"><td>${escapeHTML(item.clienteNome)}</td><td>${escapeHTML(item.descricao)}</td><td>${formatDataPt(item.dataInicio)}</td><td>${formatMoeda(r.total)}</td><td>${badgeStatus(item.status)}</td>
+                        <td><div class="action-buttons">${aberta ? `<button class="btn-action btn-edit" onclick="event.stopPropagation(); concluirObra('${item.id}')" title="Concluir obra e gerar fatura"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"></path></svg></button>` : ''}${botaoEditarNovo('Fichas de Serviço', item.id)}${botaoExcluirNovo('Fichas de Serviço', item.id)}</div></td></tr>
+                        <tr id="det-${item.id}" class="details-row"><td colspan="6" style="padding:10px 20px;">${detalheObraHtml(item)}${aberta ? `<div style="text-align:right;margin-top:10px;"><button type="button" class="btn-salvar" onclick="concluirObra('${item.id}')">Concluir obra e gerar fatura</button></div>` : ''}</td></tr>`;
                 });
                 html += `</tbody></table>`;
                 display.innerHTML = html;
+                if (document.activeElement && document.activeElement.id === 'pesq-obras') manterFoco('pesq-obras');
             },
             cadastro: function() { abrirFormFichaServico(null); }
         };
+        // Concluir obra: material das guias - notas de crédito + total de horas => uma fatura com o total
+        window.concluirObra = async function(id) {
+            const obra = (dadosCadastrados['Fichas de Serviço'] || []).find(o => o.id === id);
+            if (!obra || obra.status === 'Concluído') return;
+            const r = resumoObra(obra);
+            if (r.material.length === 0 && r.valorHoras <= 0) { mostrarAlertaCustomizado('Esta obra ainda não tem material (guias de remessa) nem horas de serviço com valor.', 'Atenção'); return; }
+            if (!confirm(`Concluir a obra "${obra.descricao}" e gerar a fatura?\n\nMaterial (guias): ${formatMoeda(r.totalGuias)}\nNotas de crédito: - ${formatMoeda(r.totalNC)}\nMão de obra (${r.totalHoras} h): ${formatMoeda(r.valorHoras)}\nTOTAL: ${formatMoeda(r.total)}`)) return;
+            try {
+                const numero = await proximoNumeroDocumento('Faturas', 'FT');
+                const itens = r.material.map(l => ({ artigoId: l.artigoId, codigo: l.codigo, categoria: l.categoria, descricao: l.descricao, armazem: '', quantidade: l.quantidade, precoUnit: l.precoUnit, subtotal: l.subtotal }));
+                if (r.valorHoras > 0 || r.totalHoras > 0) {
+                    const pu = r.totalHoras > 0 ? arred2(r.valorHoras / r.totalHoras) : 0;
+                    itens.push({ artigoId: null, codigo: 'MO', categoria: 'Mão de obra', descricao: 'Horas de serviço', armazem: '', quantidade: r.totalHoras, precoUnit: pu, subtotal: r.valorHoras });
+                }
+                const total = arred2(itens.reduce((t, i) => t + i.subtotal, 0));
+                const ref = await addDoc(collection(db, 'Faturas'), { numero, data: hojeISO(), clienteId: obra.clienteId, clienteNome: obra.clienteNome, itens, subtotal: total, desconto: 0, total, pagamento: '', vendedorId: null, vendedorNome: '', status: 'Pendente', origemObraId: obra.id, obraDescricao: obra.descricao, semMovimentoStock: true, criadoEm: new Date().toISOString() });
+                await updateDoc(doc(db, 'Fichas de Serviço', id), { status: 'Concluído', faturaId: ref.id, faturaNumero: numero, concluidoEm: new Date().toISOString() });
+                mostrarAlertaCustomizado(`Obra concluída. Fatura ${numero} gerada no valor de ${formatMoeda(total)}.`, 'Sucesso');
+                setTimeout(() => { if ((dadosCadastrados['Faturas'] || []).some(f => f.id === ref.id)) imprimirDocumento('Faturas', ref.id); }, 900);
+            } catch (e) { mostrarAlertaCustomizado('Erro ao concluir a obra.', 'Erro'); }
+        }
+
+        /* ---- Documentos > Outros Documentos > Horas de Serviço (as horas entram na folha de obra correspondente) ---- */
+        TELAS_ESPECIAIS['Horas de Serviço'] = {
+            dependeDe: ['Horas de Serviço', 'Fichas de Serviço'],
+            render: function(display) {
+                const lista = dadosCadastrados['Horas de Serviço'] || [];
+                if (lista.length === 0) {
+                    display.style.textAlign = 'center'; display.style.padding = '40px';
+                    display.innerHTML = `<div style="color: var(--text-muted);">Nenhuma hora registada. Clique em <strong>+ Cadastrar</strong> para lançar horas numa folha de obra.</div>`;
+                    return;
+                }
+                display.style.textAlign = 'left'; display.style.padding = '0';
+                let html = `<table class="elegant-table"><thead><tr><th>Data</th><th>Obra</th><th>Descrição</th><th>Horas</th><th>Preço/h</th><th>Valor</th><th style="width:100px;">Ações</th></tr></thead><tbody>`;
+                [...lista].sort((a, b) => (b.data || '').localeCompare(a.data || '')).forEach(h => {
+                    html += `<tr><td>${formatDataPt(h.data)}</td><td>${escapeHTML(h.obraNome || '-')}</td><td>${escapeHTML(h.descricao || '-')}</td><td>${Number(h.horas) || 0}</td><td>${formatMoeda(h.precoHora)}</td><td>${formatMoeda((Number(h.horas) || 0) * (Number(h.precoHora) || 0))}</td><td><div class="action-buttons">${botaoEditarNovo('Horas de Serviço', h.id)}${botaoExcluirNovo('Horas de Serviço', h.id)}</div></td></tr>`;
+                });
+                display.innerHTML = html + `</tbody></table>`;
+            },
+            cadastro: function() { abrirFormHoras(null); }
+        };
+        EDITAR_ESPECIAL['Horas de Serviço'] = function(item) { abrirFormHoras(item); };
+        function abrirFormHoras(item) {
+            const obras = (dadosCadastrados['Fichas de Serviço'] || []).filter(o => o.status !== 'Concluído' || (item && item.obraId === o.id));
+            document.getElementById('dynamic-fields').innerHTML = `
+                <div class="form-group"><label for="hs-obra">Obra (Folha de Obra)</label><select id="hs-obra" class="form-control" required>${opcoesSelectNovo(obras.map(o => ({ value: o.id, label: `${o.clienteNome} - ${o.descricao}` })), item ? item.obraId : '', 'Selecione a obra...')}</select></div>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <div class="form-group" style="flex:1; min-width:130px;"><label for="hs-data">Data</label><input type="date" id="hs-data" class="form-control" value="${item ? item.data : hojeISO()}"></div>
+                    <div class="form-group" style="flex:1; min-width:110px;"><label for="hs-horas">Horas</label><input type="number" id="hs-horas" class="form-control" min="0.25" step="0.25" value="${item ? item.horas : 1}" required></div>
+                    <div class="form-group" style="flex:1; min-width:130px;"><label for="hs-preco">Preço por hora (€)</label><input type="number" id="hs-preco" class="form-control" min="0" step="0.01" value="${item ? (item.precoHora || 0) : 0}"></div>
+                </div>
+                <div class="form-group"><label for="hs-desc">Descrição</label><input type="text" id="hs-desc" class="form-control" placeholder="Ex: Instalação de quadro" value="${item ? escapeHTML(item.descricao || '') : ''}"></div>`;
+            document.getElementById('modal-titulo').innerText = item ? 'Editar Horas de Serviço' : 'Novas Horas de Serviço';
+            document.getElementById('btn-guardar-texto').innerText = item ? 'Atualizar' : 'Guardar';
+            abrirModal('560px');
+            salvarEspecialAtual = async function() {
+                const obraId = document.getElementById('hs-obra').value, horas = parseFloat(document.getElementById('hs-horas').value) || 0;
+                const obra = (dadosCadastrados['Fichas de Serviço'] || []).find(o => o.id === obraId);
+                if (!obra || horas <= 0) { mostrarAlertaCustomizado('Selecione a obra e indique as horas.', 'Atenção'); return; }
+                const btn = document.getElementById('btn-guardar-texto'); btn.disabled = true; btn.innerText = 'A guardar...';
+                const dados = { obraId, obraNome: `${obra.clienteNome} - ${obra.descricao}`, clienteId: obra.clienteId, data: document.getElementById('hs-data').value || hojeISO(), horas, precoHora: parseFloat(document.getElementById('hs-preco').value) || 0, descricao: document.getElementById('hs-desc').value.trim(), atualizadoEm: new Date().toISOString() };
+                try {
+                    if (item) await updateDoc(doc(db, 'Horas de Serviço', item.id), dados); else { dados.criadoEm = new Date().toISOString(); await addDoc(collection(db, 'Horas de Serviço'), dados); }
+                    mostrarAlertaCustomizado('Horas registadas na folha de obra!', 'Sucesso'); fecharModal();
+                } catch (e) { mostrarAlertaCustomizado('Erro ao guardar.', 'Erro'); btn.disabled = false; btn.innerText = item ? 'Atualizar' : 'Guardar'; }
+            };
+        }
         EDITAR_ESPECIAL['Fichas de Serviço'] = function(item) { abrirFormFichaServico(item); };
         function abrirFormFichaServico(item) {
             const opcoesCliente = opcoesSelectNovo(dadosCadastrados['Clientes'].map(c => ({ value: c.id, label: c.nome })), item ? item.clienteId : '', 'Selecione o cliente...');
@@ -2132,9 +2362,10 @@ tbody tr:nth-child(even){background:#fafafa}
             for (let k = 0; k < n; k++) {
                 if (repetir === 'semanal') datas.push(isoLocal(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 7 * k)));
                 else if (repetir === 'quinzenal') datas.push(isoLocal(new Date(base.getFullYear(), base.getMonth(), base.getDate() + 14 * k)));
-                else if (repetir === 'mensal') {
-                    const alvo = new Date(base.getFullYear(), base.getMonth() + k, 1);
-                    const ultimoDia = new Date(base.getFullYear(), base.getMonth() + k + 1, 0).getDate();
+                else if (['mensal', 'trimestral', 'semestral', 'anual'].includes(repetir)) {
+                    const passo = { mensal: 1, trimestral: 3, semestral: 6, anual: 12 }[repetir];
+                    const alvo = new Date(base.getFullYear(), base.getMonth() + k * passo, 1);
+                    const ultimoDia = new Date(base.getFullYear(), base.getMonth() + k * passo + 1, 0).getDate();
                     alvo.setDate(Math.min(base.getDate(), ultimoDia));
                     datas.push(isoLocal(alvo));
                 } else datas.push(dataISO);
@@ -2254,7 +2485,7 @@ tbody tr:nth-child(even){background:#fafafa}
             return `<div style="display:flex; gap:12px;">
                 <div class="form-group" style="flex:1;"><label for="av-repetir">Repetir</label>
                     <select id="av-repetir" class="form-control" onchange="document.getElementById('av-ocorr-wrap').style.display = this.value === 'nao' ? 'none' : 'block'">
-                        <option value="nao">Não repetir</option><option value="semanal">Semanalmente</option><option value="quinzenal">Quinzenalmente</option><option value="mensal">Mensalmente</option>
+                        <option value="nao">Não repetir</option><option value="semanal">Semanalmente</option><option value="quinzenal">Quinzenalmente</option><option value="mensal">Mensalmente</option><option value="trimestral">Trimestralmente</option><option value="semestral">Semestralmente</option><option value="anual">Anualmente</option>
                     </select></div>
                 <div class="form-group" id="av-ocorr-wrap" style="flex:1; display:none;"><label for="av-ocorr">Nº de ocorrências</label><input type="number" id="av-ocorr" class="form-control" min="2" max="60" value="12"></div>
             </div>`;
@@ -2372,6 +2603,33 @@ tbody tr:nth-child(even){background:#fafafa}
         }
 
         /* ---- Documentos > Liquidações > Recibos (gerados a partir de Faturas pendentes) ---- */
+        window.imprimirRecibo = function(colecao, id) {
+            const r = (dadosCadastrados[colecao] || []).find(x => x.id === id); if (!r) return;
+            const forn = colecao === 'RecibosFornecedor';
+            const nome = (forn ? r.fornecedorNome : r.clienteNome) || '-';
+            const ent = (dadosCadastrados[forn ? 'Fornecedores' : 'Clientes'] || []).find(x => x.id === (forn ? r.fornecedorId : r.clienteId)) || {};
+            const emp = (typeof dadosEmpresa !== 'undefined' && dadosEmpresa) || {};
+            const texto = forn
+                ? `Declara-se que foi paga ao fornecedor <strong>${escapeHTML(nome)}</strong> a quantia de <strong>${formatMoeda(r.total)}</strong>, referente à fatura <strong>${escapeHTML(r.faturaNumero || '')}</strong>.`
+                : `Recebemos de <strong>${escapeHTML(nome)}</strong> a quantia de <strong>${formatMoeda(r.total)}</strong>, referente à fatura <strong>${escapeHTML(r.faturaNumero || '')}</strong>.`;
+            const fat = (dadosCadastrados[r.colecaoOrigem] || []).find(x => x.id === r.faturaId);
+            const emDivida = fat && fat.status !== 'Pago' ? Math.max(0, (Number(fat.total) || 0) - (Number(fat.valorPago) || 0)) : 0;
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHTML(r.numero)}</title><style>
+                body{font-family:Arial,sans-serif;font-size:13px;color:#111;margin:0;padding:34px;background:#fff}
+                .topo{display:flex;justify-content:space-between;gap:30px}.emp{line-height:1.5}.doc{width:300px}
+                .lb{font-weight:700;border-top:1px solid #111;padding-top:3px;margin-bottom:2px}
+                .box{margin-top:50px;border:2px solid #111;border-radius:6px;padding:22px;line-height:1.8;font-size:14px}
+                .pago{display:inline-block;margin-top:18px;border:3px solid #15803d;color:#15803d;font-weight:800;font-size:20px;padding:4px 18px;border-radius:6px;letter-spacing:2px;transform:rotate(-4deg)}
+                .pend{margin-top:14px;font-weight:700}
+                </style></head><body>
+                <div class="topo"><div class="emp"><strong style="font-size:16px">${escapeHTML(emp.nome || emp.empresa || '')}</strong><br>${escapeHTML(emp.morada || '')}${emp.codigoPostal ? '<br>' + escapeHTML(emp.codigoPostal) : ''}${emp.nif ? '<br>NIF ' + escapeHTML(emp.nif) : ''}</div>
+                <div class="doc"><div class="lb">Recibo</div><div style="font-size:15px;margin-bottom:8px">${escapeHTML(r.numero)}</div><div class="lb">Data</div>${escapeHTML(formatDataPt(r.data))}${r.modoPagamento ? `<div class="lb" style="margin-top:8px">Modo de pagamento</div>${escapeHTML(r.modoPagamento)}` : ''}</div></div>
+                <div class="box"><div style="margin-bottom:6px"><strong>${forn ? 'Fornecedor' : 'Cliente'}:</strong> ${escapeHTML(nome)}${ent.nif ? ' · NIF ' + escapeHTML(ent.nif) : ''}${ent.morada ? '<br>' + escapeHTML([ent.morada, ent.codigoPostal].filter(Boolean).join(', ')) : ''}</div>
+                <div>${texto}</div>
+                ${emDivida > 0.004 ? `<div class="pend">Pagamento parcial — valor ainda em dívida: ${formatMoeda(emDivida)}</div>` : `<div class="pago">PAGO</div>`}</div>
+                </body></html>`;
+            abrirPreVisualizacao(html, r.numero);
+        }
         TELAS_ESPECIAIS['Recibos'] = {
             dependeDe: ['RecibosVenda'],
             render: function(display) {
@@ -2382,9 +2640,9 @@ tbody tr:nth-child(even){background:#fafafa}
                     return;
                 }
                 display.style.textAlign = 'left'; display.style.padding = '0';
-                let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>Cliente</th><th>Fatura de Origem</th><th>Total</th><th>Data</th></tr></thead><tbody>`;
+                let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>Cliente</th><th>Fatura de Origem</th><th>Total</th><th>Modo</th><th>Data</th><th style="width:80px;">Ações</th></tr></thead><tbody>`;
                 [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
-                    html += `<tr><td>${escapeHTML(item.numero)}</td><td>${escapeHTML(item.clienteNome || '-')}</td><td>${escapeHTML(item.faturaNumero)}</td><td>${formatMoeda(item.total)}</td><td>${formatDataPt(item.data)}</td></tr>`;
+                    html += `<tr><td>${escapeHTML(item.numero)}${item.parcial ? ' <span class="badge badge-warning">Parcial</span>' : ''}</td><td>${escapeHTML(item.clienteNome || '-')}</td><td>${escapeHTML(item.faturaNumero)}</td><td>${formatMoeda(item.total)}</td><td>${escapeHTML(item.modoPagamento || '-')}</td><td>${formatDataPt(item.data)}</td><td><div class="action-buttons"><button class="btn-action btn-edit" onclick="imprimirRecibo('RecibosVenda','${item.id}')" title="Ver / Imprimir / PDF"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"></path></svg></button></div></td></tr>`;
                 });
                 html += `</tbody></table>`;
                 display.innerHTML = html;
@@ -2406,7 +2664,7 @@ tbody tr:nth-child(even){background:#fafafa}
         function quantidadesJaDevolvidas(cfg, colecaoOrigem, docId) {
             const porArtigo = {};
             (cfg.devolucaoColecoes || [cfg.collection]).forEach(col => {
-                (dadosCadastrados[col] || []).filter(d => d.origemColecao === colecaoOrigem && d.origemId === docId).forEach(d => {
+                (dadosCadastrados[col] || []).filter(d => d.status !== 'Anulada' && d.origemColecao === colecaoOrigem && d.origemId === docId).forEach(d => {
                     (d.itens || []).forEach(i => { porArtigo[i.artigoId] = (porArtigo[i.artigoId] || 0) + i.quantidade; });
                 });
             });
@@ -2439,10 +2697,13 @@ tbody tr:nth-child(even){background:#fafafa}
             });
             html += `</table>`;
             if (linhas.every(l => l.disponivel === 0)) html += `<p style="color:var(--text-muted); font-size:0.85rem; margin-top:8px;">Todos os artigos deste documento já foram devolvidos.</p>`;
+            html += `<div class="form-group" style="max-width:180px; margin-top:12px;"><label>Desconto (%)</label><input type="number" id="devolucao-desconto" class="form-control" min="0" max="100" step="0.01" value="${Number(origem.desconto) || 0}"></div>`;
             areaItens.innerHTML = html;
         }
         function registrarNotaDevolucao(chave, cfg) {
             DEVOLUCAO_REGISTRY[chave] = cfg;
+            // Mesmas ferramentas das faturas: ver / imprimir / PDF e anular (repõe o stock ao anular)
+            DOCUMENTOS_REGISTRY[chave] = { collection: cfg.collection, singular: cfg.singular, entidadeLabel: cfg.entidadeLabel, entidadeCollection: cfg.entidadeLabel === 'Fornecedor' ? 'Fornecedores' : 'Clientes', campoEntidadeId: 'entidadeId', movimentoStock: cfg.movimentoStock };
             TELAS_ESPECIAIS[chave] = {
                 dependeDe: [cfg.collection],
                 render: function(display) {
@@ -2453,19 +2714,21 @@ tbody tr:nth-child(even){background:#fafafa}
                         return;
                     }
                     display.style.textAlign = 'left'; display.style.padding = '0';
-                    let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>${cfg.entidadeLabel}</th><th>Documento Origem</th><th>Valor</th><th>Data</th><th style="width:70px;">Ações</th></tr></thead><tbody>`;
-                    [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
-                        html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)"><td>${escapeHTML(item.numero)}</td><td>${escapeHTML(item.entidadeNome || '-')}</td><td>${escapeHTML(item.origemNumero)}</td><td>${formatMoeda(item.valor)}</td><td>${formatDataPt(item.data)}</td>
-                            <td><div class="action-buttons">${botaoExcluirNovo(cfg.collection, item.id)}</div></td></tr>
-                            <tr id="det-${item.id}" class="details-row"><td colspan="6" style="padding:10px 20px;">${detalheItensHtml(item)}</td></tr>`;
+                    const listaF = filtrarDocs(chave, lista);
+                    let html = barraDocs(chave, ['', 'Anulada']) + `<table class="elegant-table"><thead><tr><th>Número</th><th>${cfg.entidadeLabel}</th><th>Documento Origem</th><th>Valor</th><th>Data</th><th>Estado</th><th style="width:120px;">Ações</th></tr></thead><tbody>`;
+                    [...listaF].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
+                        html += `<tr class="clickable-row" onclick="toggleLinhaDetalhes('det-${item.id}', event)"><td>${escapeHTML(item.numero)}</td><td>${escapeHTML(item.entidadeNome || '-')}</td><td>${escapeHTML(item.origemNumero)}</td><td>${formatMoeda(item.valor)}</td><td>${formatDataPt(item.data)}</td><td>${badgeStatus(item.status || 'Emitida')}</td>
+                            <td><div class="action-buttons">${botoesDoc(chave, item)}${botaoExcluirNovo(cfg.collection, item.id)}</div></td></tr>
+                            <tr id="det-${item.id}" class="details-row"><td colspan="7" style="padding:10px 20px;">${detalheItensHtml(item)}</td></tr>`;
                     });
                     html += `</tbody></table>`;
                     display.innerHTML = html;
+                    if (document.activeElement && document.activeElement.id === 'pesq-docs') manterFoco('pesq-docs');
                 },
                 cadastro: function() {
                     devolucaoContextoTemp = null;
                     // Só documentos com cliente/fornecedor podem gerar crédito
-                    const origens = listaDocumentosCombinados(cfg.origemColecoes).filter(d => !cfg.creditoCollection || d[cfg.campoEntidadeId]);
+                    const origens = listaDocumentosCombinados(cfg.origemColecoes).filter(d => d.status !== 'Anulada' && (!cfg.creditoCollection || d[cfg.campoEntidadeId]));
                     const opcoes = origens.map(d => ({ value: `${d._colecao}::${d.id}`, label: `${d.numero} - ${d[cfg.campoEntidadeNome] || 'Sem ' + cfg.entidadeLabel} (${formatMoeda(d.total)})` }));
                     document.getElementById('dynamic-fields').innerHTML = `
                         <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">${cfg.explicacao}</p>
@@ -2486,14 +2749,17 @@ tbody tr:nth-child(even){background:#fafafa}
                             if (qtd > 0) itensDevolvidos.push({ ...base, quantidade: qtd, subtotal: qtd * base.precoUnit });
                         }
                         if (itensDevolvidos.length === 0) { mostrarAlertaCustomizado('Indique a quantidade a devolver de pelo menos um artigo.', 'Atenção'); return; }
-                        const valor = itensDevolvidos.reduce((s, i) => s + i.subtotal, 0);
+                        const subtotalDev = itensDevolvidos.reduce((s, i) => s + i.subtotal, 0);
+                        const campoDescDev = document.getElementById('devolucao-desconto');
+                        const descontoDev = Math.min(100, Math.max(0, parseFloat(campoDescDev ? campoDescDev.value : 0) || 0));
+                        const valor = subtotalDev * (1 - descontoDev / 100);
                         const btnSalvar = document.getElementById('btn-guardar-texto'); btnSalvar.disabled = true; btnSalvar.innerText = "A guardar...";
                         try {
                             const numero = await proximoNumeroDocumento(cfg.collection, cfg.prefixo);
                             await addDoc(collection(db, cfg.collection), {
                                 numero, entidadeId: devolucaoContextoTemp.entidadeId, entidadeNome: devolucaoContextoTemp.entidadeNome,
                                 origemColecao: devolucaoContextoTemp.colecaoOrigem, origemId: devolucaoContextoTemp.docId, origemNumero: devolucaoContextoTemp.origemNumero,
-                                itens: itensDevolvidos, valor, data: hojeISO(), criadoEm: new Date().toISOString()
+                                itens: itensDevolvidos, subtotal: subtotalDev, desconto: descontoDev, valor, status: 'Emitida', obraId: devolucaoContextoTemp.colecaoOrigem === 'GuiaRemessa' ? devolucaoContextoTemp.entidadeId : null, data: hojeISO(), criadoEm: new Date().toISOString()
                             });
                             await aplicarMovimentoStock(itensDevolvidos, cfg.movimentoStock);
                             // (crédito calculado a partir das notas; ver creditoDaEntidade)
@@ -2506,7 +2772,7 @@ tbody tr:nth-child(even){background:#fafafa}
         }
         registrarNotaDevolucao('Notas de Crédito', {
             collection: 'NotasCreditoVenda', singular: 'Nota de Crédito', prefixo: 'NC',
-            origemColecoes: ['Faturas', 'FaturasSimplificadas', 'FaturasRecibo'], devolucaoColecoes: ['NotasCreditoVenda', 'Devoluções Pagamento'],
+            origemColecoes: ['Faturas', 'FaturasSimplificadas', 'FaturasRecibo', 'GuiaRemessa'], devolucaoColecoes: ['NotasCreditoVenda', 'Devoluções Pagamento'],
             campoEntidadeId: 'clienteId', campoEntidadeNome: 'clienteNome', entidadeLabel: 'Cliente',
             movimentoStock: 'entrada', creditoCollection: 'Clientes', creditoCampo: 'saldoCredito',
             alternativa: 'Use "Devoluções Pagamento" para reembolsar o valor.',
@@ -2535,7 +2801,7 @@ tbody tr:nth-child(even){background:#fafafa}
             collection: 'FaturasFornecedor', singular: 'Fatura de Fornecedor', prefixo: 'FTF',
             exigeCliente: true, entidadeCollection: 'Fornecedores', entidadeLabel: 'Fornecedor',
             campoEntidadeId: 'fornecedorId', campoEntidadeNome: 'fornecedorNome',
-            movimentoStock: 'entrada', statusInicial: 'Pendente', reciboFn: 'emitirReciboFornecedor', precoSelecionavel: 'custo', material: true
+            movimentoStock: 'entrada', statusInicial: 'Pendente', reciboFn: 'emitirReciboFornecedor', precoSelecionavel: 'custo', material: true, criarArtigo: true, ligarArtigos: true
         });
         registrarDocumentoComItens('Fornecedores::Faturas Recibo', {
             collection: 'FaturasSimplificadasFornecedor', singular: 'Fatura Recibo de Fornecedor', prefixo: 'FSF',
@@ -2567,9 +2833,9 @@ tbody tr:nth-child(even){background:#fafafa}
                     return;
                 }
                 display.style.textAlign = 'left'; display.style.padding = '0';
-                let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>Fornecedor</th><th>Fatura de Origem</th><th>Total</th><th>Data</th></tr></thead><tbody>`;
+                let html = `<table class="elegant-table"><thead><tr><th>Número</th><th>Fornecedor</th><th>Fatura de Origem</th><th>Total</th><th>Modo</th><th>Data</th><th style="width:80px;">Ações</th></tr></thead><tbody>`;
                 [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
-                    html += `<tr><td>${escapeHTML(item.numero)}</td><td>${escapeHTML(item.fornecedorNome || '-')}</td><td>${escapeHTML(item.faturaNumero)}</td><td>${formatMoeda(item.total)}</td><td>${formatDataPt(item.data)}</td></tr>`;
+                    html += `<tr><td>${escapeHTML(item.numero)}${item.parcial ? ' <span class="badge badge-warning">Parcial</span>' : ''}</td><td>${escapeHTML(item.fornecedorNome || '-')}</td><td>${escapeHTML(item.faturaNumero)}</td><td>${formatMoeda(item.total)}</td><td>${escapeHTML(item.modoPagamento || '-')}</td><td>${formatDataPt(item.data)}</td><td><div class="action-buttons"><button class="btn-action btn-edit" onclick="imprimirRecibo('RecibosFornecedor','${item.id}')" title="Ver / Imprimir / PDF"><svg viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"></path></svg></button></div></td></tr>`;
                 });
                 html += `</tbody></table>`;
                 display.innerHTML = html;
@@ -2659,9 +2925,9 @@ tbody tr:nth-child(even){background:#fafafa}
                     display.innerHTML = cards + `<div style="color: var(--text-muted); text-align:center; padding:30px;">Nenhuma nota de quebra registada. Clique em <strong>+ Cadastrar</strong> para retirar do stock um artigo queimado, quebrado ou desperdiçado.</div>`;
                     return;
                 }
-                let html = cards + `<table class="elegant-table"><thead><tr><th>Artigo</th><th>Armazém</th><th>Qtd</th><th>Motivo</th><th>Custo Unit.</th><th>Valor Perdido</th><th>Data</th></tr></thead><tbody>`;
+                let html = cards + `<table class="elegant-table"><thead><tr><th>Artigo</th><th>Armazém</th><th>Qtd</th><th>Motivo</th><th>Custo Unit.</th><th>Valor Perdido</th><th>Data</th><th style="width:70px;">Ações</th></tr></thead><tbody>`;
                 [...lista].sort((a, b) => (b.criadoEm || '').localeCompare(a.criadoEm || '')).forEach(item => {
-                    html += `<tr><td>${escapeHTML(item.codigo)} - ${escapeHTML(item.categoria)}</td><td>${escapeHTML(item.armazem || '-')}</td><td>${item.quantidade}</td><td>${escapeHTML(item.motivo)}</td><td>${formatMoeda(custoUnitQuebra(item))}</td><td style="font-weight:700;">${formatMoeda(valorQuebra(item))}</td><td>${formatDataPt(item.data)}</td></tr>`;
+                    html += `<tr><td>${escapeHTML(item.codigo)} - ${escapeHTML(item.categoria)}</td><td>${escapeHTML(item.armazem || '-')}</td><td>${item.quantidade}</td><td>${escapeHTML(item.motivo)}</td><td>${formatMoeda(custoUnitQuebra(item))}</td><td style="font-weight:700;">${formatMoeda(valorQuebra(item))}</td><td>${formatDataPt(item.data)}</td><td><div class="action-buttons">${botaoEditarNovo('Nota de Quebra', item.id)}</div></td></tr>`;
                 });
                 html += `</tbody></table>`;
                 display.innerHTML = html;
@@ -2674,7 +2940,7 @@ tbody tr:nth-child(even){background:#fafafa}
                     <div class="form-group"><label for="nq-armazem">Armazém</label><select id="nq-armazem" class="form-control" required>${opcoesArmazemHtml(null, '')}</select></div>
                     <div class="form-group"><label for="nq-qtd">Quantidade</label><input type="number" id="nq-qtd" class="form-control" min="1" step="1" value="1" required></div>
                     <div class="form-group"><label for="nq-custo">Custo unitário (valor perdido por unidade)</label><select id="nq-custo" class="form-control"><option value="0">Selecione o artigo primeiro...</option></select></div>
-                    <div class="form-group"><label for="nq-motivo">Motivo</label><select id="nq-motivo" class="form-control"><option value="Queimou">Queimou</option><option value="Quebrou">Quebrou</option><option value="Desperdício">Desperdício</option></select></div>
+                    <div class="form-group"><label for="nq-motivo">Motivo</label><div style="display:flex; gap:8px;"><select id="nq-motivo" class="form-control" style="flex:1;">${opcoesMotivoQuebra('')}</select><button type="button" class="btn-cancelar" onclick="novoMotivoQuebra('nq-motivo')">+ Novo motivo</button></div></div>
                 `;
                 document.getElementById('modal-titulo').innerText = 'Nova Nota de Quebra';
                 document.getElementById('btn-guardar-texto').innerText = 'Guardar';
@@ -2699,6 +2965,37 @@ tbody tr:nth-child(even){background:#fafafa}
             }
         };
 
+        /* ---- Nota de Quebra: motivos personalizáveis ---- */
+        function motivosQuebraLista() {
+            const base = ['Queimou', 'Quebrou', 'Desperdício'];
+            const extra = (dadosCadastrados['Motivos de Quebra'] || []).map(m => m.nome).filter(Boolean);
+            const usados = (dadosCadastrados['Nota de Quebra'] || []).map(q => q.motivo).filter(Boolean);
+            return [...new Set([...base, ...extra, ...usados])];
+        }
+        function opcoesMotivoQuebra(atual) { return motivosQuebraLista().map(m => `<option value="${escapeHTML(m)}" ${m === atual ? 'selected' : ''}>${escapeHTML(m)}</option>`).join(''); }
+        window.novoMotivoQuebra = async function(selId) {
+            const nome = (prompt('Nome do novo motivo:') || '').trim(); if (!nome) return;
+            const existente = motivosQuebraLista().find(m => m.toLowerCase() === nome.toLowerCase());
+            const final = existente || nome;
+            if (!existente) {
+                try { await addDoc(collection(db, 'Motivos de Quebra'), { nome, criadoEm: new Date().toISOString() }); }
+                catch (e) { mostrarAlertaCustomizado('Erro ao guardar o motivo.', 'Erro'); return; }
+            }
+            const sel = document.getElementById(selId);
+            if (sel) { if (![...sel.options].some(o => o.value === final)) sel.insertAdjacentHTML('beforeend', `<option value="${escapeHTML(final)}">${escapeHTML(final)}</option>`); sel.value = final; }
+        }
+        EDITAR_ESPECIAL['Nota de Quebra'] = function(item) {
+            document.getElementById('dynamic-fields').innerHTML = `<p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:12px;">${escapeHTML(item.codigo || '')} · ${item.quantidade} un. · ${formatDataPt(item.data)}</p>
+                <div class="form-group"><label for="nqe-motivo">Motivo</label><div style="display:flex; gap:8px;"><select id="nqe-motivo" class="form-control" style="flex:1;">${opcoesMotivoQuebra(item.motivo)}</select><button type="button" class="btn-cancelar" onclick="novoMotivoQuebra('nqe-motivo')">+ Novo motivo</button></div></div>`;
+            document.getElementById('modal-titulo').innerText = 'Alterar motivo da quebra';
+            document.getElementById('btn-guardar-texto').innerText = 'Atualizar';
+            abrirModal('500px');
+            salvarEspecialAtual = async function() {
+                const btn = document.getElementById('btn-guardar-texto'); btn.disabled = true; btn.innerText = 'A guardar...';
+                try { await updateDoc(doc(db, 'Nota de Quebra', item.id), { motivo: document.getElementById('nqe-motivo').value, atualizadoEm: new Date().toISOString() }); mostrarAlertaCustomizado('Motivo atualizado!', 'Sucesso'); fecharModal(); }
+                catch (e) { mostrarAlertaCustomizado('Erro ao atualizar o motivo.', 'Erro'); btn.disabled = false; btn.innerText = 'Atualizar'; }
+            };
+        };
         TELAS_ESPECIAIS['Entrada de Inventário'] = {
             dependeDe: ['MovimentosInventario'],
             render: function(display) {
@@ -2757,6 +3054,7 @@ tbody tr:nth-child(even){background:#fafafa}
             const mov = [];
             FONTES_SAIDA.forEach(f => {
                 (dadosCadastrados[f.col] || []).forEach(d => {
+                    if (d.semMovimentoStock) return; // faturas de obra: o stock já saiu nas guias de remessa
                     (d.itens || []).forEach(it => {
                         const qtd = Number(it.quantidade) || 0, vu = Number(it.precoUnit) || 0;
                         mov.push({ data: d.data || '', criadoEm: d.criadoEm || '', tipo: f.tipo, grupo: f.grupo, doc: d.numero || '', entidade: d.clienteNome || d.entidadeNome || '', codigo: it.codigo || '', categoria: it.categoria || '', armazem: it.armazem || '', qtd, valorUnit: vu, valor: it.subtotal != null ? Number(it.subtotal) : qtd * vu });
@@ -2804,6 +3102,35 @@ tbody tr:nth-child(even){background:#fafafa}
             }
             cont.innerHTML = html;
         }
+        function artigosComStock() {
+            return (dadosCadastrados['Artigos'] || []).filter(a => (Number(a.stock) || 0) > 0)
+                .map(a => ({ codigo: a.codigo || '', descricao: a.descricao || a.categoria || '', quantidade: Number(a.stock) || 0 }))
+                .sort((x, y) => String(x.codigo).localeCompare(String(y.codigo), 'pt', { numeric: true }));
+        }
+        window.exportarStockExcel = function() {
+            const lista = artigosComStock();
+            if (lista.length === 0) { mostrarAlertaCustomizado('Não há artigos com stock para descarregar.', 'Atenção'); return; }
+            if (typeof XLSX === 'undefined') {
+                const esc = v => `"${String(v == null ? '' : v).replace(/"/g, '""')}"`;
+                let csv = '\uFEFF' + ['Código', 'Descrição', 'Quantidade'].map(esc).join(';') + '\n';
+                lista.forEach(a => { csv += [a.codigo, a.descricao, a.quantidade].map(esc).join(';') + '\n'; });
+                const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+                link.download = `artigos_em_stock_${hojeISO()}.csv`; link.click(); return;
+            }
+            const aoa = [['Código', 'Descrição', 'Quantidade']]; lista.forEach(a => aoa.push([a.codigo, a.descricao, a.quantidade]));
+            const ws = XLSX.utils.aoa_to_sheet(aoa); ws['!cols'] = [{ wch: 18 }, { wch: 55 }, { wch: 12 }];
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Artigos em stock');
+            XLSX.writeFile(wb, `artigos_em_stock_${hojeISO()}.xlsx`);
+        }
+        window.imprimirStockLista = function() {
+            const lista = artigosComStock();
+            if (lista.length === 0) { mostrarAlertaCustomizado('Não há artigos com stock para imprimir.', 'Atenção'); return; }
+            const emp = dadosEmpresa || {};
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Artigos em stock</title><style>body{font-family:Arial,sans-serif;font-size:12px;color:#111;margin:0;padding:28px;background:#fff}h1{font-size:16px;margin:0 0 4px}p{margin:0 0 14px;color:#444}table{width:100%;border-collapse:collapse}th{text-align:left;border-bottom:1px solid #111;padding:4px}td{padding:4px;border-bottom:1px solid #e5e7eb}.r{text-align:right}</style></head><body>
+                <h1>${escapeHTML(emp.nome || emp.empresa || '')} — Artigos em stock</h1><p>Gerado em ${formatDataPt(hojeISO())} · ${lista.length} artigo(s)</p>
+                <table><thead><tr><th>Código</th><th>Descrição</th><th class="r">Quantidade</th></tr></thead><tbody>${lista.map(a => `<tr><td>${escapeHTML(a.codigo)}</td><td>${escapeHTML(a.descricao)}</td><td class="r">${a.quantidade}</td></tr>`).join('')}</tbody></table></body></html>`;
+            abrirPreVisualizacao(html, 'Artigos_em_stock');
+        }
         TELAS_ESPECIAIS['Saída de inventário'] = {
             dependeDe: ['Artigos', 'Faturas', 'FaturasSimplificadas', 'FaturasRecibo', 'GuiaRemessa', 'NotasCreditoFornecedor', 'NotasDevolucaoFornecedor', 'Nota de Quebra'],
             render: function(display) {
@@ -2812,6 +3139,8 @@ tbody tr:nth-child(even){background:#fafafa}
                     <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:20px;">
                         <button class="btn-salvar" onclick="exportarSaidasExcel()">Exportar para Excel</button>
                         <button class="btn-cancelar" onclick="imprimirSaidas()">Imprimir</button>
+                        <button class="btn-salvar" onclick="exportarStockExcel()" title="Código, descrição e quantidade de todos os artigos com stock">Descarregar artigos em stock (Excel)</button>
+                        <button class="btn-cancelar" onclick="imprimirStockLista()" title="Lista de artigos com stock para imprimir ou PDF">Lista de stock (PDF / Imprimir)</button>
                         <div style="display:flex; gap:10px; align-items:flex-end; margin-left:auto; flex-wrap:wrap;">
                             <div class="form-group" style="margin:0;"><label for="saidas-de">De</label><input type="date" id="saidas-de" class="form-control" value="${saidasFiltro.de}" onchange="definirFiltroSaidas('de', this.value)"></div>
                             <div class="form-group" style="margin:0;"><label for="saidas-ate">Até</label><input type="date" id="saidas-ate" class="form-control" value="${saidasFiltro.ate}" onchange="definirFiltroSaidas('ate', this.value)"></div>
