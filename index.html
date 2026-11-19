@@ -1890,14 +1890,47 @@
         }
         window.fecharPreVisualizacao = function() { const o = document.getElementById('previa-doc'); if (o) o.remove(); }
         window.imprimirPrevia = function() { const f = document.getElementById('previa-frame'); f.contentWindow.focus(); f.contentWindow.print(); }
-        window.baixarPdfPrevia = function(nome) {
+        // PDF igual à pré-visualização: o documento é desenhado dentro de um iframe próprio (com o seu CSS) e capturado em páginas A4
+        function carregarScriptUmaVez(src, testa) {
+            return new Promise((res, rej) => {
+                if (testa()) return res();
+                const sc = document.createElement('script'); sc.src = src; sc.onload = () => res(); sc.onerror = () => rej(new Error('falha ' + src));
+                document.head.appendChild(sc);
+            });
+        }
+        window.baixarPdfPrevia = async function(nome) {
             const f = document.getElementById('previa-frame'), btn = document.getElementById('btn-pdf-previa');
-            const gerar = () => window.html2pdf().set({ margin: 8, filename: nome + '.pdf', html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4' } }).from(f.contentDocument.body).save().then(() => { btn.disabled = false; btn.innerText = 'Descarregar PDF'; });
             btn.disabled = true; btn.innerText = 'A gerar...';
-            if (window.html2pdf) { gerar(); return; }
-            const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-            sc.onload = gerar; sc.onerror = () => { btn.disabled = false; btn.innerText = 'Descarregar PDF'; mostrarAlertaCustomizado('Não foi possível gerar o PDF. Use "Imprimir" e escolha "Guardar como PDF".', 'Atenção'); };
-            document.head.appendChild(sc);
+            let tmp = null;
+            try {
+                await carregarScriptUmaVez('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', () => window.html2canvas);
+                await carregarScriptUmaVez('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', () => window.jspdf);
+                const larg = 794; // largura A4 a 96 dpi
+                tmp = document.createElement('iframe');
+                tmp.style.cssText = `position:fixed;left:-10000px;top:0;width:${larg}px;height:1123px;border:0;background:#fff;`;
+                document.body.appendChild(tmp);
+                await new Promise(r => { tmp.onload = r; tmp.srcdoc = f.srcdoc || f.contentDocument.documentElement.outerHTML; });
+                const d = tmp.contentDocument;
+                if (d.fonts && d.fonts.ready) await d.fonts.ready;
+                const alt = Math.max(d.documentElement.scrollHeight, d.body.scrollHeight);
+                tmp.style.height = alt + 'px';
+                await new Promise(r => setTimeout(r, 150));
+                const canvas = await window.html2canvas(d.documentElement, { scale: 2, backgroundColor: '#ffffff', width: larg, height: alt, windowWidth: larg, windowHeight: alt, useCORS: true });
+                const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+                const pw = 210, ph = 297, pagPx = Math.floor(canvas.width * ph / pw);
+                for (let y = 0, n = 0; y < canvas.height; y += pagPx, n++) {
+                    const h = Math.min(pagPx, canvas.height - y);
+                    const part = document.createElement('canvas'); part.width = canvas.width; part.height = h;
+                    const ctx = part.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, part.width, h); ctx.drawImage(canvas, 0, y, canvas.width, h, 0, 0, canvas.width, h);
+                    if (n > 0) pdf.addPage();
+                    pdf.addImage(part.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, pw, h * pw / canvas.width);
+                }
+                pdf.save(nome + '.pdf');
+            } catch (e) {
+                mostrarAlertaCustomizado('Não foi possível gerar o PDF. Use "Imprimir" e escolha "Guardar como PDF".', 'Atenção');
+            }
+            if (tmp) tmp.remove();
+            btn.disabled = false; btn.innerText = 'Descarregar PDF';
         }
 
         /* ----- Pagamentos parciais (anexo da fatura) ----- */
