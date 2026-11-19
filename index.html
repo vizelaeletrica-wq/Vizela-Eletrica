@@ -680,6 +680,40 @@
             .cal-lateral { position: static; }
             .cal-lateral-lista { max-height: 320px; }
         }
+        /* ===== Cadastros: tela única (sem rolagem), organizada em quadros, com zoom proporcional ===== */
+        #modal-cadastro { overflow: hidden; }
+        #modal-cadastro .modal-box { flex: none; width: var(--mw, 700px) !important; max-width: none !important; max-height: none !important; overflow: hidden !important; transform-origin: center center; transform: scale(calc(var(--mz, 1) * 0.95)); border-radius: 12px; }
+        #modal-cadastro.active .modal-box { transform: scale(var(--mz, 1)); }
+        #modal-cadastro .modal-header { background: var(--ink); border-bottom: 3px solid var(--primary); padding: 12px 20px; }
+        #modal-cadastro .modal-header h2 { color: #fff; font-size: 1rem; }
+        #modal-cadastro .btn-close { color: #cbd2dc; }
+        #modal-cadastro .btn-close:hover { background: rgba(255,255,255,.12); color: #fff; }
+        #modal-cadastro .modal-body { max-height: none !important; overflow: visible !important; padding: 16px 20px; background: #f6f7f9; }
+        #modal-cadastro .modal-footer { padding: 10px 20px; }
+        #modal-cadastro .form-group { margin-bottom: 10px; }
+        #modal-cadastro .form-group label { font-size: .78rem; margin-bottom: 3px; }
+        #modal-cadastro .form-control { padding: 6px 9px; font-size: .85rem; }
+        /* formulários simples: duas colunas */
+        #modal-cadastro #dynamic-fields { display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; align-items: start; }
+        #modal-cadastro #dynamic-fields > * { min-width: 0; }
+        #modal-cadastro #dynamic-fields > h3, #modal-cadastro #dynamic-fields > p, #modal-cadastro #dynamic-fields > table,
+        #modal-cadastro #dynamic-fields > div[style*="display:flex"], #modal-cadastro #dynamic-fields > div[style*="display: flex"],
+        #modal-cadastro #dynamic-fields > .cad-doc, #modal-cadastro #dynamic-fields > .form-full { grid-column: 1 / -1; }
+        /* quadros (como "fieldset" com legenda) */
+        .cad-fs { border: 1px solid var(--border-strong); border-radius: 8px; background: #fff; padding: 10px 14px 8px; margin: 0; min-width: 0; }
+        .cad-fs > legend { font-size: .76rem; font-weight: 700; color: var(--primary-ink); padding: 0 6px; text-transform: uppercase; letter-spacing: .04em; }
+        .cad-doc { display: grid; grid-template-columns: 330px 1fr; gap: 14px; align-items: start; }
+        .cad-row { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 8px; margin-bottom: 8px; }
+        .cad-row > label { font-size: .78rem; font-weight: 600; color: var(--ink-2); margin: 0; }
+        .cad-row .form-control { width: 100%; }
+        .sel-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px 10px; align-items: end; }
+        .sel-grid > .form-group { margin: 0 !important; min-width: 0 !important; }
+        .sel-grid .btn-salvar { width: 100%; height: 32px; padding: 0; font-size: 1.2rem; line-height: 1; border-radius: 8px; }
+        .modal-tools { display: flex; align-items: center; gap: 4px; }
+        .zoom-btn { min-width: 30px; height: 26px; padding: 0 8px; border: 1px solid rgba(255,255,255,.25); background: rgba(255,255,255,.08); border-radius: 6px; font-size: .78rem; font-weight: 700; color: #fff; cursor: pointer; line-height: 1; }
+        .zoom-btn:hover:not(:disabled) { background: rgba(255,255,255,.2); border-color: var(--primary); }
+        .zoom-btn:disabled { opacity: .35; cursor: default; }
+        #zoom-pct { min-width: 46px; }
     </style>
 </head>
 <body>
@@ -1619,20 +1653,20 @@
                 ? `<select id="${containerId}-preco" class="form-control" onchange="{ const pe = document.getElementById('${containerId}-precoed'); if (pe) pe.value = (parseFloat(this.value) || ''); }" ${semSubmeterNoEnter}><option value="0">Selecione o artigo primeiro...</option></select>`
                 : `<input type="number" id="${containerId}-preco" class="form-control" min="0" step="0.01" value="0" ${semSubmeterNoEnter}>`;
             return `
-                <div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
-                    <div class="form-group" style="flex:1; min-width:110px;"><label>Código</label><input type="text" id="${containerId}-codigo" class="form-control" placeholder="Código" oninput="codigoParaArtigo('${containerId}', this.value, '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}></div>
-                    <div class="form-group" style="flex:2; min-width:240px;"><label>Artigo (descrição)</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
-                    <div class="form-group" style="flex:1; min-width:90px;"><label>Quantidade</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
-                    <div class="form-group" style="flex:1; min-width:150px;"><label>Armazém</label><select id="${containerId}-armazem" class="form-control" ${semSubmeterNoEnter}>${opcoesArmazemHtml(null, '')}</select></div>
-                    <div class="form-group" style="flex:1; min-width:170px;"><label>${precoSelecionavel === 'custo' ? 'Tabela de Custo' : (precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)')}</label>${campoPreco}</div>
-                    <div class="form-group" style="flex:1; min-width:100px;"><label>Preço unit. (editável)</label><input type="number" id="${containerId}-precoed" class="form-control" min="0" step="0.01" ${semSubmeterNoEnter}></div>
-                    <div class="form-group" style="flex:0;"><button type="button" class="btn-salvar" title="Adicionar à lista" aria-label="Adicionar à lista" onclick="adicionarItemDocumento('${containerId}','${movimento}')" style="width:42px;height:42px;min-width:42px;padding:0;border-radius:50%;font-size:1.5rem;line-height:1;">+</button></div>
+                <div class="sel-grid">
+                    <div class="form-group" style="grid-column:span 3;"><label>Código</label><input type="text" id="${containerId}-codigo" class="form-control" placeholder="Código" oninput="codigoParaArtigo('${containerId}', this.value, '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}></div>
+                    <div class="form-group" style="grid-column:span 9;"><label>Artigo (descrição)</label><select id="${containerId}-artigo" class="form-control" onchange="sugerirPrecoItemDocumento('${containerId}', '${precoSelecionavel || ''}')" ${semSubmeterNoEnter}>${opcoes}</select></div>
+                    <div class="form-group" style="grid-column:span 2;"><label>Qtd</label><input type="number" id="${containerId}-qtd" class="form-control" min="1" step="1" value="1" ${semSubmeterNoEnter}></div>
+                    <div class="form-group" style="grid-column:span 3;"><label>Armazém</label><select id="${containerId}-armazem" class="form-control" ${semSubmeterNoEnter}>${opcoesArmazemHtml(null, '')}</select></div>
+                    <div class="form-group" style="grid-column:span 3;"><label>${precoSelecionavel === 'custo' ? 'Tabela de Custo' : (precoSelecionavel ? 'Tabela de Preço' : 'Preço Unit. (€)')}</label>${campoPreco}</div>
+                    <div class="form-group" style="grid-column:span 3;"><label>Preço unit. (editável)</label><input type="number" id="${containerId}-precoed" class="form-control" min="0" step="0.01" ${semSubmeterNoEnter}></div>
+                    <div class="form-group" style="grid-column:span 1;"><button type="button" class="btn-salvar" title="Adicionar à lista" aria-label="Adicionar à lista" onclick="adicionarItemDocumento('${containerId}','${movimento}')">+</button></div>
                 </div>
-                ${extra.material ? `<div style="display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; margin-top:4px;">
-                    <div class="form-group" style="flex:2; min-width:240px;"><label>Material</label><input type="text" id="${containerId}-material" class="form-control" maxlength="200" placeholder="Ex: Aço inox 304, 2mm" ${semSubmeterNoEnter}></div>
-                    ${extra.imagem ? `<div class="form-group" style="flex:2; min-width:240px;"><label>Imagem do material (opcional)</label><input type="file" id="${containerId}-img" class="form-control" accept="image/*"></div>` : ''}
+                ${extra.material ? `<div class="sel-grid" style="margin-top:8px;">
+                    <div class="form-group" style="grid-column:span 6;"><label>Material</label><input type="text" id="${containerId}-material" class="form-control" maxlength="200" placeholder="Ex: Aço inox 304, 2mm" ${semSubmeterNoEnter}></div>
+                    ${extra.imagem ? `<div class="form-group" style="grid-column:span 6;"><label>Imagem do material (opcional)</label><input type="file" id="${containerId}-img" class="form-control" accept="image/*"></div>` : ''}
                 </div>` : ''}
-                <p style="margin: 4px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">Escolha o artigo, a quantidade e o preço, depois clique no botão <strong>+</strong>. Só os artigos que aparecerem na lista abaixo entram no documento ao Guardar.</p>
+                <p style="margin: 6px 0 0 0; font-size: 0.72rem; color: var(--text-muted);">Escolha o artigo e clique em <strong>+</strong>. Só os artigos da lista entram no documento ao Guardar.</p>
                 <div id="${containerId}-lista"></div>
                 <div id="${containerId}-total" style="text-align:right; font-weight:800; font-size:1.05rem; margin-top:10px; color: var(--text-dark);"></div>
             `;
@@ -2066,16 +2100,21 @@
                     itensDocumentoTemp = [];
                     const opcoesCliente = cfg.exigeCliente ? opcoesSelectNovo(dadosCadastrados[cfg.entidadeCollection || 'Clientes'].map(c => ({ value: c.id, label: cfg.entidadeNomeFn ? cfg.entidadeNomeFn(c) : c.nome })), '', `Selecione ${cfg.entidadeLabel || 'o cliente'}...`) : '';
                     document.getElementById('dynamic-fields').innerHTML = `
-                        ${cfg.exigeCliente ? `<div class="form-group"><label>${cfg.entidadeLabel || 'Cliente'}</label><select id="doc-cliente" class="form-control" required onchange="mostrarDadosEntidade('${cfg.entidadeCollection || 'Clientes'}', this.value)">${opcoesCliente}</select><div id="doc-cliente-info" style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;"></div></div>` : ''}
-                        <div class="form-group"><label>Data</label><input type="date" id="doc-data" class="form-control" value="${hojeISO()}"></div>
-                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                            ${cfg.campoEntidadeId ? '' : `<div class="form-group" style="flex:1; min-width:160px;"><label>Vendedor (não aparece na impressão)</label><select id="doc-vendedor" class="form-control">${opcoesSelectNovo((dadosCadastrados['Vendedores'] || []).map(v => ({ value: v.id, label: v.nome })), '', 'Selecione o vendedor...')}</select></div>`}
-                            <div class="form-group" style="flex:1; min-width:120px;"><label>Desconto (%)</label><input type="number" id="doc-desconto" class="form-control" min="0" max="100" step="0.01" value="0" oninput="renderListaItensDocumento('doc')"></div>
-                            <div class="form-group" style="flex:1; min-width:150px;"><label>Modo de pagamento</label><select id="doc-pagamento" class="form-control"><option value="">-</option><option>Numerário</option><option>Multibanco</option><option>Transferência</option><option>Cheque</option><option>MB Way</option></select></div>
+                        <div class="cad-doc">
+                            <fieldset class="cad-fs">
+                                <legend>Dados do documento</legend>
+                                ${cfg.exigeCliente ? `<div class="cad-row"><label>${cfg.entidadeLabel || 'Cliente'}</label><select id="doc-cliente" class="form-control" required onchange="mostrarDadosEntidade('${cfg.entidadeCollection || 'Clientes'}', this.value)">${opcoesCliente}</select></div><div id="doc-cliente-info" style="font-size:0.78rem; color:var(--text-muted); margin:-4px 0 8px 104px;"></div>` : ''}
+                                <div class="cad-row"><label>Data</label><input type="date" id="doc-data" class="form-control" value="${hojeISO()}"></div>
+                                ${cfg.campoEntidadeId ? '' : `<div class="cad-row"><label title="Não aparece na impressão">Vendedor</label><select id="doc-vendedor" class="form-control">${opcoesSelectNovo((dadosCadastrados['Vendedores'] || []).map(v => ({ value: v.id, label: v.nome })), '', 'Selecione...')}</select></div>`}
+                                <div class="cad-row"><label>Desconto (%)</label><input type="number" id="doc-desconto" class="form-control" min="0" max="100" step="0.01" value="0" oninput="renderListaItensDocumento('doc')"></div>
+                                <div class="cad-row"><label>Pagamento</label><select id="doc-pagamento" class="form-control"><option value="">-</option><option>Numerário</option><option>Multibanco</option><option>Transferência</option><option>Cheque</option><option>MB Way</option></select></div>
+                            </fieldset>
+                            <fieldset class="cad-fs">
+                                <legend>Artigos</legend>
+                                ${cfg.criarArtigo ? painelCriarArtigoHtml() : ''}
+                                ${renderSeletorArtigoDocumento('doc', cfg.movimentoStock, cfg.precoSelecionavel, { material: cfg.material, imagem: cfg.materialImagem })}
+                            </fieldset>
                         </div>
-                        <h3 style="font-size:0.95rem; margin: 14px 0 8px; color: var(--primary);">Artigos</h3>
-                        ${cfg.criarArtigo ? painelCriarArtigoHtml() : ''}
-                        ${renderSeletorArtigoDocumento('doc', cfg.movimentoStock, cfg.precoSelecionavel, { material: cfg.material, imagem: cfg.materialImagem })}
                     `;
                     document.getElementById('modal-titulo').innerText = `Novo(a) ${cfg.singular}`;
                     document.getElementById('btn-guardar-texto').innerText = `Guardar ${cfg.singular}`;
@@ -3288,16 +3327,6 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
 .acoes{max-width:1100px;margin:0 auto 16px;display:flex;justify-content:flex-end}
 .acoes button{background:#F5A623;border:none;color:#111827;font-weight:700;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:.95rem}
 @media print{body{background:#fff;padding:0}.page{box-shadow:none;max-width:none;padding:0;border-radius:0}.acoes{display:none}}
-        /* ===== Cadastros: tela única, sem barras de rolagem, com zoom proporcional ===== */
-        #modal-cadastro { overflow: hidden; }
-        #modal-cadastro .modal-box { flex: none; width: var(--mw, 500px) !important; max-width: none !important; max-height: none !important; overflow: hidden !important; transform-origin: center center; transform: scale(calc(var(--mz, 1) * 0.95)); }
-        #modal-cadastro.active .modal-box { transform: scale(var(--mz, 1)); }
-        #modal-cadastro .modal-body { max-height: none !important; overflow: visible !important; }
-        .modal-tools { display: flex; align-items: center; gap: 4px; }
-        .zoom-btn { min-width: 30px; height: 28px; padding: 0 8px; border: 1px solid var(--border-strong, #d0d5dd); background: #fff; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: var(--text-dark); cursor: pointer; line-height: 1; }
-        .zoom-btn:hover:not(:disabled) { background: #f4f5f7; border-color: var(--primary); }
-        .zoom-btn:disabled { opacity: .35; cursor: default; }
-        #zoom-pct { min-width: 46px; font-weight: 600; }
     </style></head><body>
 <div class="acoes"><button onclick="window.print()">Imprimir / Guardar PDF</button></div>
 <div class="page">
@@ -4737,7 +4766,7 @@ tr{page-break-inside:avoid}thead{display:table-header-group}
             let larg = parseInt(abaAtual, 10);
             if (abaAtual === 'Artigos' || abaAtual === 'Artigos Fabricados') larg = 650;
             if (!larg) larg = 500;
-            if (larg >= 700) larg = 820; // formulários de documentos: mais largos = menos altos
+            larg = larg >= 700 ? 980 : (larg >= 650 ? 800 : 720); // mais largo = menos alto = letras maiores
             box.style.setProperty('--mw', larg + 'px');
 
             modal.style.display = 'flex';
